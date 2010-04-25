@@ -37,10 +37,9 @@ namespace projs
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
-            else if(m_team(game::gamemode, game::mutators) && actor->team == target->team && actor != target)
+            else if(m_play(game::gamemode) && m_team(game::gamemode, game::mutators) && actor->team == target->team && actor != target)
             {
-                if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
-                else if(m_play(game::gamemode)) switch(teamdamage)
+                switch(teamdamage)
                 {
                     case 2: default: break;
                     case 1: if(actor->aitype < 0 || target->aitype >= 0) break;
@@ -125,8 +124,9 @@ namespace projs
         return false;
     }
 
-    void radialeffect(gameent *d, projent &proj, bool explode, int radius)
+    bool radialeffect(gameent *d, projent &proj, bool explode, int radius)
     {
+        bool radiated = false;
         float maxdist = explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
         if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].canmove)))
         {
@@ -151,8 +151,9 @@ namespace projs
             vec bottom(d->o), top(d->o); bottom.z -= d->height; top.z += d->aboveeye;
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
-        if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
-        if(proj.weap != WEAP_TRACTOR && dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
+        if(explode && dist <= radius*WEAP(proj.weap, pusharea)) { hitpush(d, proj, HIT_WAVE, radius, dist); radiated = true; }
+        if(proj.weap != WEAP_TRACTOR && dist <= radius) { hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist); radiated = true; }
+        return radiated;
     }
 
     void remove(gameent *owner)
@@ -1283,14 +1284,13 @@ namespace projs
                 {
                     if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
                     radius = int(ceilf(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale)*proj.lifesize));
-                    if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 100))
+                    if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 40))
                     {
                         loopj(game::numdynents())
                         {
                             gameent *f = (gameent *)game::iterdynents(j);
                             if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, true)) continue;
-                            radialeffect(f, proj, false, radius);
-                            proj.lastradial = lastmillis;
+                            if(radialeffect(f, proj, false, radius)) proj.lastradial = lastmillis;
                         }
                     }
                 }

@@ -25,7 +25,7 @@ GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
 GVAR(IDF_ADMIN, campaignplayers, 1, 4, MAXPLAYERS);
 
-GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower tranquility venus warground");
+GSVAR(IDF_ADMIN, allowmaps, "alphacampain bath bloodgrounds campaigntest chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower tranquility venus warground wishbone");
 GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli depot eight enigma ghost gladiator longestyard mist nova panic refuge rivals smouldering stone tower tranquility warground venus");
 GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight ghost gladiator longestyard mist nova panic refuge rivals tower tranquility warground venus");
 GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tranquility warground venus");
@@ -75,8 +75,8 @@ GVAR(0, kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade,
 
 GVAR(0, timelimit, 0, 15, INT_MAX-1);
 GVAR(0, triallimit, 0, 60000, INT_MAX-1);
-GVAR(0, intermlimit, 0, 30000, INT_MAX-1); // .. before vote menu comes up
-GVAR(0, votelimit, 0, 60000, INT_MAX-1); // .. before vote passes by default
+GVAR(0, intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
+GVAR(0, votelimit, 0, 45000, INT_MAX-1); // .. before vote passes by default
 GVAR(0, duelreset, 0, 1, 1); // reset winner in duel
 GVAR(0, duelclear, 0, 1, 1); // clear items in duel
 GVAR(0, duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
