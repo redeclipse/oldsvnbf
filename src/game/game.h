@@ -427,8 +427,8 @@ enum
 
 enum
 {
-    G_DEMO = 0, G_LOBBY, G_EDITMODE, G_CAMPAIGN, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX,
-    G_START = G_LOBBY, G_PLAY = G_CAMPAIGN, G_FIGHT = G_DEATHMATCH, G_RAND = G_CTF-G_DEATHMATCH+1
+    G_DEMO = 0, G_EDITMODE, G_CAMPAIGN, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX,
+    G_START = G_EDITMODE, G_PLAY = G_CAMPAIGN, G_FIGHT = G_DEATHMATCH, G_RAND = G_CTF-G_DEATHMATCH+1
 };
 enum
 {
@@ -444,7 +444,6 @@ struct gametypes
 #ifdef GAMESERVER
 gametypes gametype[] = {
     { G_DEMO,           G_M_NONE,                                                           G_M_NONE,               "demo" },
-    { G_LOBBY,          G_M_SOME,                                                           G_M_NONE,               "lobby" },
     { G_EDITMODE,       G_M_SOME,                                                           G_M_NONE,               "editing" },
     { G_CAMPAIGN,       G_M_TEAM|G_M_SOME,                                                  G_M_TEAM,               "campaign" },
     { G_DEATHMATCH,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_NONE,               "deathmatch" },
@@ -466,7 +465,6 @@ extern gametypes gametype[], mutstype[];
 #define m_check(a,b)        (!a || (a < 0 ? -a != b : a == b))
 
 #define m_demo(a)           (a == G_DEMO)
-#define m_lobby(a)          (a == G_LOBBY)
 #define m_edit(a)           (a == G_EDITMODE)
 #define m_campaign(a)       (a == G_CAMPAIGN)
 #define m_dm(a)             (a == G_DEATHMATCH)
@@ -487,7 +485,7 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)         (m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)        (!m_duke(a,b) && !m_insta(a,b))
 
-#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) || m_lobby(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
+#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
 #define m_delay(a,b)        (m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GAME(trialdelay) : ((m_insta(a, b) ? GAME(instadelay) : GAME(spawndelay)))) : 0)
 #define m_protect(a,b)      (m_insta(a, b) || m_arena(a, b) ? GAME(instaprotect) : GAME(spawnprotect))
 #define m_noitems(a,b)      (GAME(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
