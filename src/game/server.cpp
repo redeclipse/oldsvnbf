@@ -398,14 +398,6 @@ namespace server
     #define setmod(a,b) { if(a != b) { setvar(#a, b, true);  sendf(-1, 1, "ri2ss", N_COMMAND, -1, &((const char *)#a)[3], #b); } }
     #define setmodf(a,b) { if(a != b) { setfvar(#a, b, true);  sendf(-1, 1, "ri2ss", N_COMMAND, -1, &((const char *)#a)[3], #b); } }
 
-    void setupvars()
-    {
-        if(m_campaign(gamemode))
-        {
-            setmod(sv_impulseallowed, 1);
-        }
-    }
-
     void resetgamevars(bool flush)
     {
         string val;
@@ -1735,7 +1727,8 @@ namespace server
         timeremaining = GAME(timelimit) ? GAME(timelimit)*60 : -1;
         gamelimit = GAME(timelimit) ? timeremaining*1000 : 0;
         sents.shrink(0); scores.shrink(0);
-        setupvars(); setuptriggers(false); setupspawns(false);
+        setuptriggers(false);
+        setupspawns(false);
 
         const char *reqmap = name && *name ? name : pickmap(smapname, gamemode, mutators);
 #ifdef STANDALONE // interferes with savemap on clients, in which case we can just use the auto-request

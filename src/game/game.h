@@ -398,7 +398,7 @@ extern weaptypes weaptype[];
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
 #define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAP2(a, explode, b)*e*(m_insta(c, d) || m_arena(c, d) ? GAME(limitedscale) : GAME(explodescale)))) : 0)
-#define WEAPSP(a,b,c,d)         (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b) : 0)
+#define WEAPSP(a,b,c,d,e)       ((!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b) : 0)+(int(ceilf(min(WEAP2(a, spread, b), 1)*e))))
 
 WEAPDEF(int, add); WEAPDEF(int, max); WEAPDEF2(int, sub); WEAPDEF2(int, adelay); WEAPDEF(int, rdelay); WEAPDEF2(int, damage); WEAPDEF2(int, speed); WEAPDEF2(int, power);
 WEAPDEF2(int, time); WEAPDEF2(int, pdelay); WEAPDEF2(int, explode); WEAPDEF2(int, rays); WEAPDEF2(int, spread); WEAPDEF2(int, zdiv); WEAPDEF2(int, aiskew); WEAPDEF2(int, collide);

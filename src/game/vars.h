@@ -115,15 +115,19 @@ GFVAR(0, forceaircurb, -1, -1, 1000);
 GFVAR(0, jumpspeed, 0, 100.f, 1000); // extra velocity to add when jumping
 GFVAR(0, movespeed, 0, 100.f, 1000); // speed
 GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
-GFVAR(0, impulsespeed, 0, 75.f, 1000); // extra velocity to add when impulsing
+GFVAR(0, impulsespeed, 0, 100.f, 1000); // extra velocity to add when impulsing
 
 GVAR(0, impulseallowed, 0, 3, 3); // impulse allowed; 0 = off, 1 = dash/boost only, 2 = dash/boost and sprint, 3 = all mechanics including parkour
 GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 GVAR(0, impulsecount, 0, 10, INT_MAX-1); // number of impulse actions per air transit
 GVAR(0, impulsemeter, 0, 0, INT_MAX-1); // impulse dash length; 0 = unlimited, anything else = timer
 GVAR(0, impulsecost, 0, 500, INT_MAX-1); // cost of impulse jump
-GVAR(0, impulseskate, 0, 750, INT_MAX-1); // length of time a run along a wall can last
+GVAR(0, impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
 GFVAR(0, impulseregen, 0, 10, 1000); // impulse regen multiplier
+
+GFVAR(0, movespread, 0, 2.5f, 1000);
+GFVAR(0, jumpspread, 0, 5, 1000);
+GFVAR(0, impulsespread, 0, 10, 1000);
 
 GFVAR(0, explodescale, 0, 1, 1000);
 GFVAR(0, limitedscale, 0, 0.5f, 1000);
@@ -131,6 +135,10 @@ GFVAR(0, damagescale, 0, 1, 1000);
 GVAR(0, damagecritchance, 0, 100, INT_MAX-1);
 
 GFVAR(0, hitpushscale, 0, 1, 1000);
+GFVAR(0, kickpushscale, 0, 1, 1000);
+GFVAR(0, kickpushcrouch, 0, 0.5f, 1000);
+GFVAR(0, kickpushsway, 0, 0.25f, 1000);
+GFVAR(0, kickpushzoom, 0, 0.125f, 1000);
 GFVAR(0, deadpushscale, 0, 2, 1000);
 GFVAR(0, wavepushscale, 0, 1, 1000);
 
