@@ -1383,7 +1383,8 @@ namespace server
     {
         clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
-        switch(GAME(votelock))
+        if(GAME(modelock) == 5 && GAME(mapslock) == 5 && !haspriv(ci, PRIV_MAX, "vote for a new game")) return;
+        else switch(GAME(votelock))
         {
             case 1: case 2: if(!m_edit(reqmode) && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GAME(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
             case 3: case 4: if(!haspriv(ci, GAME(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
@@ -2265,9 +2266,9 @@ namespace server
         if(actor->state.aitype < AI_START)
         {
             if((actor == target && !GAME(selfdamage)) || (m_trial(gamemode) && !GAME(trialdamage))) nodamage++;
-            else if(m_team(gamemode, mutators) && actor->team == target->team && actor != target)
+            else if(m_play(gamemode) && m_team(gamemode, mutators) && actor->team == target->team && actor != target)
             {
-                if(m_play(gamemode)) switch(GAME(teamdamage))
+                switch(GAME(teamdamage))
                 {
                     case 2: default: break;
                     case 1: if(actor->state.aitype < 0 || target->state.aitype >= 0) break;
@@ -2907,13 +2908,10 @@ namespace server
                 if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) continue;
                 if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
                 int delay = m_delay(gamemode, mutators);
-                if(ci->state.aitype >= AI_START)
+                if(ci->state.aitype >= AI_START && ci->state.lastdeath)
                 {
-                    if(ci->state.lastdeath)
-                    {
-                        if(m_campaign(gamemode)) continue;
-                        else if(!m_duke(gamemode, mutators)) delay = GAME(enemydelay);
-                    }
+                    if(m_campaign(gamemode)) continue;
+                    else delay = GAME(enemydelay);
                 }
                 if(delay && ci->state.respawnwait(gamemillis, delay)) continue;
                 int nospawn = 0;
@@ -2957,8 +2955,8 @@ namespace server
 
             if(interm && gamemillis >= interm) // wait then call for next map
             {
-                if(GAME(votelimit) && !maprequest)
-                {
+                if(GAME(votelimit) && !maprequest && GAME(votelock) != 5 && (GAME(modelock) != 5 || GAME(mapslock) != 5))
+                { // if they can't vote, no point in waiting for them to do so
                     if(demorecord) enddemorecord();
                     sendf(-1, 1, "ri", N_NEWGAME);
                     maprequest = true;
