@@ -218,14 +218,12 @@ namespace weapons
         else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
         if(d->aitype < AI_START || d->maxspeed)
         {
-            vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, secondary));
-            if(d == game::player1)
-            {
-                if(WEAP(weap, zooms) && game::inzoom()) kick.mul(0.0125f);
-                game::swaypush.add(vec(kick).mul(0.025f));
-                if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, secondary)), 1), 0, 1000);
-            }
-            if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(0.5f));
+            float kickmod = kickpushscale;
+            if(d == game::player1 && WEAP(weap, zooms) && game::inzoom()) kickmod = kickpushzoom;
+            else if(physics::iscrouching(d)) kickmod = kickpushcrouch;
+            vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, secondary)*kickmod);
+            if(d == game::focus) game::swaypush.add(vec(kick).mul(kickpushsway));
+            d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, secondary)*kickmod), 1), 0, 1000);
         }
 
         // move along the eye ray towards the weap origin, stopping when something is hit
@@ -256,10 +254,14 @@ namespace weapons
         #define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
         int rays = WEAP2(weap, rays, secondary);
         if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
+        float accmod = 0;
+        if(physics::sprinting(d)) accmod = impulsespread;
+        else if(d->move || d->strafe) accmod = movespread;
+        if(d->physstate == PHYS_FALL && !d->onladder) accmod += jumpspread;
         loopi(rays)
         {
             vec dest;
-            int spread = WEAPSP(weap, secondary, game::gamemode, game::mutators);
+            int spread = WEAPSP(weap, secondary, game::gamemode, game::mutators, accmod);
             if(spread) offsetray(from, to, spread, WEAP2(weap, zdiv, secondary), dest);
             else dest = to;
             if(weaptype[weap].thrown[secondary ? 1 : 0] > 0)

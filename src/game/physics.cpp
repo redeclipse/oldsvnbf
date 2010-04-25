@@ -28,7 +28,7 @@ namespace physics
     VAR(IDF_PERSIST, impulsedash,       0, 1, 3);               // determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
     VAR(IDF_PERSIST, crouchstyle,       0, 1, 2);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle
-    VAR(IDF_PERSIST, sprintstyle,       0, 4, 5);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
+    VAR(IDF_PERSIST, sprintstyle,       0, 1, 5);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
 
     int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0, lastcrouch = 0, lastsprint = 0;
 
@@ -644,7 +644,7 @@ namespace physics
         else if(game::allowmove(d))
         {
             bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d);
-            if(millis && allowimpulse())
+            if(millis && allowimpulse() && impulsemeter)
             {
                 if(sprinting(d) && canimpulse(d, millis))
                 {
@@ -672,7 +672,7 @@ namespace physics
                 float mag = impulsespeed+max(d->vel.magnitude(), 1.f);
                 vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
                 d->vel.normalize().mul(mag); d->vel.z += mag/4;
-                d->doimpulse(allowimpulse() ? impulsecost : 0, IM_T_DASH, lastmillis);
+                d->doimpulse(allowimpulse() && impulsemeter ? impulsecost : 0, IM_T_DASH, lastmillis);
                 playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
                 client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
             }
@@ -695,7 +695,7 @@ namespace physics
             if(!d->turnside && !onfloor && d->action[AC_JUMP] && canimpulse(d, 0, 1))
             {
                 d->vel.z += impulsespeed*1.5f;
-                d->doimpulse(allowimpulse() ? impulsecost : 0, IM_T_BOOST, lastmillis);
+                d->doimpulse(allowimpulse() && impulsemeter ? impulsecost : 0, IM_T_BOOST, lastmillis);
                 if(impulseaction < (PHYS(gravity) > 0 && impulsestyle < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
                 playsound(S_IMPULSE, d->o, d);
                 game::impulseeffect(d, true);
@@ -741,7 +741,7 @@ namespace physics
                             d->action[key] = false;
                             d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
                             d->vel.z += d->turnside ? mag : mag/2;
-                            d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
+                            d->doimpulse(impulsemeter ? impulsecost : 0, IM_T_KICK, lastmillis);
                             vectoyawpitch(d->vel, yaw, pitch);
                             off = yaw-d->aimyaw;
                             if(off > 180) off -= 360;
@@ -771,7 +771,7 @@ namespace physics
                             off = yaw-d->aimyaw;
                             if(off > 180) off -= 360;
                             else if(off < -180) off += 360;
-                            d->doimpulse(impulsecost, IM_T_SKATE, lastmillis);
+                            d->doimpulse(impulsemeter ? impulsecost : 0, IM_T_SKATE, lastmillis);
                             d->action[AC_SPECIAL] = false;
                             d->turnmillis = PHYSMILLIS;
                             d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
