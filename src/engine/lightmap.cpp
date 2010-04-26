@@ -1648,6 +1648,8 @@ static void setupsurfaces(lightmapworker *w, lightmaptask &task)
         }
     }
     if(numsurfs) newsurfaces(c, surfaces, numsurfs);
+    task.lightmaps = w->curlightmaps ? w->curlightmaps : (lightmapinfo *)-1;
+    if(numsurfs) packlightmap();
 }
 
 int lightmapworker::work(void *data)
@@ -2064,7 +2066,7 @@ static void setupthreads()
         if(lightmapping <= 1) cleanuplocks();
     }
     loopv(lightmapworkers) lightmapworkers[i]->reset();
-    while(lightmapworkers.length() <= lightmapping)
+    while(lightmapworkers.length() < lightmapping)
     {
         lightmapworker *w = new lightmapworker;
         lightmapworkers.add(w);
