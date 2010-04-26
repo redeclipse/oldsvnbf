@@ -1003,7 +1003,7 @@ namespace ai
             if(idle || insight || hasseen)
             {
                 float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-                if(idle || (insight && d->weapselect == WEAP_MELEE))
+                if(idle || (insight && d->weapselect == WEAP_MELEE && e->o.squaredist(d->o) <= (d->radius*d->radius)+64))
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
@@ -1078,7 +1078,7 @@ namespace ai
             d->aimyaw = d->yaw;
             d->aimpitch = d->pitch;
             if(lastmillis-d->lastpain < PHYSMILLIS/4) d->move = -1;
-            else if(enemyok && e->o.squaredist(d->o) <= d->radius*d->radius) d->move = 0;
+            else if(enemyok && e->o.squaredist(d->o) <= (d->radius*d->radius)+4) d->move = 0;
             else d->move = 1;
             d->strafe = 0;
         }
