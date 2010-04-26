@@ -733,7 +733,6 @@ static bool generatelightmap(lightmapworker *w, float lpu, int y1, int y2, const
         vec u(v);
         for(int x = 0; x < w->w; ++x, u.add(ustep), normal.add(nstep), slight += w->bpp)
         {
-            CHECK_PROGRESS(return NO_SURFACE);
             lightused |= generatelumel(w, tolerance, 0, lights, u, vec(normal).normalize(), *sample, x, y);
             if(hasskylight())
             {
