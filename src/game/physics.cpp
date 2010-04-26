@@ -28,7 +28,7 @@ namespace physics
     VAR(IDF_PERSIST, impulsedash,       0, 1, 3);               // determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
     VAR(IDF_PERSIST, crouchstyle,       0, 1, 2);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle
-    VAR(IDF_PERSIST, sprintstyle,       0, 1, 5);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
+    VAR(IDF_PERSIST, sprintstyle,       0, 4, 5);               // 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
 
     int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0, lastcrouch = 0, lastsprint = 0;
 

@@ -674,7 +674,8 @@ namespace game
         d->lastpain = lastmillis;
         d->state = CS_DEAD;
         d->deaths++;
-        int anc = -1, dth = d->aitype >= AI_START || style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
+        d->obliterated = (style&FRAG_OBLITERATE) != 0;
+        int anc = -1, dth = d->aitype >= AI_START || d->obliterated ? S_SPLOSH : S_DIE1+rnd(2);
         if(d == focus) anc = !m_duke(gamemode, mutators) && !m_trial(gamemode) ? S_V_FRAGGED : -1;
         else d->resetinterp();
         formatstring(d->obit)("%s ", colorname(d));
@@ -705,13 +706,12 @@ namespace game
                 concatstring(d->obit, suicidenames[weap]);
             }
             else if(flags&HIT_BURN || burning) concatstring(d->obit, "burned up");
-            else if(style&FRAG_OBLITERATE) concatstring(d->obit, "was obliterated");
+            else if(d->obliterated) concatstring(d->obit, "was obliterated");
             else concatstring(d->obit, "suicided");
         }
         else
         {
             concatstring(d->obit, "was ");
-            if(flags&HIT_CRIT) concatstring(d->obit, "\fs\fzgrcritically\fS ");
             if(isaitype(d->aitype) && !aistyle[d->aitype].living) concatstring(d->obit, "destroyed by");
             else if(isaitype(actor->aitype) && actor->aitype == AI_ZOMBIE) concatstring(d->obit, "a tasty snack for");
             else
@@ -759,7 +759,7 @@ namespace game
                         "warped into next week by",
                         "turned into little chunks by",
                         "swiss-cheesed by",
-                        "barbequed by chef",
+                        "barbequed by",
                         "reduced to ooze by",
                         "given laser shock treatment by",
                         "turned into shrapnel by",
@@ -767,14 +767,14 @@ namespace game
                     }
                 };
 
-                int o = style&FRAG_OBLITERATE ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT ? 1 : 0));
+                int o = d->obliterated ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT ? 1 : 0));
                 concatstring(d->obit, burning ? "set ablaze by" : (isweap(weap) ? obitnames[o][weap] : "killed by"));
             }
             bool override = false;
             vec az = actor->abovehead(), dz = d->abovehead();
             if(!m_fight(gamemode) || actor->aitype >= AI_START)
             {
-                concatstring(d->obit, " ");
+                concatstring(d->obit, actor->aitype >= AI_START ? " a " : " ");
                 concatstring(d->obit, colorname(actor));
             }
             else if(m_team(gamemode, mutators) && d->team == actor->team)
@@ -835,6 +835,7 @@ namespace game
                 if(!override) anc = S_V_HEADSHOT;
             }
 
+            if(flags&HIT_CRIT) concatstring(d->obit, "with a \fs\fzgrcritical\fS hit ");
             if(style&FRAG_SPREE1)
             {
                 concatstring(d->obit, " in total \fs\fzcgcarnage\fS");
@@ -909,6 +910,7 @@ namespace game
         {
             vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
             int debris = clamp(max(damage,5)/5, 1, 15), amt = int((rnd(debris)+debris+1)*debrisscale);
+            if(d->obliterated) amt *= 3;
             loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].living ? PRJ_GIBS : PRJ_DEBRIS, rnd(debrisfade)+debrisfade, 0, rnd(500)+1, rnd(50)+10);
         }
         if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
@@ -1081,7 +1083,7 @@ namespace game
         if(!name) name = d->name;
         static string cname;
         formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", teamtype[d->team].chat, name);
-        if(!name[0] || d->aitype >= 0 || (dupname && duplicatename(d, name)))
+        if(!name[0] || d->aitype == AI_BOT || (d->aitype < AI_START && dupname && duplicatename(d, name)))
         {
             defformatstring(s)(" [\fs%s%d\fS]", d->aitype >= 0 ? "\fc" : "\fw", d->clientnum);
             concatstring(cname, s);
@@ -1556,7 +1558,7 @@ namespace game
                         int state = d->weapstate[d->weapselect];
                         if(WEAP(d->weapselect, zooms))
                         {
-                            if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
+                            if(state == WEAP_S_PRIMARY || state == WEAP_S_SECONDARY || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
                                 state = WEAP_S_IDLE;
                         }
                         if(zooming && (!WEAP(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
@@ -1596,9 +1598,12 @@ namespace game
             flushdamagetones();
             if(player1->state == CS_DEAD || player1->state == CS_WAITING)
             {
-                if(player1->ragdoll) moveragdoll(player1, true);
-                else if(lastmillis-player1->lastpain <= 2000)
-                    physics::move(player1, 10, false);
+                if(!player1->obliterated)
+                {
+                    if(player1->ragdoll) moveragdoll(player1, true);
+                    else if(lastmillis-player1->lastpain <= 2000)
+                        physics::move(player1, 10, false);
+                }
             }
             else
             {
@@ -1835,7 +1840,7 @@ namespace game
 
     void renderplayer(gameent *d, bool third, float trans, float size, bool early = false)
     {
-        if(d->state == CS_SPECTATOR) return;
+        if(d->state == CS_SPECTATOR || d->obliterated) return;
         if(trans <= 0.f || (d == focus && (third ? thirdpersonmodel : firstpersonmodel) < 1))
         {
             if(d->state == CS_ALIVE && rendernormally && (early || d != focus))
@@ -1918,7 +1923,8 @@ namespace game
                         else animflags = weaptype[weap].anim|ANIM_LOOP;
                         break;
                     }
-                    case WEAP_S_SHOOT:
+                    case WEAP_S_PRIMARY:
+                    case WEAP_S_SECONDARY:
                     {
                         if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
                             showweap = false;
