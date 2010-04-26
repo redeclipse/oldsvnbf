@@ -138,3 +138,6 @@ extern volatile bool check_calclight_lmprog;
 
 extern void check_calclight_canceled();
 extern void fixlightmapnormals();
+
+extern int lightmapping;
+
