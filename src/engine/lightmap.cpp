@@ -384,7 +384,7 @@ static void updatelightmap(const surfaceinfo &surface)
             tex2.unlitx = lm2.unlitx;
             tex2.unlity = lm2.unlity;
             glGenTextures(1, &tex2.id);
-            createtexture(tex2.id, tex2.w, tex2.h, NULL, 3, false, GL_RGB);
+            createtexture(tex2.id, tex2.w, tex2.h, NULL, 3, 1, GL_RGB);
         }
     }
 
@@ -491,9 +491,9 @@ static uint generatelumel(lightmapworker *w, const float tolerance, uint lightma
 
 static bool lumelsample(const vec &sample, int aasample, int stride)
 {
-    if(sample.x >= ambientcolor[0]+1 || sample.y >= ambientcolor[1]+1 || sample.z >= ambientcolor[2]+1) return true;
+    if(sample.x >= int(ambientcolor[0])+1 || sample.y >= int(ambientcolor[1])+1 || sample.z >= int(ambientcolor[2])+1) return true;
 #define NCHECK(n) \
-    if((n).x >= ambientcolor[0]+1 || (n).y >= ambientcolor[1]+1 || (n).z >= ambientcolor[2]+1) \
+    if((n).x >= int(ambientcolor[0])+1 || (n).y >= int(ambientcolor[1])+1 || (n).z >= int(ambientcolor[2])+1) \
         return true;
     const vec *n = &sample - stride - aasample;
     NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
@@ -964,7 +964,7 @@ static int previewlightmapalpha(lightmapworker *w, float lpu, int y1, int y2, co
     return SURFACE_LIGHTMAP_BLEND;
 }
 
-void clearsurfaces(cube *c)
+static void clearsurfaces(cube *c)
 {
     loopi(8)
     {
@@ -991,7 +991,7 @@ VARF(0, lightcachesize, 4, 6, 12, clearlightcache());
 
 void findsunlights()
 {
-    sunlights.shrink(0);
+    sunlights.setsize(0);
     int numents = entities::lastent(ET_SUNLIGHT);
     const vector<extentity *> &ents = entities::getents();
     loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
@@ -999,29 +999,27 @@ void findsunlights()
 
 void clearlightcache(int e)
 {
-    if(e >= 0)
+    if(e < 0 || !entities::getents()[e]->attrs[0])
     {
-        const extentity &light = *entities::getents()[e];
-        if(light.type == ET_LIGHT && light.attrs[0])
+        for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
         {
-            int radius = light.attrs[0];
-            for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
-            for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
-            {
-                lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-                if(lce.x != x || lce.y != y) continue;
-                lce.x = -1;
-                lce.lights.setsize(0);
-            }
-            return;
+            lce->x = -1;
+            lce->lights.setsize(0);
         }
     }
-    for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
+    else
     {
-        lce->x = -1;
-        lce->lights.setsize(0);
+        const extentity &light = *entities::getents()[e];
+        int radius = light.attrs[0];
+        for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+        for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+        {
+            lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+            if(lce.x != x || lce.y != y) continue;
+            lce.x = -1;
+            lce.lights.setsize(0);
+        }
     }
-    if(e < 0) sunlights.shrink(0);
 }
 
 const vector<int> &checklightcache(int x, int y)
@@ -2154,6 +2152,7 @@ void calclight(int *quality)
     setupthreads();
     generatelightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
     cleanupthreads();
+    clearnormals();
     Uint32 end = SDL_GetTicks();
     if(timer) SDL_RemoveTimer(timer);
     uint total = 0, lumels = 0;
