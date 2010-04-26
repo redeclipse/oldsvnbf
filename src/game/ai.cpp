@@ -187,9 +187,9 @@ namespace ai
     void update()
     {
         if(game::intermission) { loopv(game::players) if(game::players[i] && game::players[i]->ai) game::players[i]->stopmoving(true); }
-        else // fixed rate logic done out-of-sequence at 4 frames per second
+        else // fixed rate logic done out-of-sequence at 1 frame per second for each ai
         {
-            if(!updateiteration && lastmillis-updatemillis > 250)
+            if(!updateiteration && lastmillis-updatemillis > 1000)
             {
                 avoid();
                 if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; aicampaign = 0; }

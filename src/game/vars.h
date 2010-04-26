@@ -25,11 +25,11 @@ GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
 GVAR(IDF_ADMIN, campaignplayers, 1, 4, MAXPLAYERS);
 
-GSVAR(IDF_ADMIN, allowmaps, "alphacampain bath bloodgrounds campaigntest chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower tranquility venus warground wishbone");
-GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli depot eight enigma ghost gladiator longestyard mist nova panic refuge rivals smouldering stone tower tranquility warground venus");
+GSVAR(IDF_ADMIN, allowmaps, "alphacampain bath bloodgrounds campaigntest chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower tranquility venus warground warp wishbone");
+GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli depot eight enigma ghost gladiator longestyard mist nova panic refuge rivals smouldering stone tower tranquility warground warp venus");
 GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight ghost gladiator longestyard mist nova panic refuge rivals tower tranquility warground venus");
-GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tranquility warground venus");
-GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tower tranquility warground venus");
+GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tranquility warground warp venus");
+GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tower tranquility warground warp venus");
 GSVAR(IDF_ADMIN, trialmaps, "testchamber");
 GSVAR(IDF_ADMIN, campaignmaps, "alphacampain wishbone campaigntest");
 
@@ -98,13 +98,13 @@ GVAR(0, stfpoints, 0, 1, INT_MAX-1); // points added to score
 GVAR(0, stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 GVAR(0, stfflags, 0, 3, 3); // 0 = init all (neutral), 1 = init neutral and team only, 2 = init team only, 3 = init all (team + neutral + converted)
 
-GVAR(0, botbalance, -1, -1, MAXAI/2); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
-GVAR(0, botminskill, 1, 65, 101);
-GVAR(0, botmaxskill, 1, 85, 101);
-GVAR(0, botlimit, 0, 16, MAXAI/2);
-
+GVAR(0, skillmin, 1, 65, 101);
+GVAR(0, skillmax, 1, 85, 101);
+GVAR(0, botbalance, -1, -1, INT_MAX-1); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
+GVAR(0, botlimit, 0, 16, INT_MAX-1);
 GVAR(0, enemyallowed, 0, 1, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too
-GVAR(0, enemydelay, 0, 10000, INT_MAX-1);
+GVAR(0, enemybalance, 0, 1, INT_MAX-1);
+GVAR(0, enemydelay, 0, 15000, INT_MAX-1);
 
 GFVAR(0, forcegravity, -1, -1, 1000);
 GFVAR(0, forceliquidspeed, -1, -1, 1);
