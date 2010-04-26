@@ -507,7 +507,8 @@ namespace hud
         int interval = lastmillis-game::focus->weaplast[weap];
         if(interval <= game::focus->weapwait[weap]) switch(game::focus->weapstate[weap])
         {
-            case WEAP_S_SHOOT:
+            case WEAP_S_PRIMARY:
+            case WEAP_S_SECONDARY:
             {
                 float amt = 1.f-clamp(float(interval)/float(game::focus->weapwait[weap]), 0.f, 1.f); fade *= amt;
                 if(showclips >= 2) size *= amt;
@@ -552,7 +553,8 @@ namespace hud
         glBindTexture(GL_TEXTURE_2D, t->id);
         if(interval <= game::focus->weapwait[weap]) switch(game::focus->weapstate[weap])
         {
-            case WEAP_S_SHOOT:
+            case WEAP_S_PRIMARY:
+            case WEAP_S_SECONDARY:
             {
                 int shot = game::focus->weapshot[weap] ? game::focus->weapshot[weap] : 1;
                 if(shot) switch(weapid)

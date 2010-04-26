@@ -174,10 +174,10 @@ enum
     ANIM_IMPULSE_FORWARD, ANIM_IMPULSE_BACKWARD, ANIM_IMPULSE_LEFT, ANIM_IMPULSE_RIGHT, ANIM_IMPULSE_DASH,
     ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_PICKUP, ANIM_WIN, ANIM_LOSE,
     ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
-    ANIM_MELEE, ANIM_MELEE_ATTACK,
-    ANIM_LIGHT, ANIM_LIGHT_SHOOT, ANIM_LIGHT_RELOAD,
-    ANIM_HEAVY, ANIM_HEAVY_SHOOT, ANIM_HEAVY_RELOAD,
-    ANIM_GRASP, ANIM_GRASP_THROW, ANIM_GRASP_RELOAD, ANIM_GRASP_POWER,
+    ANIM_MELEE, ANIM_MELEE_PRIMARY, ANIM_MELEE_SECONDARY,
+    ANIM_LIGHT, ANIM_LIGHT_PRIMARY, ANIM_LIGHT_SECONDARY, ANIM_LIGHT_RELOAD,
+    ANIM_HEAVY, ANIM_HEAVY_PRIMARY, ANIM_HEAVY_SECONDARY, ANIM_HEAVY_RELOAD,
+    ANIM_GRASP, ANIM_GRASP_PRIMARY, ANIM_GRASP_SECONDARY, ANIM_GRASP_RELOAD, ANIM_GRASP_POWER,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAX
 };
@@ -195,7 +195,7 @@ enum
 #define isweap(a)       (a >= 0 && a < WEAP_MAX)
 
 enum { WEAP_F_NONE = 0, WEAP_F_FORCED = 1<<0 };
-enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH, WEAP_S_PICKUP, WEAP_S_WAIT };
+enum { WEAP_S_IDLE = 0, WEAP_S_PRIMARY, WEAP_S_SECONDARY, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH, WEAP_S_PICKUP, WEAP_S_WAIT };
 
 enum
 {
@@ -926,10 +926,10 @@ const char * const animnames[] =
     "impulse forward", "impulse backward", "impulse left", "impulse right", "impulse dash",
     "sink", "edit", "lag", "switch", "pickup", "win", "lose",
     "crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-    "melee", "melee attack",
-    "light", "light shoot", "light reload",
-    "heavy", "heavy shoot", "heavy reload",
-    "grasp", "grasp throw", "grasp reload", "grasp power",
+    "melee", "melee primary", "melee secondary",
+    "light", "light primary", "light secondary", "light reload",
+    "heavy", "heavy primary", "heavy secondary", "heavy reload",
+    "grasp", "grasp primary", "grasp secondary", "grasp reload", "grasp power",
     "vwep", "shield", "powerup",
     ""
 };
@@ -945,7 +945,7 @@ struct gameent : dynent, gamestate
         lastpush, lastjump;
     float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
     vec head, torso, muzzle, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
-    bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right;
+    bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right, obliterated;
     string name, info, obit;
     vector<int> airnodes;
     vector<gameent *> dominating, dominated;
@@ -955,7 +955,7 @@ struct gameent : dynent, gamestate
         lastattacker(-1), lastpoints(0), quake(0), lastpush(0), lastjump(0),
         head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
         lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
-        conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
+        conopen(false), k_up(false), k_down(false), k_left(false), k_right(false), obliterated(false)
     {
         name[0] = info[0] = obit[0] = 0;
         weight = 200; // so we can control the 'gravity' feel
@@ -1000,6 +1000,7 @@ struct gameent : dynent, gamestate
         turnroll = turnyaw = 0;
         lastflag = respawned = suicided = lastnode = -1;
         obit[0] = 0;
+        obliterated = false;
     }
 
     void respawn(int millis, int heal)

@@ -516,7 +516,7 @@ namespace server
         if(!name) name = ci->name;
         static string cname;
         formatstring(cname)("\fs%s%s", teamtype[ci->team].chat, name);
-        if(!name[0] || ci->state.aitype >= 0 || (dupname && duplicatename(ci, name)))
+        if(!name[0] || ci->state.aitype == AI_BOT || (ci->state.aitype < AI_START && dupname && duplicatename(ci, name)))
         {
             defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype >= 0 ? "\fc" : "\fw", ci->clientnum);
             concatstring(cname, s);
@@ -2347,7 +2347,7 @@ namespace server
         {
             int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
                 pointvalue = smode ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
-            if(!m_insta(gamemode, mutators) && (realflags&HIT_EXPLODE || realdamage > m_health(gamemode, mutators)*3/2))
+            if(!m_insta(gamemode, mutators) && (realdamage >= (realflags&HIT_EXPLODE ? m_health(gamemode, mutators) : m_health(gamemode, mutators)*3/2)))
                 style = FRAG_OBLITERATE;
             actor->state.frags += fragvalue;
 
@@ -2550,7 +2550,7 @@ namespace server
             else return;
         }
         else takeammo(ci, weap, sub);
-        gs.setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), millis);
+        gs.setweapstate(weap, flags&HIT_ALT ? WEAP_S_SECONDARY : WEAP_S_PRIMARY, WEAP2(weap, adelay, flags&HIT_ALT), millis);
         sendf(-1, 1, "ri8ivx", N_SHOTFX, ci->clientnum, weap, flags, scale, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
         gs.weapshot[weap] = sub;
         gs.shotdamage += WEAP2(weap, damage, flags&HIT_ALT)*shots.length();
