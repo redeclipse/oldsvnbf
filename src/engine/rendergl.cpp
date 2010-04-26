@@ -971,16 +971,17 @@ void popscissor()
 
 static float findsurface(int fogmat, const vec &v, int &abovemat)
 {
-    ivec o(v);
+    ivec o(v), co;
+    int csize;
     do
     {
-        cube &c = lookupcube(o.x, o.y, o.z);
+        cube &c = lookupcube(o.x, o.y, o.z, 0, co, csize);
         if(!c.ext || (c.ext->material&MATF_VOLUME) != fogmat)
         {
             abovemat = c.ext && isliquid(c.ext->material&MATF_VOLUME) ? c.ext->material&MATF_VOLUME : MAT_AIR;
             return o.z;
         }
-        o.z = lu.z + lusize;
+        o.z = co.z + csize;
     }
     while(o.z < hdr.worldsize);
     abovemat = MAT_AIR;

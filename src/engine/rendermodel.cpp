@@ -362,6 +362,31 @@ ICOMMAND(0, mapmodelindex, "s", (char *a), {
 
 hashtable<const char *, model *> mdllookup;
 
+void preloadusedmapmodels(bool msg, bool bih)
+{
+    vector<int> mapmodels;
+    vector<extentity *> &ents = entities::getents();
+    loopv(ents)
+    {
+        extentity &e = *ents[i];
+        if(e.type == ET_MAPMODEL && e.attrs[0] >= 0)
+        {
+            if(mapmodels.find(e.attrs[0]) < 0) mapmodels.add(e.attrs[0]);
+        }
+    }
+
+    loopv(mapmodels)
+    {
+        loadprogress = float(i+1)/mapmodels.length();
+        int mmindex = mapmodels[i];
+        mapmodelinfo &mmi = getmminfo(mmindex);
+        if(!&mmi) conoutf("\frcould not find map model: %d", mmindex);
+        else if(!loadmodel(NULL, mmindex, true))
+            conoutf("\frcould not load model: %s", mmi.name);
+    }
+    loadprogress = 0;
+}
+
 model *loadmodel(const char *name, int i, bool msg)
 {
     if(!name)
@@ -376,6 +401,7 @@ model *loadmodel(const char *name, int i, bool msg)
     if(mm) m = *mm;
     else
     {
+        if(lightmapping > 1) return NULL;
         const char *cmds = NULL, *file = name;
         if(name && name[0]=='<')
         {
