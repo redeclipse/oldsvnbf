@@ -1156,9 +1156,9 @@ static int packlightmaps(bool force = false, bool needlock = true)
     for(; packidx < lightmaptasks[0].length(); packidx++)
     {
         lightmaptask &t = lightmaptasks[0][packidx];
-        if(!t.worker || !t.lightmaps) break;
-        lmprog = t.progress;
         if(!t.lightmaps || (packsem && SDL_SemTryWait(packsem) == SDL_MUTEX_TIMEDOUT)) break;
+        lmprog = t.progress;
+        if(t.lightmaps == (lightmapinfo *)-1) continue;
         for(lightmapinfo *l = t.lightmaps; l && l->c == t.c; l = l->next)
         {
             l->packed = true;
