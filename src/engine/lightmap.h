@@ -134,7 +134,7 @@ extern void freenormals(cube &c);
         } \
         if(calclight_canceled) { exit; } \
     }
-#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog) CHECK_CALCLIGHT_PROGRESS_LOCKED(exit, show_calclight_progress, , )
+#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog) CHECK_CALCLIGHT_PROGRESS_LOCKED(exit, show_calclight_lmprog, , )
 
 extern bool calclight_canceled;
 extern volatile bool check_calclight_lmprog;
