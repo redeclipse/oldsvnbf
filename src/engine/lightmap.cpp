@@ -1966,6 +1966,7 @@ void resetlightmaps()
     lightmaps.shrink(0);
     compressed.clear();
     clearlightcache();
+    while(lightmapworkers.length()) delete lightmapworkers.pop();
 }
 
 lightmapworker::lightmapworker()
@@ -2496,7 +2497,6 @@ bool brightengeom = false;
 
 void clearlights()
 {
-    while(lightmapworkers.length()) delete lightmapworkers.pop();
     clearlightcache();
     const vector<extentity *> &ents = entities::getents();
     loopv(ents)
