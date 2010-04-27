@@ -254,10 +254,10 @@ namespace weapons
         #define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
         int rays = WEAP2(weap, rays, secondary);
         if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
-        float accmod = 0;
-        if(physics::sprinting(d)) accmod = impulsespread;
-        else if(d->move || d->strafe) accmod = movespread;
-        if(d->physstate == PHYS_FALL && !d->onladder) accmod += jumpspread;
+        float accmod = d->physstate == PHYS_FALL && !d->onladder ? jumpspread : 0;
+        if(physics::sprinting(d)) accmod += impulsespread;
+        else if(d->move || d->strafe) accmod += movespread;
+        else if(!physics::iscrouching(d)) accmod += stillspread;
         loopi(rays)
         {
             vec dest;

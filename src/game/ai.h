@@ -20,7 +20,7 @@ aistyles aistyle[] = {
             false,      false,      false,      true,       false,                 "turret",   "weapons/smg/vwep",          "actors/player/gamma/vwep"
     },
     {
-        AI_ZOMBIE,      WEAP_MELEE,     50,     45,         3,              3,          3,          14,         150,
+        AI_ZOMBIE,      WEAP_MELEE,     50,     35,         3,              3,          3,          14,         150,
             true,       false,      true,       true,       true,                  "zombie",   "actors/z1",                 "actors/player/gamma/vwep"
     },
     {
@@ -28,11 +28,11 @@ aistyles aistyle[] = {
             true,       true,       true,       true,       true,                  "guard",    "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {
-        AI_HEAVY,       WEAP_SHOTGUN,   200,    30,         2,              3,          3,          14,         200,
+        AI_HEAVY,       WEAP_SHOTGUN,   200,    25,         2,              3,          3,          14,         200,
             true,       true,       true,       true,       true,                  "heavy",    "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {
-        AI_PYRO,        WEAP_FLAMER,    150,    50,         2,              3,          3,          14,         175,
+        AI_PYRO,        WEAP_FLAMER,    150,    45,         2,              3,          3,          14,         175,
             true,       true,       true,       true,       true,                  "pyro",     "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {
@@ -53,13 +53,15 @@ namespace entities { struct avoidset; };
 
 namespace ai
 {
-    const float CLOSEDIST       = float(enttype[WAYPOINT].radius);  // is close
-    const float JUMPMIN         = CLOSEDIST*0.25f;                  // decides to jump
-    const float JUMPMAX         = CLOSEDIST*1.5f;                   // max jump
-    const float SIGHTMIN        = CLOSEDIST*4.f;                    // minimum line of sight
-    const float SIGHTMAX        = CLOSEDIST*128.f;                  // maximum line of sight
-    const float VIEWMIN         = 90.f;                             // minimum field of view
-    const float VIEWMAX         = 180.f;                            // maximum field of view
+    const float CLOSEDIST       = 16.f;    // is close
+    const float JUMPMIN         = 4.f;     // decides to jump
+    const float JUMPMAX         = 24.f;    // max jump
+    const float SIGHTMIN        = 64.f;    // minimum line of sight
+    const float SIGHTMAX        = 1024.f;  // maximum line of sight
+    const float ALERTMIN        = 128.f;   // minimum alert distance
+    const float ALERTMAX        = 512.f;   // maximum alert distance
+    const float VIEWMIN         = 90.f;    // minimum field of view
+    const float VIEWMAX         = 180.f;   // maximum field of view
 
     // ai state information for the owner client
     enum
