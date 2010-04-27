@@ -383,6 +383,7 @@ void preloadusedmapmodels(bool msg, bool bih)
         if(!&mmi) conoutf("\frcould not find map model: %d", mmindex);
         else if(!loadmodel(NULL, mmindex, true))
             conoutf("\frcould not load model: %s", mmi.name);
+        else if(mmi.m && bih) mmi.m->preloadBIH();
     }
     loadprogress = 0;
 }
