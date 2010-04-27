@@ -1960,13 +1960,13 @@ void cleanuplightmaps()
     if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-void resetlightmaps()
+void resetlightmaps(bool fullclean = true)
 {
     cleanuplightmaps();
     lightmaps.shrink(0);
     compressed.clear();
     clearlightcache();
-    while(lightmapworkers.length()) delete lightmapworkers.pop();
+    if(fullclean) while(lightmapworkers.length()) delete lightmapworkers.pop();
 }
 
 lightmapworker::lightmapworker()
@@ -2140,7 +2140,7 @@ void calclight(int *quality)
     loadlayermasks();
     optimizeblendmap();
     if(lightthreads > 1) preloadusedmapmodels(false, true);
-    resetlightmaps();
+    resetlightmaps(false);
     clearsurfaces(worldroot);
     findsunlights();
     taskprogress = lmprog = 0;
