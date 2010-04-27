@@ -59,9 +59,9 @@ struct lightmaptask
 static vector<lightmapworker *> lightmapworkers;
 static vector<lightmaptask> lightmaptasks[2];
 static int packidx = 0, allocidx = 0;
-static bool fillingbuffer = false;
-static SDL_mutex *lightlock = NULL, *packlock = NULL, *alloclock = NULL, *bufferlock = NULL;
-static SDL_cond *fullcond = NULL;
+static SDL_mutex *lightlock = NULL, *packlock = NULL, *alloclock = NULL;
+static SDL_cond *fullcond = NULL, *emptycond = NULL;
+static SDL_sem *packsem = NULL;
 static vector<const extentity *> sunlights;
 
 int lightmapping = 0;
@@ -140,18 +140,8 @@ void show_calclight_lmprog()
     progress(bar1, "computing lightmaps..", bar1, text);//, lmprogtexticks ? lmprogtex : 0);
 }
 
-#define CHECK_PROGRESS(exit) \
-    if(check_calclight_lmprog) \
-    { \
-        if(!calclight_canceled) \
-        { \
-            if(bufferlock) SDL_UnlockMutex(bufferlock); \
-            show_calclight_lmprog(); \
-            check_calclight_canceled(); \
-            if(bufferlock) SDL_LockMutex(bufferlock); \
-        } \
-        if(calclight_canceled) exit; \
-    }
+#define CHECK_PROGRESS_LOCKED(exit, before, after) CHECK_CALCLIGHT_PROGRESS_LOCKED(exit, show_calclight_lmprog, before, after)
+#define CHECK_PROGRESS(exit) CHECK_PROGRESS_LOCKED(exit, , )
 
 bool PackNode::insert(ushort &tx, ushort &ty, ushort tw, ushort th)
 {
@@ -1168,7 +1158,7 @@ static int packlightmaps(bool force = false, bool needlock = true)
         lightmaptask &t = lightmaptasks[0][packidx];
         if(!t.worker || !t.lightmaps) break;
         lmprog = t.progress;
-        if(t.lightmaps == (lightmapinfo *)-1) continue;
+        if(!t.lightmaps || (packsem && SDL_SemTryWait(packsem) == SDL_MUTEX_TIMEDOUT)) break;
         for(lightmapinfo *l = t.lightmaps; l && l->c == t.c; l = l->next)
         {
             l->packed = true;
@@ -1648,62 +1638,59 @@ static void setupsurfaces(lightmapworker *w, lightmaptask &task)
     }
     if(numsurfs) newsurfaces(c, surfaces, numsurfs);
     task.lightmaps = w->curlightmaps ? w->curlightmaps : (lightmapinfo *)-1;
+    if(packsem) SDL_SemPost(packsem);
     if(numsurfs) packlightmaps();
 }
 
 int lightmapworker::work(void *data)
 {
     lightmapworker *w = (lightmapworker *)data;
+    SDL_LockMutex(alloclock);
     while(!w->doneworking)
     {
-        SDL_LockMutex(alloclock);
         if(allocidx < lightmaptasks[0].length())
         {
             lightmaptask &t = lightmaptasks[0][allocidx++];
             t.worker = w;
             SDL_UnlockMutex(alloclock);
             setupsurfaces(w, t);
+            SDL_LockMutex(alloclock);
         }
         else
         {
-            SDL_UnlockMutex(alloclock);
-            packlightmaps(true);
-            SDL_LockMutex(bufferlock);
-            if(lightmaptasks[1].empty())
-            {
-                if(fillingbuffer) SDL_CondWait(fullcond, bufferlock);
-                else w->doneworking = true;
-            }
-            else if(packidx >= lightmaptasks[0].length())
-            {
-                SDL_LockMutex(packlock);
-                lightmaptasks[0].setsize(0);
-                lightmaptasks[0].move(lightmaptasks[1]);
-                packidx = allocidx = 0;
-                SDL_CondBroadcast(fullcond);
-                SDL_UnlockMutex(packlock);
-            }
-            else if(allocidx >= lightmaptasks[0].length()) SDL_CondWait(fullcond, bufferlock);
-            SDL_UnlockMutex(bufferlock);
+            SDL_LockMutex(packlock);
+            packlightmaps(true, false);
+            if(packidx >= lightmaptasks[0].length()) SDL_CondSignal(emptycond);
+            SDL_UnlockMutex(packlock);
+            SDL_CondWait(fullcond, alloclock);
         }
     }
+    SDL_UnlockMutex(alloclock);
     return 0;
 }
 
-static bool processtasks()
+static bool processtasks(bool finish = false)
 {
-    while(lightmaptasks[1].length())
+    if(packlock) SDL_LockMutex(packlock);
+    while(finish || lightmaptasks[1].length())
     {
         if(packidx >= lightmaptasks[0].length())
         {
-            if(packlock) SDL_LockMutex(packlock);
+            if(lightmaptasks[1].empty()) break;
+            if(alloclock) SDL_LockMutex(alloclock);
             lightmaptasks[0].setsize(0);
             lightmaptasks[0].move(lightmaptasks[1]);
             packidx = allocidx = 0;
             if(fullcond) SDL_CondBroadcast(fullcond);
-            if(packlock) SDL_UnlockMutex(packlock);
+            if(alloclock) SDL_UnlockMutex(alloclock);
         }
-        if(lightmapping <= 1)
+        else if(lightmapping > 1)
+        {
+            SDL_CondWaitTimeout(emptycond, packlock, 250);
+            SDL_UnlockMutex(packlock);
+            CHECK_PROGRESS_LOCKED({ SDL_UnlockMutex(packlock); return false; }, SDL_UnlockMutex(packlock), SDL_LockMutex(packlock));
+        }
+        else
         {
             while(allocidx < lightmaptasks[0].length())
             {
@@ -1712,14 +1699,10 @@ static bool processtasks()
                 setupsurfaces(lightmapworkers[0], t);
                 CHECK_PROGRESS(return false);
             }
-            packlightmaps(true);
-        }
-        else
-        {
-            SDL_CondWaitTimeout(fullcond, bufferlock, 250);
-            CHECK_PROGRESS(return false);
+            packlightmaps(true, false);
         }
     }
+    if(packlock) SDL_UnlockMutex(packlock);
     return true;
 }
 
@@ -1761,7 +1744,6 @@ static void generatelightmaps(cube *c, int cx, int cy, int cz, int size)
                 t.usefaces = usefacemask;
                 t.c = &c[i];
                 t.lightmaps = NULL;
-                t.worker = NULL;
                 t.progress = taskprogress;
                 if(lightmaptasks[1].length() >= MAXLIGHTMAPTASKS && !processtasks()) return;
             }
@@ -2039,7 +2021,7 @@ bool setlightmapquality(int quality)
 
 VAR(IDF_PERSIST, lightthreads, 1, 1, 16);
 
-#define ALLOCLOCK(name, init) { if(lightmapping > 1) name = init(); if(!name) lightmapping = 1; }
+#define ALLOCLOCK(name, init, val) { if(lightmapping > 1) name = init(val); if(!name) lightmapping = 1; }
 #define FREELOCK(name, destroy) { if(name) { destroy(name); name = NULL; } }
 
 static void cleanuplocks()
@@ -2047,23 +2029,24 @@ static void cleanuplocks()
     FREELOCK(lightlock, SDL_DestroyMutex);
     FREELOCK(packlock, SDL_DestroyMutex);
     FREELOCK(alloclock, SDL_DestroyMutex);
-    FREELOCK(bufferlock, SDL_DestroyMutex);
     FREELOCK(fullcond, SDL_DestroyCond);
+    FREELOCK(emptycond, SDL_DestroyCond);
+    FREELOCK(packsem, SDL_DestroySemaphore);
 }
 
 static void setupthreads()
 {
     loopi(2) lightmaptasks[i].setsize(0);
     packidx = allocidx = 0;
-    fillingbuffer = true;
     lightmapping = lightthreads;
     if(lightmapping > 1)
     {
-        ALLOCLOCK(lightlock, SDL_CreateMutex);
-        ALLOCLOCK(packlock, SDL_CreateMutex);
-        ALLOCLOCK(alloclock, SDL_CreateMutex);
-        ALLOCLOCK(bufferlock, SDL_CreateMutex);
-        ALLOCLOCK(fullcond, SDL_CreateCond);
+        ALLOCLOCK(lightlock, SDL_CreateMutex, );
+        ALLOCLOCK(packlock, SDL_CreateMutex, );
+        ALLOCLOCK(alloclock, SDL_CreateMutex, );
+        ALLOCLOCK(fullcond, SDL_CreateCond, );
+        ALLOCLOCK(emptycond, SDL_CreateCond, );
+        ALLOCLOCK(packsem, SDL_CreateSemaphore, 0);
     }
     while(lightmapworkers.length() < lightmapping) lightmapworkers.add(new lightmapworker);
     loopi(lightmapping)
@@ -2075,56 +2058,33 @@ static void setupthreads()
         lightmapping = i >= 1 ? max(i, 2) : 1;
         break;
     }
-    if(lightmapping > 1) SDL_LockMutex(bufferlock);
-    else cleanuplocks();
+    if(lightmapping <= 1) cleanuplocks();
 }
 
 static void cleanupthreads()
 {
-    if(lightmaptasks[1].length()) processtasks();
-    fillingbuffer = false;
+    processtasks(true);
     if(lightmapping > 1)
     {
-        SDL_UnlockMutex(bufferlock);
-        while(!calclight_canceled && packidx < lightmaptasks[0].length())
-        {
-            SDL_Delay(250);
-            if(check_calclight_lmprog)
-            {
-                show_calclight_lmprog();
-                check_calclight_canceled();
-            }
-        }
-        SDL_LockMutex(packlock);
+        SDL_LockMutex(alloclock);
+        loopv(lightmapworkers) lightmapworkers[i]->doneworking = true;
         SDL_CondBroadcast(fullcond);
+        SDL_UnlockMutex(alloclock);
+        SDL_LockMutex(packlock);
         loopv(lightmapworkers)
         {
             lightmapworker *w = lightmapworkers[i];
             if(w->needspace && w->spacecond) SDL_CondSignal(w->spacecond);
-            w->doneworking = true;
         }
         SDL_UnlockMutex(packlock);
-        loopv(lightmapworkers) 
+        loopv(lightmapworkers)
         {
             lightmapworker *w = lightmapworkers[i];
             if(w->thread) SDL_WaitThread(w->thread, NULL);
         }
     }
-    else
-    {
-        while(allocidx < lightmaptasks[0].length())
-        {
-            lightmaptask &t = lightmaptasks[0][allocidx++];
-            t.worker = lightmapworkers[0];
-            setupsurfaces(lightmapworkers[0], t);
-            CHECK_PROGRESS(break);
-        }
-        packlightmaps(true);
-    }
     loopv(lightmapworkers) lightmapworkers[i]->cleanupthread();
-
     cleanuplocks();
-
     lightmapping = 0;
 }
 
