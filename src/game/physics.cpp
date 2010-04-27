@@ -747,7 +747,7 @@ namespace physics
                             if(off > 180) off -= 360;
                             else if(off < -180) off += 360;
                             d->turnmillis = PHYSMILLIS;
-                            d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
+                            d->turnside = off < 0 ? -1 : 1;
                             d->turnyaw = off;
                             d->turnroll = 0;
                             playsound(S_IMPULSE, d->o, d);

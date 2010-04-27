@@ -835,7 +835,7 @@ namespace game
                 if(!override) anc = S_V_HEADSHOT;
             }
 
-            if(flags&HIT_CRIT) concatstring(d->obit, "with a \fs\fzgrcritical\fS hit ");
+            if(flags&HIT_CRIT) concatstring(d->obit, " with a \fs\fzgrcritical\fS hit");
             if(style&FRAG_SPREE1)
             {
                 concatstring(d->obit, " in total \fs\fzcgcarnage\fS");
