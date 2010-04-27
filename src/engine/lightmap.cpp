@@ -1960,7 +1960,7 @@ void cleanuplightmaps()
     if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-void resetlightmaps(bool fullclean = true)
+void resetlightmaps(bool fullclean)
 {
     cleanuplightmaps();
     lightmaps.shrink(0);
