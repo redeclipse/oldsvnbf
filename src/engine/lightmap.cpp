@@ -999,26 +999,28 @@ void findsunlights()
 
 void clearlightcache(int e)
 {
-    if(e < 0 || !entities::getents()[e]->attrs[0])
-    {
-        for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
-        {
-            lce->x = -1;
-            lce->lights.setsize(0);
-        }
-    }
-    else
+    if(e >= 0)
     {
         const extentity &light = *entities::getents()[e];
-        int radius = light.attrs[0];
-        for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
-        for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+        if(light.type == ET_LIGHT && light.attrs[0])
         {
-            lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-            if(lce.x != x || lce.y != y) continue;
-            lce.x = -1;
-            lce.lights.setsize(0);
+            int radius = light.attrs[0];
+            for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+            for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+            {
+                lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+                if(lce.x != x || lce.y != y) continue;
+                lce.x = -1;
+                lce.lights.setsize(0);
+            }
+            return;
         }
+    }
+    else sunlights.setsize(0);
+    for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
+    {
+        lce->x = -1;
+        lce->lights.setsize(0);
     }
 }
 
