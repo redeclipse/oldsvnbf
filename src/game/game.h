@@ -246,13 +246,13 @@ enum
 //  ext1    ext2    cook1   cook2   radl1   radl2   brn1    brn2    rlds    zooms   fa1     fa2     allowed
 //  tpr1    tpr2    elas1   elas2   rflt1   rflt2   relt1   relt2   wfrc1   wfrc2   wght1   wght2   rads1   rads2   kpsh1   kpsh2   hpsh1       hpsh2       mdst1   mdst2   psz1    psz2    plen1   plen2   freq    push    cmult   cdist   guided1 guided2
 WEAPON(melee,
-    1,      1,      0,      0,      500,        500,        0,      50,     70,     250,        250,        0,      0,      100,        100,        0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
+    1,      1,      0,      0,      500,        500,        0,      40,     60,     250,        250,        0,      0,      100,        100,        0,      0,      1,      1,      1,      1,      1,      1,      1,      1,      1,      1,
     IMPACT_PLAYER,                                                          IMPACT_PLAYER,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    250,        250,        25,     25,     1,      2,      0,      0,      0,      1,      2,      0,      0,      0
+    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    200,        200,        25,     25,     1,      2,      0,      0,      0,      2,      2,      0,      0,      0
 );
 WEAPON(pistol,
-    10,     10,     1,      1,      100,        200,        1000,   40,     40,     2500,       2500,       0,      0,      2000,       2000,       0,      0,      0,      0,      1,      1,      5,      5,      1,      1,      100,    100,
+    10,     10,     1,      1,      100,        200,        1000,   40,     40,     2500,       2500,       0,      0,      2000,       2000,       0,      0,      0,      0,      1,      1,      2,      2,      1,      1,      100,    100,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      0,      1,      1,
     0,      0,      0,      0,      0,      0,      0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      2,      2,      150,        150,        300,    300,    1,      1,      10,     10,     1,      2,      4,      16,     0,      0
@@ -264,31 +264,31 @@ WEAPON(tractor,
     1,      1,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      1,      1,      -1,      -1,    250,        -250,       25,     25,     32,     32,     0,      0,      1,      1,      0,      0,      0,      0
 );
 WEAPON(shotgun,
-    1,      8,      1,      2,      400,        600,        800,    15,     15,     2500,       2500,       0,      0,      1000,       750,        0,      0,      0,      0,      15,     30,     25,     20,     1,      1,      10,     10,
+    1,      8,      1,      2,      400,        600,        800,    15,     15,     2500,       2500,       0,      0,      1000,       750,        0,      0,      0,      0,      15,     30,     20,     20,     1,      1,      10,     10,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      0,      0,      1,
     0.25f,  0.35f,  0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,      15,     15,     20,         40,         150,    300,    1,      1,      50,     50,     1,      2,      2,      6,      0,      0
 );
 WEAPON(smg,
-    40,     40,     1,      5,      75,         250,        1500,   20,     20,     5000,       3000,       0,      0,      750,        500,        0,      0,      0,      0,      1,      5,      10,     15,     4,      1,      20,     20,
+    40,     40,     1,      5,      75,         250,        1500,   20,     20,     5000,       3000,       0,      0,      750,        500,        0,      0,      0,      0,      1,      5,      5,      5,      4,      1,      20,     20,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      1,      1,      1,
     0.35f,  0.35f,  0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      0.5f,   3,      100,        120,        300,    400,    1,      1,      40,     40,     1,      2,      3,      12,     0,      0
 );
 WEAPON(flamer,
-    50,     50,     1,      10,     100,        500,        2000,   5,      10,     150,        200,        0,      500,    500,        1000,       0,      50,     20,     28,     1,      5,      40,     20,     0,      0,      10,     10,
+    50,     50,     1,      10,     100,        500,        2000,   5,      10,     150,        200,        0,      500,    500,        1000,       0,      50,     20,     28,     1,      5,      10,     5,      0,      0,      10,     10,
     BOUNCE_GEOM|IMPACT_PLAYER,                                              IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
     2,      2,      0,      1,      1,      1,      1,      1,      1,      0,      1,      0,      1,
     0,      0,      0.15f,  0,      45,     0,      0.95f,  0.5f,   1,      1,      -300,   50,     1,      1,      0.25f,      1,      20,     40,         40,     80,     20,     28,     0,      5,      2,      2,      5,      12,     0,      0
 );
 WEAPON(plasma,
-    20,     20,     1,      20,     500,        1000,       2000,   25,     10,     1500,       35,         0,      2000,   500,        5000,       0,      100,    18,     48,     1,      1,      10,     5,      0,      0,      50,     10,
+    20,     20,     1,      20,     500,        1000,       2000,   25,     10,     1500,       35,         0,      2000,   500,        5000,       0,      100,    18,     48,     1,      1,      5,      1,      0,      0,      50,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
     1,      0,      0,      1,      1,      1,      0,      0,      1,      0,      1,      0,      1,
     0.5f,   0.75f,  0,      0,      0,      0,      0.125f, 0.175f, 1,      1,      0,      0,      4,      2,      3,      6,      50,     -50,            200,    50,     18,     44,     0,      0,      2,      2,      3,      12,     0,      0
 );
 WEAPON(rifle,
-    5,      5,      1,      1,      750,        750,        2000,   50,     100,    5000,       50000,      0,      0,      5000,       5000,       0,      0,      20,     0,      1,      1,      5,      1,      0,      0,      40,     40,
+    5,      5,      1,      1,      750,        750,        2000,   50,     100,    5000,       50000,      0,      0,      5000,       5000,       0,      0,      20,     0,      1,      1,      1,      0,      0,      0,      40,     40,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      1,
     0,      0,      0,      0,      0,      0,      1,      0,      2,      2,      0,      0,      1,      1,      5,      0,      100,        200,        600,    0,      1,      2,      256,    512,    1,      2,      2,      12,     0,      0
@@ -398,7 +398,7 @@ extern weaptypes weaptype[];
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
 #define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAP2(a, explode, b)*e*(m_insta(c, d) || m_arena(c, d) ? GAME(limitedscale) : GAME(explodescale)))) : 0)
-#define WEAPSP(a,b,c,d,e)       ((!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b) : 0)+(int(ceilf(min(WEAP2(a, spread, b), 1)*e))))
+#define WEAPSP(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b)+(int(ceilf(min(WEAP2(a, spread, b), 1)*e))) : 0)
 
 WEAPDEF(int, add); WEAPDEF(int, max); WEAPDEF2(int, sub); WEAPDEF2(int, adelay); WEAPDEF(int, rdelay); WEAPDEF2(int, damage); WEAPDEF2(int, speed); WEAPDEF2(int, power);
 WEAPDEF2(int, time); WEAPDEF2(int, pdelay); WEAPDEF2(int, explode); WEAPDEF2(int, rays); WEAPDEF2(int, spread); WEAPDEF2(int, zdiv); WEAPDEF2(int, aiskew); WEAPDEF2(int, collide);

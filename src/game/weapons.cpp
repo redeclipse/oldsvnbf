@@ -257,7 +257,7 @@ namespace weapons
         float accmod = d->physstate == PHYS_FALL && !d->onladder ? jumpspread : 0;
         if(physics::sprinting(d)) accmod += impulsespread;
         else if(d->move || d->strafe) accmod += movespread;
-        else if(!physics::iscrouching(d)) accmod += stillspread;
+        else if(!physics::iscrouching(d) && (weap != WEAP_RIFLE || !secondary)) accmod += stillspread;
         loopi(rays)
         {
             vec dest;
