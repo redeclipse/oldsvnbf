@@ -403,156 +403,17 @@ model *loadmodel(const char *name, int i, bool msg)
     else
     {
         if(lightmapping > 1) return NULL;
-        const char *cmds = NULL, *file = name;
-        if(name && name[0]=='<')
-        {
-            cmds = name;
-            file = strrchr(name, '>');
-            if(!file) file = name;
-            else file++;
-        }
         if(msg)
         {
-            defformatstring(str)("models/%s", file);
+            defformatstring(str)("models/%s", name);
             progress(loadprogress, str);
         }
         loopi(NUMMODELTYPES)
         {
-            m = modeltypes[i](file);
+            m = modeltypes[i](name);
             if(!m) continue;
             loadingmodel = m;
-            if(m->load())
-            {
-                while(cmds)
-                {
-                    #define PARSEMDLCOMMANDS(cmds) \
-                        const char *cmd = NULL, *end = NULL, *arg[4] = { NULL, NULL, NULL, NULL }; \
-                        cmd = &cmds[1]; \
-                        end = strchr(cmd, '>'); \
-                        if(!end) break; \
-                        cmds = strchr(cmd, '<'); \
-                        size_t len = strcspn(cmd, ":,><"); \
-                        loopi(4) \
-                        { \
-                            arg[i] = strchr(i ? arg[i-1] : cmd, i ? ',' : ':'); \
-                            if(!arg[i] || arg[i] >= end) arg[i] = ""; \
-                            else arg[i]++; \
-                        }
-                    PARSEMDLCOMMANDS(cmds);
-                    if(!strncmp(cmd, "cullface", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlcullface(&n);
-                    }
-                    else if(!strncmp(cmd, "collide", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlcollide(&n);
-                    }
-                    else if(!strncmp(cmd, "ellipsecollide", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlellipsecollide(&n);
-                    }
-                    else if(!strncmp(cmd, "spec", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 100;
-                        mdlspec(&n);
-                    }
-                    else if(!strncmp(cmd, "ambient", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 30;
-                        mdlambient(&n);
-                    }
-                    else if(!strncmp(cmd, "alphatest", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.9f;
-                        mdlalphatest(&n);
-                    }
-                    else if(!strncmp(cmd, "alphablend", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlalphablend(&n);
-                    }
-                    else if(!strncmp(cmd, "alphadepth", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlalphadepth(&n);
-                    }
-                    else if(!strncmp(cmd, "depthoffset", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 0;
-                        mdldepthoffset(&n);
-                    }
-                    else if(!strncmp(cmd, "glow", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 300;
-                        mdlglow(&n);
-                    }
-                    else if(!strncmp(cmd, "glare", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 1.f, o = arg[1] ? atof(arg[1]) : 1.f;
-                        mdlglare(&n, &o);
-                    }
-                    else if(!strncmp(cmd, "envmap", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 1.f, o = arg[1] ? atof(arg[1]) : 0.f;
-                        mdlenvmap(&n, &o, arg[2]);
-                    }
-                    else if(!strncmp(cmd, "fullbright", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f;
-                        mdlfullbright(&n);
-                    }
-                    else if(!strncmp(cmd, "shader", len)) mdlshader(arg[0]);
-                    else if(!strncmp(cmd, "spin", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f;
-                        mdlspin(&n);
-                    }
-                    else if(!strncmp(cmd, "scale", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 100;
-                        mdlscale(&n);
-                    }
-                    else if(!strncmp(cmd, "trans", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f, o = arg[0] ? atof(arg[0]) : 0.f, p = arg[0] ? atof(arg[0]) : 0.f;
-                        mdltrans(&n, &o, &p);
-                    }
-                    else if(!strncmp(cmd, "yaw", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f;
-                        mdlyaw(&n);
-                    }
-                    else if(!strncmp(cmd, "pitch", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f;
-                        mdlpitch(&n);
-                    }
-                    else if(!strncmp(cmd, "roll", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f;
-                        mdlroll(&n);
-                    }
-                    else if(!strncmp(cmd, "shadow", len))
-                    {
-                        int n = arg[0] ? atoi(arg[0]) : 1;
-                        mdlshadow(&n);
-                    }
-                    else if(!strncmp(cmd, "bb", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f, o = arg[0] ? atof(arg[0]) : 0.f, p = arg[0] ? atof(arg[0]) : 0.9f;
-                        mdlbb(&n, &o, &p);
-                    }
-                    else if(!strncmp(cmd, "extendbb", len))
-                    {
-                        float n = arg[0] ? atof(arg[0]) : 0.f, o = arg[0] ? atof(arg[0]) : 0.f, p = arg[0] ? atof(arg[0]) : 0.9f;
-                        mdlextendbb(&n, &o, &p);
-                    }
-                }
-                break;
-            }
+            if(m->load()) break;
             DELETEP(m);
         }
         loadingmodel = NULL;
