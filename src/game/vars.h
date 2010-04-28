@@ -125,10 +125,10 @@ GVAR(0, impulsecost, 0, 500, INT_MAX-1); // cost of impulse jump
 GVAR(0, impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
 GFVAR(0, impulseregen, 0, 10, 1000); // impulse regen multiplier
 
-GFVAR(0, stillspread, 0, 2.5f, 1000);
-GFVAR(0, movespread, 0, 5, 1000);
-GFVAR(0, jumpspread, 0, 10, 1000);
-GFVAR(0, impulsespread, 0, 25, 1000);
+GFVAR(0, stillspread, 0, 1.5f, 1000);
+GFVAR(0, movespread, 0, 3.f, 1000);
+GFVAR(0, jumpspread, 0, 3.f, 1000);
+GFVAR(0, impulsespread, 0, 6.f, 1000);
 
 GFVAR(0, explodescale, 0, 1, 1000);
 GFVAR(0, limitedscale, 0, 0.5f, 1000);
