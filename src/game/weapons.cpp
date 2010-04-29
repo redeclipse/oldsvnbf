@@ -282,8 +282,11 @@ namespace weapons
         {
             if(d == game::player1 && game::zooming && game::inzoomswitch()) secondary = true;
         }
-        else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
-        else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
+        else if(d->weapselect != WEAP_MELEE || (d->physstate == PHYS_FALL && !d->onladder))
+        {
+            if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
+            else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
+        }
         if(doshot(d, targ, d->weapselect, pressed, secondary, force))
         {
             if(!WEAP2(d->weapselect, fullauto, secondary))
