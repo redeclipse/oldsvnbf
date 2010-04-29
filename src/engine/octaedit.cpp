@@ -1575,7 +1575,7 @@ static VSlot *remapvslot(int index, const VSlot &ds)
 {
     loopv(remappedvslots) if(remappedvslots[i].index == index) return remappedvslots[i].vslot;
     VSlot &vs = lookupvslot(index, false);
-    if(vs.index < 0) return NULL;
+    if(vs.index < 0 || vs.index == DEFAULT_SKY) return NULL;
     VSlot *edit = NULL;
     if(usevdelta)
     {
@@ -1726,6 +1726,17 @@ void vlayer(int *n)
     mpeditvslot(ds, allfaces, sel, true);
 }
 COMMAND(0, vlayer, "i");
+
+void valpha(float *front, float *back)
+{
+    if(noedit() || multiplayer()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_ALPHA;
+    ds.alphafront = clamp(*front, 0.0f, 1.0f);
+    ds.alphaback = clamp(*back, 0.0f, 1.0f);
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(0, valpha, "ff");
 
 void vreset()
 {

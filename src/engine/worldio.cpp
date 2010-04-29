@@ -292,6 +292,11 @@ void savevslot(stream *f, VSlot &vs, int prev)
         f->putlil<float>(vs.scrollT);
     }
     if(vs.changed & (1<<VSLOT_LAYER)) f->putlil<int>(vs.layer);
+    if(vs.changed & (1<<VSLOT_ALPHA))
+    {
+        f->putlil<float>(vs.alphafront);
+        f->putlil<float>(vs.alphaback);
+    }
 }
 
 void savevslots(stream *f, int numvslots)
@@ -358,6 +363,11 @@ void loadvslot(stream *f, VSlot &vs, int changed)
         vs.scrollT = f->getlil<float>();
     }
     if(vs.changed & (1<<VSLOT_LAYER)) vs.layer = f->getlil<int>();
+    if(vs.changed & (1<<VSLOT_ALPHA))
+    {
+        vs.alphafront = f->getlil<float>();
+        vs.alphaback = f->getlil<float>();
+    }
 }
 
 void loadvslots(stream *f, int numvslots)
@@ -424,7 +434,10 @@ void saveslotconfig(stream *h, Slot &s, int index)
             if(s.layermaskname) h->printf("texlayer %d \"%s\" %d %f\n", s.variants->layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
             else h->printf("texlayer %d\n", s.variants->layer);
         }
+        if(s.variants->alphafront != DEFAULT_ALPHA_FRONT || s.variants->alphaback != DEFAULT_ALPHA_BACK)
+            h->printf("texalpha %f %f\n", s.variants->alphafront, s.variants->alphaback);
         if(s.autograss) h->printf("autograss \"%s\"\n", s.autograss);
+        if(s.ffenv) h->printf("texffenv 1\n");
     }
     h->printf("\n");
 }
@@ -472,16 +485,17 @@ void save_config(char *mname)
     if(verbose >= 2) conoutf("\fasaved %d aliases", aliases);
 
     // texture slots
-    loopi(MAT_EDIT)
+    int nummats = sizeof(materialslots)/sizeof(materialslots[0]);
+    loopi(nummats)
     {
-        if(verbose) progress(float(i)/float(MAT_EDIT), "saving material slots...");
+        if(verbose) progress(float(i)/float(nummats), "saving material slots...");
 
         if(i == MAT_WATER || i == MAT_LAVA)
         {
             saveslotconfig(h, materialslots[i], -i);
         }
     }
-    if(verbose) conoutf("\fasaved %d material slots", MAT_EDIT);
+    if(verbose) conoutf("\fasaved %d material slots", nummats);
 
     loopv(slots)
     {

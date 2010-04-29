@@ -504,8 +504,12 @@ enum
     VSLOT_OFFSET,
     VSLOT_SCROLL,
     VSLOT_LAYER,
+    VSLOT_ALPHA,
     VSLOT_NUM
 };
+
+#define DEFAULT_ALPHA_FRONT 0.5f
+#define DEFAULT_ALPHA_BACK 0.0f
 
 struct VSlot
 {
@@ -518,11 +522,13 @@ struct VSlot
     int rotation, xoffset, yoffset;
     float scrollS, scrollT;
     int layer;
+    float alphafront, alphaback;
     vec glowcolor, pulseglowcolor;
     float pulseglowspeed;
-    bool skippedglow;
+    vec envscale;
+    int skipped;
 
-    VSlot(Slot *slot = NULL, int index = -1) : slot(slot), next(NULL), index(index), changed(0), skippedglow(false)
+    VSlot(Slot *slot = NULL, int index = -1) : slot(slot), next(NULL), index(index), changed(0), skipped(0)
     {
         reset();
         if(slot) addvariant(slot);
@@ -538,9 +544,12 @@ struct VSlot
         rotation = xoffset = yoffset = 0;
         scrollS = scrollT = 0;
         layer = 0;
+        alphafront = DEFAULT_ALPHA_FRONT;
+        alphaback = DEFAULT_ALPHA_BACK;
         glowcolor = vec(1, 1, 1);
         pulseglowcolor = vec(0, 0, 0);
         pulseglowspeed = 0;
+        envscale = vec(0, 0, 0);
     }
 
     void cleanup()
@@ -572,6 +581,7 @@ struct Slot
     int layermaskmode;
     float layermaskscale;
     ImageData *layermask;
+    bool ffenv;
 
     Slot(int index = -1) : index(index), variants(NULL), autograss(NULL), layermaskname(NULL), layermask(NULL) { reset(); }
 
@@ -589,6 +599,7 @@ struct Slot
         layermaskmode = 0;
         layermaskscale = 1;
         if(layermask) DELETEP(layermask);
+        ffenv = false;
     }
 
     void cleanup()

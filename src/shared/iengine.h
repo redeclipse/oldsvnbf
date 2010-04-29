@@ -582,5 +582,5 @@ enum // cube empty-space materials
 
     MAT_DEATH  = 1 << MATF_FLAG_SHIFT,  // force player suicide
     MAT_LADDER = 2 << MATF_FLAG_SHIFT,  // acts as ladder (move up/down)
-    MAT_EDIT   = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
+    MAT_ALPHA  = 4 << MATF_FLAG_SHIFT   // alpha blended
 };
