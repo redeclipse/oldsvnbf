@@ -657,13 +657,13 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
     glDisable(GL_FOG);
     glFogi(GL_FOG_MODE, GL_LINEAR);
-    glHint(GL_FOG_HINT, GL_NICEST);
+    //glHint(GL_FOG_HINT, GL_NICEST);
     GLfloat fogcolor[4] = { 0, 0, 0, 0 };
     glFogfv(GL_FOG_COLOR, fogcolor);
 
 
     glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    //glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
     glFrontFace(GL_CW);
     glCullFace(GL_BACK);
@@ -776,6 +776,18 @@ void vectocursor(vec &v, float &x, float &y, float &z)
     x = screenpos.x/screenpos.w*0.5f + 0.5f;
     y = 0.5f - screenpos.y/screenpos.w*0.5f;
     z = screenpos.z/screenpos.w*0.5f + 0.5f;
+}
+
+glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
+
+void readmatrices()
+{
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix.v);
+    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix.v);
+
+    mvpmatrix.mul(projmatrix, mvmatrix);
+    invmvmatrix.invert(mvmatrix);
+    invmvpmatrix.invert(mvpmatrix);
 }
 
 FVAR(0, nearplane, 1e-3f, 0.54f, 1e3f);
@@ -967,6 +979,15 @@ void popscissor()
     if(scissoring>1) glScissor(oldscissor[0], oldscissor[1], oldscissor[2], oldscissor[3]);
     else if(scissoring) glDisable(GL_SCISSOR_TEST);
     scissoring = 0;
+}
+
+glmatrixf envmatrix;
+
+void setenvmatrix()
+{
+    envmatrix = fogging ? fogmatrix : mvmatrix;
+    if(reflecting) envmatrix.reflectz(reflectz);
+    envmatrix.transpose();
 }
 
 static float findsurface(int fogmat, const vec &v, int &abovemat)
@@ -1217,6 +1238,7 @@ void drawglare()
 
     renderwater();
     rendermaterials();
+    renderalphageom();
     renderparticles();
 
     if(game::thirdpersonview()) renderavatar(false);
@@ -1296,6 +1318,8 @@ void drawreflection(float z, bool refract)
         glFrontFace(GL_CCW);
     }
 
+    setenvmatrix();
+
     if(reflectclip && z>=0)
     {
         float zoffset = reflectclip/4.0f, zclip;
@@ -1346,6 +1370,7 @@ void drawreflection(float z, bool refract)
 
     if(refracting) rendergrass();
     rendermaterials();
+    renderalphageom(fogging);
     renderparticles();
 
     if(game::thirdpersonview() || reflecting) renderavatar(false);
@@ -1373,6 +1398,8 @@ void drawreflection(float z, bool refract)
     reflectz = 1e16f;
     refracting = 0;
     reflecting = fading = fogging = false;
+
+    setenvmatrix();
 }
 
 bool envmapping = false;
@@ -1424,6 +1451,8 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
     project(fovy, aspect, farplane, flipx, flipy, swapxy);
     transplayer();
+    readmatrices();
+    setenvmatrix();
 
     glEnable(GL_FOG);
     glEnable(GL_CULL_FACE);
@@ -1457,6 +1486,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     if(level > 1) renderdecals();
 
     rendermapmodels();
+    renderalphageom();
 
     if(level) rendergame();
     if(level > 1)
@@ -1619,6 +1649,7 @@ void drawminimap()
         rendermapmodels();
         renderwater();
         rendermaterials();
+        renderalphageom();
     }
 
     glFrontFace(GL_CW);
@@ -1732,18 +1763,6 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
     else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
     else SLICESPOKE(-1, ey/ex)
     glEnd();
-}
-
-glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
-
-void readmatrices()
-{
-    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix.v);
-    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix.v);
-
-    mvpmatrix.mul(projmatrix, mvmatrix);
-    invmvmatrix.invert(mvmatrix);
-    invmvpmatrix.invert(mvpmatrix);
 }
 
 float cursorx = 0.5f, cursory = 0.5f;
@@ -2013,6 +2032,8 @@ void drawview(int targtype)
     rendergrass();
 
     rendermaterials();
+    renderalphageom();
+
     renderparticles(true);
 
     if(game::thirdpersonview()) renderavatar(false);
@@ -2122,6 +2143,7 @@ void gl_drawframe(int w, int h)
         transplayer();
         readmatrices();
         game::project(w, h);
+        setenvmatrix();
 
         int copies = 0, oldcurtime = curtime;
         loopi(VP_MAX) if(needsview(viewtype, i))
