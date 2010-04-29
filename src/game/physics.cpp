@@ -769,13 +769,14 @@ namespace physics
                             d->turnyaw = off;
                             d->turnroll = (impulseroll*d->turnside)-d->roll;
                             found = true;
+                            break;
                         }
-                        else if(side == d->turnside)
+                        if(side == d->turnside)
                         {
                             m = rft; // re-project and override
                             found = true;
+                            break;
                         }
-                        break;
                     }
                 }
             }
