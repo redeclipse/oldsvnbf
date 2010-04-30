@@ -2120,6 +2120,7 @@ struct texturegui : guicb
                 g.pushlist();
                 loop(w, thumbwidth)
                 {
+                    extern VSlot dummyvslot;
                     int ti = (i*thumbheight+h)*thumbwidth+w;
                     if(ti<slots.length())
                     {
@@ -2128,7 +2129,11 @@ struct texturegui : guicb
                         if(slot.sts.empty()) continue;
                         else if(!slot.loaded && !slot.thumbnail)
                         {
-                            if(totalmillis-lastthumbnail<thumbtime) continue;
+                            if(totalmillis-lastthumbnail<thumbtime) 
+                            {
+                                g.texture(dummyvslot, thumbsize, false); //create an empty space
+                                continue;
+                            }
                             loadthumbnail(slot);
                             lastthumbnail = totalmillis;
                         }
@@ -2137,7 +2142,6 @@ struct texturegui : guicb
                     }
                     else
                     {
-                        extern VSlot dummyvslot;
                         g.texture(dummyvslot, thumbsize, false); //create an empty space
                     }
                 }
