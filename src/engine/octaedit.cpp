@@ -1738,6 +1738,16 @@ void valpha(float *front, float *back)
 }
 COMMAND(0, valpha, "ff");
 
+void vcolor(float *r, float *g, float *b)
+{
+    if(noedit() || multiplayer()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_COLOR;
+    ds.colorscale = vec(clamp(*r, 0.0f, 1.0f), clamp(*g, 0.0f, 1.0f), clamp(*b, 0.0f, 1.0f));
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(0, vcolor, "fff");
+
 void vreset()
 {
     if(noedit() || multiplayer()) return;
@@ -2113,31 +2123,22 @@ struct texturegui : guicb
                     int ti = (i*thumbheight+h)*thumbwidth+w;
                     if(ti<slots.length())
                     {
-                        Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
                         Slot &slot = lookupslot(ti, false);
                         VSlot &vslot = *slot.variants;
                         if(slot.sts.empty()) continue;
-                        else if(slot.loaded)
+                        else if(!slot.loaded && !slot.thumbnail)
                         {
-                            tex = slot.sts[0].t;
-                            if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-                            if(vslot.layer)
-                            {
-                                VSlot &layer = lookupvslot(vslot.layer);
-                                if(!layer.slot->sts.empty()) layertex = layer.slot->sts[0].t;
-                            }
+                            if(totalmillis-lastthumbnail<thumbtime) continue;
+                            loadthumbnail(slot);
+                            lastthumbnail = totalmillis;
                         }
-                        else if(slot.thumbnail) tex = slot.thumbnail;
-                        else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
-                        if((slot.loaded || slot.thumbnail ? g.texture(tex, thumbsize, vslot.rotation, vslot.xoffset, vslot.yoffset, glowtex, vslot.glowcolor, layertex) : g.texture(tex, thumbsize))&GUI_UP)
-                        {
+                        if(g.texture(vslot, thumbsize, true)&GUI_UP && (slot.loaded || slot.thumbnail!=notexture))
                             nextslot = vslot.index;
-                        }
                     }
                     else
                     {
-                        Texture *tex = textureload("textures/blank", 3);
-                        g.image(tex, thumbsize, false); // empty space
+                        extern VSlot dummyvslot;
+                        g.texture(dummyvslot, thumbsize, false); //create an empty space
                     }
                 }
                 g.poplist();
@@ -2148,27 +2149,12 @@ struct texturegui : guicb
                 Slot &slot = lookupslot(menutex, false);
                 VSlot &vslot = *slot.variants;
                 g.pushlist();
-                Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
-                if(!slot.sts.empty())
+                if(slot.sts.length() && !slot.loaded && !slot.thumbnail && totalmillis-lastthumbnail<thumbtime)
                 {
-                    if(slot.loaded)
-                    {
-                        tex = slot.sts[0].t;
-                        if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-                        if(vslot.layer)
-                        {
-                            VSlot &layer = lookupvslot(vslot.layer);
-                            if(!layer.slot->sts.empty()) layertex = layer.slot->sts[0].t;
-                        }
-                    }
-                    else if(slot.thumbnail) tex = slot.thumbnail;
-                    else
-                    {
-                        tex = loadthumbnail(slot);
-                        lastthumbnail = lastmillis;
-                    }
+                    loadthumbnail(slot);
+                    lastthumbnail = totalmillis;
                 }
-                if(g.texture(tex, thumbpreview, vslot.rotation, vslot.xoffset, vslot.yoffset, glowtex, vslot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
+                if(g.texture(vslot, thumbpreview, true)&GUI_UP) { edittex(menutex); menuon = false; }
                 g.space(2);
                 g.pushlist();
 
@@ -2335,7 +2321,7 @@ struct texturegui : guicb
             else
             {
                 g.pushlist();
-                g.texture(textureload("textures/nothumb", 3), 7);
+                g.image(textureload("textures/nothumb", 3), 7, true);
                 g.space(2);
                 g.pushlist();
                 g.title("no texture selected", 0x666666);
@@ -2401,7 +2387,7 @@ void render_texture_panel(int w, int h)
             int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
             if(ti>=0 && ti<texmru.length())
             {
-                VSlot &vslot = lookupvslot(texmru[ti]);
+                VSlot &vslot = lookupvslot(texmru[ti]), *layer = NULL;
                 Slot &slot = *vslot.slot;
                 Texture *tex = slot.sts.empty() ? notexture : slot.sts[0].t, *glowtex = NULL, *layertex = NULL;
                 if(slot.texmask&(1<<TEX_GLOW))
@@ -2410,8 +2396,8 @@ void render_texture_panel(int w, int h)
                 }
                 if(vslot.layer)
                 {
-                    VSlot &layer = lookupvslot(vslot.layer);
-                    layertex = layer.slot->sts.empty() ? notexture : layer.slot->sts[0].t;
+                    layer = &lookupvslot(vslot.layer);
+                    layertex = layer->slot->sts.empty() ? notexture : layer->slot->sts[0].t;
                 }
                 float sx = min(1.0f, tex->xs/(float)tex->ys), sy = min(1.0f, tex->ys/(float)tex->xs);
                 int x = width-s-50, r = s;
@@ -2427,7 +2413,7 @@ void render_texture_panel(int w, int h)
                 glBindTexture(GL_TEXTURE_2D, tex->id);
                 loopj(glowtex ? 3 : 2)
                 {
-                    if(j < 2) glColor4f(j, j, j, texpaneltimer/1000.0f);
+                    if(j < 2) glColor4f(j*vslot.colorscale.x, j*vslot.colorscale.y, j*vslot.colorscale.z, texpaneltimer/1000.0f);
                     else
                     {
                         glBindTexture(GL_TEXTURE_2D, glowtex->id);
@@ -2443,6 +2429,7 @@ void render_texture_panel(int w, int h)
                     xtraverts += 4;
                     if(j==1 && layertex)
                     {
+                        glColor4f(layer->colorscale.x, layer->colorscale.y, layer->colorscale.z, texpaneltimer/1000.0f);
                         glBindTexture(GL_TEXTURE_2D, layertex->id);
                         glBegin(GL_TRIANGLE_FAN);
                         glTexCoord2fv(tc[0]); glVertex2f(x+r/2, y+r/2);

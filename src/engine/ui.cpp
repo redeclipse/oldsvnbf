@@ -136,7 +136,7 @@ struct gui : guient
                 if(mouseaction[0]&GUI_UP) { b; } \
                 hit = true; \
             } \
-            icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], !hit); \
+            icon_(textureload(a, 3, true, false), false, x, y, guibound[1], !hit); \
             y += guibound[1]*3/2; \
         }
         uibtn("textures/exit", cleargui(1));
@@ -248,16 +248,16 @@ struct gui : guient
         autotab();
         if(scale == 0) scale = 1;
         int size = (int)(scale*2*guibound[1])-guishadow;
-        if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+guishadow, size+guishadow));
+        if(visible()) icon_(t, overlaid, curx, cury, size, ishit(size+guishadow, size+guishadow));
         return layout(size+guishadow, size+guishadow);
     }
 
-    int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor, Texture *layertex)
+    int texture(VSlot &vslot, float scale, bool overlaid)
     {
         autotab();
-        if(scale == 0) scale = 1;
+        if(scale==0) scale = 1;
         int size = (int)(scale*2*guibound[1])-guishadow;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
+        if(visible()) previewslot(vslot, overlaid, curx, cury, size, ishit(size+guishadow, size+guishadow));
         return layout(size+guishadow, size+guishadow);
     }
 
@@ -549,33 +549,16 @@ struct gui : guient
         defaultshader->set();
     }
 
-    void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL)
+    void icon_(Texture *t, bool overlaid, int x, int y, int size, bool hit)
     {
-        float xr = 0, yr = 0, xs = 0, ys = 0, xt = 0, yt = 0;
-        if(tiled)
-        {
-            static Shader *rgbonlyshader = NULL;
-            if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
-            rgbonlyshader->set();
-        }
+        float xs = 0, ys = 0;
         if(t)
         {
-            if(tiled)
-            {
-                xt = min(1.0f, t->xs/(float)t->ys),
-                yt = min(1.0f, t->ys/(float)t->xs);
-                xr = t->xs; yr = t->ys;
-                xs = size; ys = size;
-            }
-            else
-            {
-                xt = 1.0f; yt = 1.0f;
-                float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
-                xr = t->xs; yr = t->ys;
-                xs = t->xs*scale; ys = t->ys*scale;
-                x += int((size-xs)/2);
-                y += int((size-ys)/2);
-            }
+            float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
+            xs = t->xs*scale;
+            ys = t->ys*scale;
+            x += int((size-xs)/2);
+            y += int((size-ys)/2);
             glBindTexture(GL_TEXTURE_2D, t->id);
         }
         else
@@ -583,9 +566,7 @@ struct gui : guient
             extern GLuint lmprogtex;
             if(lmprogtex)
             {
-                xt = 1.0f; yt = 1.0f;
                 float scale = float(size)/256; //scale and preserve aspect ratio
-                xr = 256; yr = 256;
                 xs = 256*scale; ys = 256*scale;
                 x += int((size-xs)/2);
                 y += int((size-ys)/2);
@@ -594,9 +575,7 @@ struct gui : guient
             else
             {
                 if((t = textureload(mapname, 3, true, false)) == notexture) t = textureload("textures/emblem", 3, true, false);
-                xt = 1.0f; yt = 1.0f;
                 float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
-                xr = t->xs; yr = t->ys;
                 xs = t->xs*scale; ys = t->ys*scale;
                 x += int((size-xs)/2);
                 y += int((size-ys)/2);
@@ -613,16 +592,77 @@ struct gui : guient
             xs -= 2*xpad;
             ys -= 2*ypad;
         }
-        float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-        if(rotate)
-        {
-            if((rotate&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
-            if(rotate >= 2 && rotate <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
-            if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
-        }
-        loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
-        vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
+        static const float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+        const vec &color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
         glColor3fv(color.v);
+        glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
+        glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
+        glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
+        glTexCoord2fv(tc[3]); glVertex2f(xi,    yi+ys);
+        glEnd();
+        if(overlaid)
+        {
+            if(!overlaytex) overlaytex = textureload(guioverlaytex, 3, true, false);
+            const vec &ocolor = hit ? vec(1, 1, 1) : vec(0.5f, 0.5f, 0.5f);
+            glColor3fv(ocolor.v);
+            glBindTexture(GL_TEXTURE_2D, overlaytex->id);
+            glBegin(GL_TRIANGLE_FAN);
+            rect_(xi - xpad, yi - ypad, xs + 2*xpad, ys + 2*ypad, 0);
+            glEnd();
+        }
+    }
+
+    void previewslot(VSlot &vslot, bool overlaid, int x, int y, int size, bool hit)
+    {
+        Slot &slot = *vslot.slot;
+        if(slot.sts.empty()) return;
+        VSlot *layer = NULL;
+        Texture *t = NULL, *glowtex = NULL, *layertex = NULL;
+        if(slot.loaded)
+        {
+            t = slot.sts[0].t;
+            if(t == notexture) return;
+            Slot &slot = *vslot.slot;
+            if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+            if(vslot.layer)
+            {
+                layer = &lookupvslot(vslot.layer);
+                if(!layer->slot->sts.empty()) layertex = layer->slot->sts[0].t;
+            }
+        }
+        else if(slot.thumbnail && slot.thumbnail != notexture) t = slot.thumbnail;
+        else return;
+        float xt = min(1.0f, t->xs/(float)t->ys), yt = min(1.0f, t->ys/(float)t->xs), xs = size, ys = size;
+        float xi = x, yi = y, xpad = 0, ypad = 0;
+        if(overlaid)
+        {
+            xpad = xs/32;
+            ypad = ys/32;
+            xi += xpad;
+            yi += ypad;
+            xs -= 2*xpad;
+            ys -= 2*ypad;
+        }
+        static Shader *rgbonlyshader = NULL;
+        if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
+        rgbonlyshader->set();
+        const vec &color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
+        float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+        if(slot.loaded)
+        {
+            int xoff = vslot.xoffset, yoff = vslot.yoffset;
+            if(vslot.rotation)
+            {
+                if((vslot.rotation&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
+                if(vslot.rotation >= 2 && vslot.rotation <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
+                if(vslot.rotation <= 2 || vslot.rotation == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
+            }
+            loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/t->xs; tc[k][1] = tc[k][1]/yt - float(yoff)/t->ys; }
+            glColor3f(color.x*vslot.colorscale.x, color.y*vslot.colorscale.y, color.z*vslot.colorscale.z);
+        }
+        else glColor3fv(color.v);
+        glBindTexture(GL_TEXTURE_2D, t->id);
         glBegin(GL_TRIANGLE_FAN);
         glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
         glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
@@ -633,34 +673,34 @@ struct gui : guient
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             glBindTexture(GL_TEXTURE_2D, glowtex->id);
-            if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
-            else glColor3fv(glowcolor.v);
+            if(hit || overlaid) glColor3f(color.x*vslot.glowcolor.x, color.y*vslot.glowcolor.y, color.z*vslot.glowcolor.z);
+            else glColor3fv(vslot.glowcolor.v);
             glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
-            glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
-            glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
-            glTexCoord2fv(tc[3]); glVertex2f(xi,    yi+ys);
+            glTexCoord2fv(tc[0]); glVertex2f(x,    y);
+            glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
+            glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(x,    y+ys);
             glEnd();
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         if(layertex)
         {
             glBindTexture(GL_TEXTURE_2D, layertex->id);
-            glColor3fv(color.v);
+            glColor3f(color.x*layer->colorscale.x, color.y*layer->colorscale.y, color.z*layer->colorscale.z);
             glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2fv(tc[0]); glVertex2f(xi+xs/2, yi+ys/2);
-            glTexCoord2fv(tc[1]); glVertex2f(xi+xs,   yi+ys/2);
-            glTexCoord2fv(tc[2]); glVertex2f(xi+xs,   yi+ys);
-            glTexCoord2fv(tc[3]); glVertex2f(xi+xs/2, yi+ys);
+            glTexCoord2fv(tc[0]); glVertex2f(x+xs/2, y+ys/2);
+            glTexCoord2fv(tc[1]); glVertex2f(x+xs,   y+ys/2);
+            glTexCoord2fv(tc[2]); glVertex2f(x+xs,   y+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(x+xs/2, y+ys);
             glEnd();
         }
 
-        if(tiled) defaultshader->set();
+        defaultshader->set();
         if(overlaid)
         {
             if(!overlaytex) overlaytex = textureload(guioverlaytex, 3, true, false);
-            color = hit ? vec(1, 1, 1) : vec(0.5f, 0.5f, 0.5f);
-            glColor3fv(color.v);
+            const vec &ocolor = hit ? vec(1, 1, 1) : vec(0.5f, 0.5f, 0.5f);
+            glColor3fv(ocolor.v);
             glBindTexture(GL_TEXTURE_2D, overlaytex->id);
             glBegin(GL_TRIANGLE_FAN);
             rect_(xi - xpad, yi - ypad, xs + 2*xpad, ys + 2*ypad, 0);
@@ -725,7 +765,7 @@ struct gui : guient
             if(icon)
             {
                 defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
-                icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
+                icon_(textureload(tname, 3, true, false), false, x, cury, guibound[1], faded && clickable && !hit);
                 x += guibound[1];
             }
             if(icon && text) x += 8;

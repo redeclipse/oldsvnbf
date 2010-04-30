@@ -455,6 +455,7 @@ enum { GUI_DOWN = 1<<0, GUI_UP = 1<<1, GUI_ALT = 1<<2, GUI_PRESSED = 1<<3, GUI_R
 enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct Texture;
+struct VSlot;
 struct guient
 {
     virtual ~guient() {}
@@ -484,7 +485,7 @@ struct guient
     virtual void tab(const char *name = NULL, int color = 0xFFFFFF) = 0;
     virtual int title(const char *text, int color = 0xFFFFFF, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
-    virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
+    virtual int texture(VSlot &vslot, float scale, bool overlaid = true) = 0;
     virtual int slice(Texture *t, float scale, float start = 0, float end = 1, const char *text = NULL) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false, bool scroll = false) = 0;
     virtual void separator() = 0;
