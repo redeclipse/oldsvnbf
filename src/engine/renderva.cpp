@@ -1486,7 +1486,6 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot, VSlot &vslot)
             Slot::Tex &t = slot.sts[j];
             Texture *u = slot.sts[j].t;
             if(t.type==TEX_DIFFUSE || t.combined>=0) continue;
-            if(t.type==TEX_DIFFUSE && blankgeom) u = blanktexture;
             if(t.type==TEX_ENVMAP)
             {
                 if(envmaptmu>=0 && cur.textures[envmaptmu]!=u->id)
