@@ -24,3 +24,5 @@ freely, subject to the following restrictions:
     distribution.
 
 The license covers the Blood Frontier map "Flak Panic", its architecture, layout, and general concept. Blood Frontier, the Cube Engine 2, as well as any textures, sounds, and models used in the map are not covered by this license and may have individual copyrights and distribution restrictions (see individual readmes).
+
+Contact: favorito.bloodfrontier@gmail.com
