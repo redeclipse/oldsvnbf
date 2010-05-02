@@ -2394,14 +2394,13 @@ void rendergeom(float causticspass, bool fogpass)
     if(!cur.colormask) { cur.colormask = true; glColorMask(COLORMASK, GL_TRUE); }
     if(!cur.depthmask) { cur.depthmask = true; glDepthMask(GL_TRUE); }
 
+    bool multipassing = false;
+
     if(doOQ)
     {
         setupTMUs(cur, causticspass, fogpass);
-        if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION)
-        {
-            pushshadowmap();
-        }
-        glDepthFunc(GL_LEQUAL);
+        if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION) pushshadowmap();
+        if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         cur.vbuf = 0;
         cur.texgendim = -1;
 
@@ -2458,13 +2457,11 @@ void rendergeom(float causticspass, bool fogpass)
             renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
         }
         if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
-
-        if(foggedvas.empty()) glDepthFunc(GL_LESS);
     }
 
     if(blends && (renderpath!=R_FIXEDFUNCTION || !nolights))
     {
-        if(foggedvas.empty()) glDepthFunc(GL_LEQUAL);
+        if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2501,22 +2498,17 @@ void rendergeom(float causticspass, bool fogpass)
         glColorMask(COLORMASK, GL_TRUE);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
-        if(foggedvas.empty()) glDepthFunc(GL_LESS);
     }
 
     if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION) popshadowmap();
 
     cleanupTMUs(cur, causticspass, fogpass);
 
-    if(foggedvas.length())
-    {
-        renderfoggedvas(cur, !doOQ);
-        if(doOQ) glDepthFunc(GL_LESS);
-    }
+    if(foggedvas.length()) renderfoggedvas(cur, !doOQ);
 
     if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skipped) || (causticspass>=1 && cur.causticstmu<0) || (shadowmap && shadowmapcasters) || hasdynlights : causticspass)
     {
-        glDepthFunc(GL_LEQUAL);
+        if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
 
@@ -2632,9 +2624,10 @@ void rendergeom(float causticspass, bool fogpass)
 
         glFogfv(GL_FOG_COLOR, cur.fogcolor);
         glDisable(GL_BLEND);
-        glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
     }
+
+    if(multipassing) glDepthFunc(GL_LESS);
 
     if(hasVBO)
     {
