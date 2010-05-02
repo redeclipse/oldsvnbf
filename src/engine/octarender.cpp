@@ -1199,7 +1199,7 @@ vtxarray *newva(int x, int y, int z, int size)
     vc.setupdata(va);
 
     wverts += va->verts;
-    wtris  += va->tris;
+    wtris  += va->tris + va->blends + va->alphabacktris + va->alphafronttris;
     allocva++;
     valist.add(va);
 
@@ -1209,7 +1209,7 @@ vtxarray *newva(int x, int y, int z, int size)
 void destroyva(vtxarray *va, bool reparent)
 {
     wverts -= va->verts;
-    wtris -= va->tris;
+    wtris -= va->tris + va->blends + va->alphabacktris + va->alphafronttris;
     allocva--;
     valist.removeobj(va);
     if(!va->parent) varoot.removeobj(va);
