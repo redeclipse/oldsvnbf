@@ -463,7 +463,8 @@ namespace entities
 
     static inline bool allowuse(gameent *d, int n, bool force = true)
     {
-        if(!d || !d->ai || force || (!d->ai->hasprevnode(n) && !ai::obs.find(n, d))) switch(ents[n]->attrs[0])
+        if(!d) return ents[n]->attrs[0] == WP_COMMON;
+        else if(!d->ai || force || (!d->ai->hasprevnode(n) && !ai::obs.find(n, d))) switch(ents[n]->attrs[0])
         {
             case WP_COMMON: return true; break;
             case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
