@@ -529,7 +529,7 @@ namespace entities
         return -1;
     }
 
-    void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
+    void findentswithin(int type, const vec &pos, float mindist, float maxdist, gameent *d, vector<int> &results)
     {
         float mindist2 = mindist*mindist, maxdist2 = maxdist*maxdist;
 
@@ -542,7 +542,7 @@ namespace entities
             int n = curnode->childindex(branch); \
             if(ents.inrange(n)) { \
                 extentity &e = *ents[n]; \
-                if(e.type == type && allowuse(NULL, n)) \
+                if(e.type == type && allowuse(d, n)) \
                 { \
                     float dist = e.o.squaredist(pos); \
                     if(dist > mindist2 && dist < maxdist2) results.add(n); \

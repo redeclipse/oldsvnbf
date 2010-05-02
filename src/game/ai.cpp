@@ -250,7 +250,7 @@ namespace ai
     {
         static vector<int> candidates;
         candidates.setsize(0);
-        entities::findentswithin(WAYPOINT, pos, guard, wander, candidates);
+        entities::findentswithin(WAYPOINT, pos, guard, wander, d, candidates);
 
         while(!candidates.empty())
         {
