@@ -242,7 +242,7 @@ namespace ai
 
     bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, int retries)
     {
-        int node = entities::closestent(WAYPOINT, pos, SIGHTMIN, true, d);
+        int node = entities::closestent(WAYPOINT, pos, SIGHTMIN, true);
         return makeroute(d, b, node, changed, retries);
     }
 
@@ -250,7 +250,7 @@ namespace ai
     {
         static vector<int> candidates;
         candidates.setsize(0);
-        entities::findentswithin(WAYPOINT, pos, guard, wander, d, candidates);
+        entities::findentswithin(WAYPOINT, pos, guard, wander, candidates);
 
         while(!candidates.empty())
         {

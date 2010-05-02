@@ -234,13 +234,7 @@ namespace entities
             }
             case WAYPOINT:
             {
-                if(full)
-                {
-                    const char *wpnames[WP_MAX+1] = { "common", "player", "enemy", "linked", "camera", "" }, *wpsnames[WP_S_MAX+1] = { "", "defend", "project", "" };
-                    addentinfo(wpnames[attr[0] < 0 || attr[0] >= WP_MAX ? WP_MAX : attr[0]]);
-                    addentinfo(wpsnames[attr[1] < 0 || attr[1] >= WP_S_MAX ? WP_S_MAX : attr[1]]);
-                    if(attr[4]&WP_F_CROUCH) addentinfo("crouch");
-                }
+                if(full && attr[0]&WP_F_CROUCH) addentinfo("crouch");
                 break;
             }
             default: break;
@@ -461,21 +455,7 @@ namespace entities
 
     vector<entcachenode *> entcachestack;
 
-    static inline bool allowuse(gameent *d, int n, bool force = true)
-    {
-        if(!d) return ents[n]->attrs[0] == WP_COMMON;
-        else if(!d->ai || force || (!d->ai->hasprevnode(n) && !ai::obs.find(n, d))) switch(ents[n]->attrs[0])
-        {
-            case WP_COMMON: return true; break;
-            case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
-            case WP_ENEMY: if(d->aitype >= AI_START) return true; break;
-            case WP_LINKED: if(ents.inrange(d->aientity) && ents[n]->links.find(d->aientity) >= 0) return true; break;
-            case WP_CAMERA: if(d == game::player1 && d->state == CS_SPECTATOR) return true; break;
-        }
-        return false;
-    }
-
-    int closestent(int type, const vec &pos, float mindist, bool links, gameent *d)
+    int closestent(int type, const vec &pos, float mindist, bool links)
     {
         if(entcachedepth<0) buildentcache();
 
@@ -485,7 +465,7 @@ namespace entities
             int n = curnode->childindex(branch); \
             if(ents.inrange(n)) { \
                 extentity &e = *ents[n]; \
-                if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force!=0)) \
+                if(e.type == type && (!links || !e.links.empty())) \
                 { \
                     float dist = e.o.squaredist(pos); \
                     if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
@@ -530,7 +510,7 @@ namespace entities
         return -1;
     }
 
-    void findentswithin(int type, const vec &pos, float mindist, float maxdist, gameent *d, vector<int> &results)
+    void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
     {
         float mindist2 = mindist*mindist, maxdist2 = maxdist*maxdist;
 
@@ -543,7 +523,7 @@ namespace entities
             int n = curnode->childindex(branch); \
             if(ents.inrange(n)) { \
                 extentity &e = *ents[n]; \
-                if(e.type == type && allowuse(d, n)) \
+                if(e.type == type) \
                 { \
                     float dist = e.o.squaredist(pos); \
                     if(dist > mindist2 && dist < maxdist2) results.add(n); \
@@ -1133,12 +1113,6 @@ namespace entities
                 while(e.attrs[2] < -90) e.attrs[2] += 180;
                 while(e.attrs[2] > 90) e.attrs[2] -= 180;
                 break;
-            case WAYPOINT:
-                while(e.attrs[0] < 0) e.attrs[0] += WP_MAX;
-                while(e.attrs[0] >= WP_MAX) e.attrs[0] -= WP_MAX;
-                while(e.attrs[1] < 0) e.attrs[1] += WP_S_MAX;
-                while(e.attrs[1] >= WP_S_MAX) e.attrs[1] -= WP_S_MAX;
-                break;
             default:
                 break;
         }
@@ -1423,7 +1397,7 @@ namespace entities
             loopv(links)
             {
                 int link = links[i];
-                if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()) && allowuse(d, link, !check))
+                if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()))
                 {
                     linkq &n = nodes[link];
                     float curscore = prevscore + ents[link]->o.dist(ent.o);
@@ -1487,7 +1461,7 @@ namespace entities
             vec v = d->feetpos();
             bool clip = clipped(v, true), shoulddrop = waypointdrop() && !d->ai && !clip;
             float dist = float(shoulddrop ? enttype[WAYPOINT].radius : (d->ai ? ai::JUMPMIN : ai::SIGHTMIN));
-            int curnode = closestent(WAYPOINT, v, dist, false, d), prevnode = d->lastnode;
+            int curnode = closestent(WAYPOINT, v, dist, false), prevnode = d->lastnode;
 
             if(!ents.inrange(curnode) && shoulddrop)
             {
@@ -1495,7 +1469,8 @@ namespace entities
                 if(physics::iscrouching(d)) cmds |= WP_F_CROUCH;
                 curnode = ents.length();
                 static vector<int> wpattrs;
-                if(wpattrs.empty()) { wpattrs.add(int(WP_COMMON)); wpattrs.add(int(WP_S_NONE)); wpattrs.add(0); wpattrs.add(0); wpattrs.add(cmds); }
+                wpattrs.setsize(0);
+                wpattrs.add(cmds);
                 newentity(v, WAYPOINT, wpattrs);
                 if(d->physstate == PHYS_FALL) d->airnodes.add(curnode);
             }
@@ -1507,7 +1482,7 @@ namespace entities
                 d->lastnode = curnode;
             }
             else if(!ents.inrange(d->lastnode) || ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
-                d->lastnode = closestent(WAYPOINT, v, ai::SIGHTMAX, false, d);
+                d->lastnode = closestent(WAYPOINT, v, ai::SIGHTMAX, false);
 
             if(clip) cleanairnodes = 2;
             else if(d->physstate != PHYS_FALL) cleanairnodes = 1;
@@ -1966,12 +1941,10 @@ namespace entities
                     else if(mtype == MAP_BFGZ)
                     {
                         if(gver <= 90) e.attrs[0] = e.attrs[1] = e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
-                        else if(gver <= 159)
+                        if(gver <= 165 && gver >= 160)
                         {
-                            e.attrs[4] = e.attrs[0];
-                            e.attrs[0] = WP_COMMON;
-                            e.attrs[1] = WP_S_NONE;
-                            e.attrs[2] = e.attrs[3] = 0;
+                            e.attrs[0] = e.attrs[4]; // for a short while we had a mess of attributes
+                            e.attrs[1] = e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
                         }
                     }
                     break;
@@ -2168,8 +2141,7 @@ namespace entities
                 }
                 case WAYPOINT:
                 {
-                    int s = e.attrs[4] ? e.attrs[4] : enttype[e.type].radius;
-                    part_radius(e.o, vec(s, s, s), 1, 1, 1, 0x008888);
+                    part_radius(e.o, vec(enttype[e.type].radius, enttype[e.type].radius, enttype[e.type].radius), 1, 1, 1, 0x008888);
                     break;
                 }
                 default:

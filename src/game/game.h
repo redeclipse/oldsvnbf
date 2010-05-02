@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID              "bfa"
-#define GAMEVERSION         165
+#define GAMEVERSION         166
 #define DEMO_VERSION        GAMEVERSION
 
 #define MAXAI 256
@@ -43,8 +43,6 @@ enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
 #define TRIGSTATE(a,b)  (b%2 ? !a : a)
 
 enum { CP_RESPAWN = 0, CP_START, CP_FINISH, CP_LAST, CP_MAX };
-enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_CAMERA, WP_MAX };
-enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
 struct enttypes
 {
@@ -158,10 +156,10 @@ enttypes enttype[] = {
             false,              "camera",       { "type",   "mindist",  "maxdist" }
     },
     {
-        WAYPOINT,       0,          1,      16,     EU_NONE,    5,
+        WAYPOINT,       0,          1,      16,     EU_NONE,    1,
             (1<<WAYPOINT),
             0,
-            true,               "waypoint",     { "type",   "state",    "id",       "radius",   "flags" }
+            true,               "waypoint",     { "flags" }
     }
 };
 #else
@@ -1383,7 +1381,7 @@ namespace entities
     extern vector<extentity *> ents;
     extern int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
     extern void clearentcache();
-    extern int closestent(int type, const vec &pos, float mindist, bool links = false, gameent *d = NULL);
+    extern int closestent(int type, const vec &pos, float mindist, bool links = false);
     extern bool collateitems(gameent *d, vector<actitem> &actitems);
     extern void checkitems(gameent *d);
     extern void putitems(packetbuf &p);
@@ -1495,7 +1493,7 @@ namespace entities
                             vec above(pos.x, pos.y, ob.above);
                             if(above.z-d->o.z >= ai::JUMPMAX)
                                 return -1; // too much scotty
-                            int node = closestent(WAYPOINT, above, ai::SIGHTMIN, true, d);
+                            int node = closestent(WAYPOINT, above, ai::SIGHTMIN, true);
                             if(ents.inrange(node) && node != n)
                             { // try to reroute above their head?
                                 if(!find(node, d))
@@ -1526,7 +1524,7 @@ namespace entities
             return n;
         }
     };
-    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, gameent *d, vector<int> &results);
+    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
     extern float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d = NULL, bool check = true);
 }
 #elif defined(GAMESERVER)
