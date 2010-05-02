@@ -1526,7 +1526,7 @@ namespace entities
             return n;
         }
     };
-    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
+    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, gameent *d, vector<int> &results);
     extern float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d = NULL, bool check = true);
 }
 #elif defined(GAMESERVER)
