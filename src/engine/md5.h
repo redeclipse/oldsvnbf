@@ -29,6 +29,16 @@ struct md5hierarchy
     int parent, flags, start;
 };
 
+struct md5adjustment
+{
+    float yaw, pitch, roll;
+    vec translate;
+
+    md5adjustment(float yaw, float pitch, float roll, const vec &translate) : yaw(yaw), pitch(pitch), roll(roll), translate(translate) {}
+};
+
+vector<md5adjustment> md5adjustments;
+
 struct md5 : skelmodel
 {
     md5(const char *name) : skelmodel(name) {}
@@ -144,7 +154,7 @@ struct md5 : skelmodel
                 }
                 else if(sscanf(buf, " weight %d %d %f ( %f %f %f ) ", &index, &w.joint, &w.bias, &w.pos.x, &w.pos.y, &w.pos.z)==6)
                 {
-                    w.pos.y = -w.pos.y;
+                    w.pos.x = -w.pos.x;
                     if(index>=0 && index<numweights) weightinfo[index] = w;
                 }
             }
@@ -205,8 +215,8 @@ struct md5 : skelmodel
                             &parent, &j.pos.x, &j.pos.y, &j.pos.z,
                             &j.orient.x, &j.orient.y, &j.orient.z)==7)
                         {
-                            j.pos.y = -j.pos.y;
-                            j.orient.x = -j.orient.x;
+                            j.pos.x = -j.pos.x;
+                            j.orient.y = -j.orient.y;
                             j.orient.z = -j.orient.z;
                             if(basejoints.length()<skel->numbones)
                             {
@@ -315,8 +325,8 @@ struct md5 : skelmodel
                         md5joint j;
                         if(sscanf(buf, " ( %f %f %f ) ( %f %f %f )", &j.pos.x, &j.pos.y, &j.pos.z, &j.orient.x, &j.orient.y, &j.orient.z)==6)
                         {
-                            j.pos.y = -j.pos.y;
-                            j.orient.x = -j.orient.x;
+                            j.pos.x = -j.pos.x;
+                            j.orient.y = -j.orient.y;
                             j.orient.z = -j.orient.z;
                             j.orient.restorew();
                             basejoints.add(j);
@@ -356,15 +366,22 @@ struct md5 : skelmodel
                         if(h.start < animdatalen && h.flags)
                         {
                             float *jdata = &animdata[h.start];
-                            if(h.flags&1) j.pos.x = *jdata++;
-                            if(h.flags&2) j.pos.y = -*jdata++;
+                            if(h.flags&1) j.pos.x = -*jdata++;
+                            if(h.flags&2) j.pos.y = *jdata++;
                             if(h.flags&4) j.pos.z = *jdata++;
-                            if(h.flags&8) j.orient.x = -*jdata++;
-                            if(h.flags&16) j.orient.y = *jdata++;
+                            if(h.flags&8) j.orient.x = *jdata++;
+                            if(h.flags&16) j.orient.y = -*jdata++;
                             if(h.flags&32) j.orient.z = -*jdata++;
                             j.orient.restorew();
                         }
                         frame[i] = dualquat(j.orient, j.pos);
+                        if(md5adjustments.inrange(i))
+                        {
+                            if(md5adjustments[i].yaw) frame[i].mulorient(quat(vec(0, 0, 1), md5adjustments[i].yaw*RAD));
+                            if(md5adjustments[i].pitch) frame[i].mulorient(quat(vec(0, 1, 0), md5adjustments[i].pitch*RAD));
+                            if(md5adjustments[i].roll) frame[i].mulorient(quat(vec(1, 0, 0), md5adjustments[i].roll*RAD));
+                            if(!md5adjustments[i].translate.iszero()) frame[i].translate(md5adjustments[i].translate);
+                        }
                         frame[i].mul(skel->bones[i].invbase);
                         if(h.parent >= 0) frame[i].mul(skel->bones[h.parent].base, dualquat(frame[i]));
                         frame[i].fixantipodal(skel->framebones[i]);
@@ -403,6 +420,7 @@ struct md5 : skelmodel
         mdl.model = this;
         mdl.index = 0;
         mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
+        md5adjustments.setsize(0);
         const char *fname = loadname + strlen(loadname);
         do --fname; while(fname >= loadname && *fname!='/' && *fname!='\\');
         fname++;
@@ -465,6 +483,7 @@ void md5load(char *meshfile, char *skelname, float *smooth)
     mdl.model = loadingmd5;
     mdl.index = loadingmd5->parts.length()-1;
     mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
+    md5adjustments.setsize(0);
     mdl.meshes = loadingmd5->sharemeshes(path(filename), skelname[0] ? skelname : NULL, double(*smooth > 0 ? cos(clamp(*smooth, 0.0f, 180.0f)*RAD) : 2));
     if(!mdl.meshes) conoutf("\frcould not load %s", filename); // ignore failure
     else
@@ -528,6 +547,18 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
         mdl.pitchmin = -360*mdl.pitchscale;
         mdl.pitchmax = 360*mdl.pitchscale;
     }
+}
+
+void md5adjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz)
+{
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
+    md5::part &mdl = *loadingmd5->parts.last();
+
+    if(!name[0]) return;
+    int i = mdl.meshes ? ((md5::skelmeshgroup *)mdl.meshes)->skel->findbone(name) : -1;
+    if(i < 0) {  conoutf("\frcould not find bone %s to adjust", name); return; }
+    while(!md5adjustments.inrange(i)) md5adjustments.add(md5adjustment(0, 0, 0, vec(0, 0, 0)));
+    md5adjustments[i] = md5adjustment(*yaw, *pitch, *roll, vec(*tx/4, *ty/4, *tz/4));
 }
 
 #define loopmd5meshes(meshname, m, body) \
@@ -691,6 +722,7 @@ COMMANDN(0, md5dir, setmd5dir, "s");
 COMMAND(0, md5load, "ssf");
 COMMAND(0, md5tag, "ss");
 COMMAND(0, md5pitch, "sffff");
+COMMAND(0, md5adjust, "sffffff");
 COMMAND(0, md5skin, "sssff");
 COMMAND(0, md5spec, "si");
 COMMAND(0, md5ambient, "si");
