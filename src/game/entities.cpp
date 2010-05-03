@@ -1883,6 +1883,7 @@ namespace entities
                         }
                         e.mark = 0;
                     }
+                    if(e.attrs[0] >= 0 && ((mtype == MAP_OCTA && mver <= 30) || (mtype == MAP_BFGZ && mver <= 39))) e.attrs[0] = (e.attrs[0] + 180)%360;
                     break;
                 }
                 case WEAPON:
@@ -1921,6 +1922,7 @@ namespace entities
                         e.attrs[2] = int(dir.magnitude());
                         e.attrs[5] = 0;
                     }
+                    if(mtype == MAP_BFGZ && mver <= 39) e.attrs[0] = (e.attrs[0] + 180)%360;
                     break;
                 }
                 case FLAG:
@@ -1933,6 +1935,7 @@ namespace entities
                         e.attrs[3] = e.attrs[4] = 0;
                     }
                     if(mtype == MAP_BFGZ && gver <= 164 && e.attrs[0] > TEAM_LAST) e.attrs[0] = TEAM_NEUTRAL;
+                    if((mtype == MAP_OCTA && mver <= 30) || (mtype == MAP_BFGZ && mver <= 39)) e.attrs[1] = (e.attrs[1] + 180)%360;
                     break;
                 }
                 case WAYPOINT:
@@ -1949,6 +1952,9 @@ namespace entities
                     }
                     break;
                 }
+                case CHECKPOINT: case ACTOR: 
+                    if((mtype == MAP_OCTA && mver <= 30) || (mtype == MAP_BFGZ && mver <= 39)) e.attrs[1] = (e.attrs[1] + 180)%360;
+                    break;
                 default: break;
             }
         }

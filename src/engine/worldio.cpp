@@ -1196,7 +1196,6 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
 
                 // bloodfrontier version increments
                 if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 35)) && e.type >= ET_SUNLIGHT) e.type++;
-
                 entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i);
                 if(maptype == MAP_BFGZ && entities::maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
                 {
@@ -1237,6 +1236,11 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                     }
                 }
                 if(e.type == ET_SUNLIGHT && hdr.version <= 38) e.attrs[1] -= 90; // reorient pitch axis
+                if((maptype == MAP_OCTA && hdr.version <= 30) || (maptype == MAP_BFGZ && hdr.version <= 39)) switch(e.type)
+                {
+                    case ET_MAPMODEL: case ET_PLAYERSTART: e.attrs[1] = (e.attrs[1] + 180)%360; break;
+                    case ET_SUNLIGHT: e.attrs[0] = (e.attrs[0] + 180)%360; break;
+                }
                 if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT)
                     conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
             }
@@ -1425,9 +1429,9 @@ void writeobj(char *name)
     {
         vec v = verts[i];
         v.add(center);
-        if(v.y != floor(v.y)) f->printf("v %.3f ", v.y); else f->printf("v %d ", int(v.y));
+        if(v.y != floor(v.y)) f->printf("v %.3f ", -v.y); else f->printf("v %d ", int(-v.y));
         if(v.z != floor(v.z)) f->printf("%.3f ", v.z); else f->printf("%d ", int(v.z));
-        if(v.x != floor(v.x)) f->printf("%.3f\n", -v.x); else f->printf("%d\n", int(-v.x));
+        if(v.x != floor(v.x)) f->printf("%.3f\n", v.x); else f->printf("%d\n", int(v.x));
     }
     f->printf("\n");
     loopv(texcoords)
