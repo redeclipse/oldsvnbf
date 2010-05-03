@@ -742,7 +742,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         else
         {
             center.mul(size);
-            center.rotate_around_z((-180-yaw)*RAD);
+            center.rotate_around_z(-yaw*RAD);
             center.add(o);
         }
         radius *= size;

@@ -743,7 +743,6 @@ void rotatebb(vec &center, vec &radius, int yaw)
         vec2(1.00000000, 0.00000000) // 360
     };
 
-    yaw += 180;
     if(yaw < 0) yaw = 360 + yaw%360;
     else if(yaw >= 360) yaw %= 360;
     const vec2 &rot = rots[(yaw + 7)/15];
@@ -783,7 +782,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         vec center, radius;
         m->collisionbox(0, center, radius);
         if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
-        float yaw = 180 + float((e.attrs[1]+7)-(e.attrs[1]+7)%15);
+        float yaw = float((e.attrs[1]+7)-(e.attrs[1]+7)%15);
         switch(d->collidetype)
         {
             case COLLIDE_ELLIPSE:

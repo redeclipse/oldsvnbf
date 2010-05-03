@@ -309,7 +309,7 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
     if(!maxdist) maxdist = 1e16f;
     vec yo(o);
     yo.sub(e.o);
-    float yaw = -180.0f-(float)(e.attrs[1]%360);
+    float yaw = -(float)(e.attrs[1]%360);
     vec yray(ray);
     if(yaw != 0) yawray(yo, yray, yaw);
     if(m->bih->traverse(yo, yray, maxdist, dist, mode))
