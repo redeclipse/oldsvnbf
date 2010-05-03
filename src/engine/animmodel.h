@@ -894,7 +894,7 @@ struct animmodel : model
 
         if(anim&ANIM_NORENDER)
         {
-            render(anim, basetime, basetime2, pitch, vec(0, 1, 0), d, a, rdir, campos);
+            render(anim, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos);
             if(d) d->lastrendered = lastmillis;
             return;
         }
@@ -915,10 +915,10 @@ struct animmodel : model
             if(!d || !d->ragdoll || anim&ANIM_RAGDOLL)
             {
                 rdir.rotate_around_z(-yaw*RAD);
-                rdir.rotate_around_x(-roll*RAD);
+                rdir.rotate_around_x(roll*RAD);
                 campos.sub(o);
                 campos.rotate_around_z(-yaw*RAD);
-                campos.rotate_around_x(-roll*RAD);
+                campos.rotate_around_x(roll*RAD);
             }
             else
             {
@@ -963,7 +963,7 @@ struct animmodel : model
             if(alphadepth)
             {
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-                render(anim|ANIM_NOSKIN, basetime, basetime2, pitch, vec(0, 1, 0), d, a, rdir, campos);
+                render(anim|ANIM_NOSKIN, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos);
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
 
                 glDepthFunc(GL_LEQUAL);
@@ -977,7 +977,7 @@ struct animmodel : model
             }
         }
 
-        render(anim, basetime, basetime2, pitch, vec(0, 1, 0), d, a, rdir, campos);
+        render(anim, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos);
 
         if(envmaptmu>=0)
         {
@@ -1020,8 +1020,8 @@ struct animmodel : model
     {
         m.identity();
         if(offsetyaw) m.rotate_around_z(offsetyaw*RAD);
-        if(offsetroll) m.rotate_around_x(offsetroll*RAD);
-        if(offsetpitch) m.rotate_around_y(offsetpitch*RAD);
+        if(offsetroll) m.rotate_around_x(-offsetroll*RAD);
+        if(offsetpitch) m.rotate_around_y(-offsetpitch*RAD);
     }
 
     void gentris(int frame, vector<BIH::tri> *tris)

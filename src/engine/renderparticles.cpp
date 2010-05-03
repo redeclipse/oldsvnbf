@@ -301,7 +301,7 @@ struct textrenderer : sharedlistrenderer
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        glRotatef(camera1->yaw-180, 0, 0, 1);
+        glRotatef(camera1->yaw, 0, 0, 1);
         glRotatef(camera1->pitch-90, 1, 0, 0);
         float scale = size/80.0f;
         glScalef(-scale, scale, -scale);
@@ -349,7 +349,7 @@ struct portalrenderer : listrenderer<portal>
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        glRotatef(p->yaw-180, 0, 0, 1);
+        glRotatef(p->yaw, 0, 0, 1);
         glRotatef(p->pitch, 1, 0, 0);
         glScalef(size, size, size);
 
@@ -409,7 +409,7 @@ struct iconrenderer : listrenderer<icon>
 
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        glRotatef(camera1->yaw-180, 0, 0, 1);
+        glRotatef(camera1->yaw, 0, 0, 1);
         glRotatef(camera1->pitch, 1, 0, 0);
         glScalef(size, size, size);
 

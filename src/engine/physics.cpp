@@ -1189,8 +1189,8 @@ void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m)
 {
     if(move)
     {
-        m.x = move*sinf(RAD*yaw);
-        m.y = move*-cosf(RAD*yaw);
+        m.x = move*-sinf(RAD*yaw);
+        m.y = move*cosf(RAD*yaw);
     }
     else m.x = m.y = 0;
 
@@ -1204,14 +1204,14 @@ void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m)
 
     if(strafe)
     {
-        m.x += strafe*-cosf(RAD*yaw);
-        m.y += strafe*-sinf(RAD*yaw);
+        m.x += strafe*cosf(RAD*yaw);
+        m.y += strafe*sinf(RAD*yaw);
     }
 }
 
 void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 {
-    yaw = -(float)atan2(v.x, v.y)/RAD + 180;
+    yaw = -atan2(v.x, v.y)/RAD;
     pitch = asin(v.z/v.magnitude())/RAD;
 }
 
@@ -1238,8 +1238,8 @@ bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float
 
     if(dist <= mdist)
     {
-        float x = fabs((asin((q.z-o.z)/dist)/RAD)-pitch);
-        float y = fabs((-(float)atan2(q.x-o.x, q.y-o.y)/PI*180+180)-yaw);
+        float x = fabs(asin((q.z-o.z)/dist)/RAD-pitch);
+        float y = fabs(atan2(q.x-o.x, q.y-o.y)/RAD+yaw);
         if(x <= fovx && y <= fovy) return raycubelos(o, q, v);
     }
     return false;

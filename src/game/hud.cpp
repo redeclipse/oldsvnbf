@@ -1059,7 +1059,7 @@ namespace hud
 
     void drawblip(const char *tex, float area, int w, int h, float s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
     {
-        float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
+        float yaw = -atan2(dir.x, dir.y)/RAD, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
             size = max(w, h)/2, tx = w/2, ty = h/2, ts = size*radarsize, tp = ts*s, tq = tp/2, tr = (size*radaroffset)+(ts*area);
         vec pos = vec(tx+(tr*x), ty+(tr*y), 0);
         settexture(tex, 3);

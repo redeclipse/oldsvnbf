@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID              "bfa"
-#define GAMEVERSION         166
+#define GAMEVERSION         167
 #define DEMO_VERSION        GAMEVERSION
 
 #define MAXAI 256

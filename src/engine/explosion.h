@@ -486,7 +486,7 @@ struct fireballrenderer : sharedlistrenderer
         oc.sub(camera1->o);
         if(reflecting) oc.z = p->o.z - reflectz;
 
-        float yaw = inside ? camera1->yaw - 180 : atan2(oc.y, oc.x)/RAD - 90,
+        float yaw = inside ? camera1->yaw : atan2(oc.y, oc.x)/RAD - 90,
         pitch = (inside ? camera1->pitch : asin(oc.z/oc.magnitude())/RAD) - 90;
         vec rotdir;
         if(renderpath==R_FIXEDFUNCTION || explosion2d)
