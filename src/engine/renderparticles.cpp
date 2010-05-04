@@ -354,11 +354,11 @@ struct portalrenderer : listrenderer<portal>
         glScalef(size, size, size);
 
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
         glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
-        glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
         glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
+        glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
         glEnd();
 
         glPopMatrix();
@@ -439,11 +439,11 @@ struct iconrenderer : listrenderer<icon>
         }
         else
         {
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
             glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
-            glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
             glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
+            glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
             glEnd();
         }
 
