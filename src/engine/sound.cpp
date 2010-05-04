@@ -235,11 +235,11 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
     if(!(flags&SND_NOATTEN))
     {
         if(!(flags&SND_NOQUIET) && (isliquid(lookupmaterial(pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME))) svol = int(svol*0.75f);
-        vec v; float dist = camera1->o.dist(pos, v);
+        vec v; float dist = pos.dist(camera1->o, v);
         if(!(flags&SND_NOPAN) && !soundmono && (v.x != 0 || v.y != 0))
         {
             v.rotate_around_z(-camera1->yaw*RAD);
-            *curpan = int(255.9f*(0.5f + 0.5f*v.x/v.magnitude2())); // range is from 0 (left) to 255 (right)
+            *curpan = int(255.9f*(0.5f - 0.5f*v.x/v.magnitude2())); // range is from 0 (left) to 255 (right)
         }
         else *curpan = 127;
         if(!(flags&SND_NODIST))
