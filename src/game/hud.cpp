@@ -326,11 +326,11 @@ namespace hud
 
     void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
     {
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(tx1, ty1); glVertex2f(x, y);
         glTexCoord2f(tx2, ty1); glVertex2f(x+w, y);
-        glTexCoord2f(tx2, ty2); glVertex2f(x+w, y+h);
         glTexCoord2f(tx1, ty2); glVertex2f(x, y+h);
+        glTexCoord2f(tx2, ty2); glVertex2f(x+w, y+h);
         glEnd();
     }
     void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
@@ -341,9 +341,11 @@ namespace hud
         if(!blend) glEnable(GL_BLEND);
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
         glColor3f(r, g, b);
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(x, y); glVertex2f(x+w, y);
-        glVertex2f(x+w, y+h); glVertex2f(x, y+h);
+        glBegin(GL_TRIANGLE_STRIP);
+        glVertex2f(x, y); 
+        glVertex2f(x+w, y);
+        glVertex2f(x, y+h);
+        glVertex2f(x+w, y+h); 
         glEnd();
         if(!blend) glDisable(GL_BLEND);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1064,7 +1066,7 @@ namespace hud
         vec pos = vec(tx+(tr*x), ty+(tr*y), 0);
         settexture(tex, 3);
         glColor4f(r, g, b, blend);
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         loopk(4)
         {
             vec norm;
@@ -1072,8 +1074,8 @@ namespace hud
             {
                 case 0: vecfromyawpitch(yaw, 0, 1, -1, norm);   glTexCoord2f(1, 0); break;
                 case 1: vecfromyawpitch(yaw, 0, 1, 1, norm);    glTexCoord2f(0, 0); break;
-                case 2: vecfromyawpitch(yaw, 0, -1, 1, norm);   glTexCoord2f(0, 1); break;
-                case 3: vecfromyawpitch(yaw, 0, -1, -1, norm);  glTexCoord2f(1, 1); break;
+                case 2: vecfromyawpitch(yaw, 0, -1, -1, norm);  glTexCoord2f(1, 1); break;
+                case 3: vecfromyawpitch(yaw, 0, -1, 1, norm);   glTexCoord2f(0, 1); break;
             }
             norm.z = 0; norm.normalize().mul(tq).add(pos);
             glVertex2f(norm.x, norm.y);
@@ -1773,38 +1775,38 @@ namespace hud
     {
         Texture *t = textureload(bglefttex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_STRIP); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(512, h/2-256);
         glTexCoord2f(1, 0); glVertex2f(0, h/2-256);
-        glTexCoord2f(1, 1); glVertex2f(0, h/2+256);
         glTexCoord2f(0, 1); glVertex2f(512, h/2+256);
+        glTexCoord2f(1, 1); glVertex2f(0, h/2+256);
         glEnd();
 
         t = textureload(bgrighttex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_STRIP); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(w, h/2-256);
         glTexCoord2f(1, 0); glVertex2f(w-512, h/2-256);
-        glTexCoord2f(1, 1); glVertex2f(w-512, h/2+256);
         glTexCoord2f(0, 1); glVertex2f(w, h/2+256);
+        glTexCoord2f(1, 1); glVertex2f(w-512, h/2+256);
         glEnd();
 
         t = textureload(logotex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0, 0); glVertex2f(w-512, 0);
         glTexCoord2f(1, 0); glVertex2f(w, 0);
-        glTexCoord2f(1, 1); glVertex2f(w, 128);
         glTexCoord2f(0, 1); glVertex2f(w-512, 128);
+        glTexCoord2f(1, 1); glVertex2f(w, 128);
         glEnd();
 
         t = textureload(badgetex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_STRIP); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(w-208, 96);
         glTexCoord2f(1, 0); glVertex2f(w-16, 96);
-        glTexCoord2f(1, 1); glVertex2f(w-16, 192);
         glTexCoord2f(0, 1); glVertex2f(w-208, 192);
+        glTexCoord2f(1, 1); glVertex2f(w-16, 192);
         glEnd();
 
         pushfont("radar");

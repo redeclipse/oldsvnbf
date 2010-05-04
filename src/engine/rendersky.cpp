@@ -65,11 +65,11 @@ void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
                       GLuint texture)
 {
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(s3, t3); glVertex3f(x3, y3, z3);
     glTexCoord2f(s2, t2); glVertex3f(x2, y2, z2);
-    glTexCoord2f(s1, t1); glVertex3f(x1, y1, z1);
     glTexCoord2f(s0, t0); glVertex3f(x0, y0, z0);
+    glTexCoord2f(s1, t1); glVertex3f(x1, y1, z1);
     glEnd();
     xtraverts += 4;
 }
@@ -79,11 +79,11 @@ void draw_envbox_quad(int x0, int y0, int z0,
                       int x2, int y2, int z2,
                       int x3, int y3, int z3)
 {
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glVertex3f(x3, y3, z3);
     glVertex3f(x2, y2, z2);
-    glVertex3f(x1, y1, z1);
     glVertex3f(x0, y0, z0);
+    glVertex3f(x1, y1, z1);
     glEnd();
     xtraverts += 4;
 }
@@ -160,7 +160,7 @@ void draw_env_overlay(int w, Texture *overlay = NULL, int colour = 0xFFFFFF, flo
     }
     glEnd();
     float tsz2 = 0.5f/cloudscale;
-    glBegin(GL_QUAD_STRIP);
+    glBegin(GL_TRIANGLE_STRIP);
     loopi(cloudsubdiv+1)
     {
         vec p(1, 1, 0);
@@ -495,7 +495,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw, 0, 0, 1);
         glScalef(-1, 1, reflecting ? -1 : 1);
         glColor3f((skybgcolour>>16)/255.0f, ((skybgcolour>>8)&255)/255.0f, (skybgcolour&255)/255.0f);
-        draw_envbox_bg(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
+        draw_envbox_bg(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawsky, spinsky));
         glPopMatrix();
 
         glEnable(GL_TEXTURE_2D);

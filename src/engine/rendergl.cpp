@@ -1100,11 +1100,11 @@ void addmotionblur()
     rectshader->set();
 
     glColor4f(1, 1, 1, lastmotion ? pow(amount, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
-    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
     glTexCoord2f(      0, motionh); glVertex2f(-1,  1);
+    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
     glEnd();
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
@@ -1174,11 +1174,11 @@ void drawfogoverlay(int fogmat, float fogblend, int abovemat)
     glLoadIdentity();
 
     glColor3fv(overlay);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glVertex2f(-1, -1);
     glVertex2f(1, -1);
-    glVertex2f(1, 1);
     glVertex2f(-1, 1);
+    glVertex2f(1, 1);
     glEnd();
     glDisable(GL_BLEND);
 
@@ -1829,11 +1829,11 @@ struct framebuffercopy
             th *= h;
         }
         glBindTexture(target, tex);
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(tx,    ty);    glVertex2f(sx,    sy);
         glTexCoord2f(tx+tw, ty);    glVertex2f(sx+sw, sy);
-        glTexCoord2f(tx+tw, ty+th); glVertex2f(sx+sw, sy+sh);
         glTexCoord2f(tx,    ty+th); glVertex2f(sx,    sy+sh);
+        glTexCoord2f(tx+tw, ty+th); glVertex2f(sx+sw, sy+sh);
         glEnd();
         if(target == GL_TEXTURE_RECTANGLE_ARB)
         {
@@ -2202,11 +2202,11 @@ void gl_drawframe(int w, int h)
                     glDisable(GL_TEXTURE_2D);
                     glBlendFunc(GL_ZERO, GL_SRC_COLOR);
                     glColor3f(0.f, 0.5f, 1.f);
-                    glBegin(GL_TRIANGLE_FAN);
+                    glBegin(GL_TRIANGLE_STRIP);
                     glVertex2f(0, 0);
                     glVertex2f(1, 0);
-                    glVertex2f(1, 1);
                     glVertex2f(0, 1);
+                    glVertex2f(1, 1);
                     glEnd();
                     glEnable(GL_TEXTURE_2D);
                     glBlendFunc(GL_ONE, GL_ONE);
