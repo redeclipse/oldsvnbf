@@ -983,10 +983,10 @@ void at(char *s, int *pos)
     commandret = indexlist(s, *pos);
 }
 
-void substr(char *s, int *start, int *count)
+void substr(char *s, int *start, char *count)
 {
     int len = strlen(s), offset = clamp(*start, 0, len);
-    commandret = newstring(&s[offset], *count <= 0 ? len - offset : min(*count, len - offset));
+    commandret = newstring(&s[offset], count[0] ? clamp(parseint(count), 0, len - offset) : len - offset);
 }
 
 void getalias_(char *s)
@@ -1000,7 +1000,7 @@ COMMAND(0, result, "s");
 COMMAND(0, concatword, "V");
 COMMAND(0, format, "V");
 COMMAND(0, at, "si");
-COMMAND(0, substr, "sii");
+COMMAND(0, substr, "sis");
 ICOMMAND(0, listlen, "s", (char *s), intret(listlen(s)));
 COMMANDN(0, getalias, getalias_, "s");
 
