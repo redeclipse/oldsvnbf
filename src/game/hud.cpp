@@ -1516,7 +1516,7 @@ namespace hud
                 {
                     float health, r, g, b;
                 } steps[] = { { 0, 0.75f, 0, 0 }, { 0.35f, 1, 0.5f, 0 }, { 0.65f, 1, 1, 0 }, { 1, 0, 1, 0 } };
-                glBegin(GL_QUAD_STRIP);
+                glBegin(GL_TRIANGLE_STRIP);
                 int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
                 float health = clamp(game::focus->health/float(heal), 0.0f, 1.0f);
                 const float margin = 0.1f;
