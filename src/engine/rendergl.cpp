@@ -1225,7 +1225,8 @@ void drawglare()
     glFogfv(GL_FOG_COLOR, zerofog);
 
     glClearColor(0, 0, 0, 1);
-    glClear((skyboxglare ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
+    extern int skyglare, skybgglare;
+    glClear((skyboxglare && (skyglare || skybgglare) ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
 
     if(skyboxglare && limitsky()) drawskybox(farplane, true);
 
