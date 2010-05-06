@@ -138,7 +138,7 @@ void draw_envbox_bg(int w, float z1clip = 0.0f, float z2clip = 1.0f, int faces =
 
     int z1 = int(ceil(2*w*(z1clip-0.5f))), z2 = int(ceil(2*w*(z2clip-0.5f)));
     if(faces&0x01) draw_envbox_quad(-w, -w, z2, -w,  w, z2, -w,  w, z1, -w, -w, z1);
-    if(faces&0x02) draw_envbox_quad( w, -w, z1,  w,  w, z2,  w,  w, z2, w, - w, z2);
+    if(faces&0x02) draw_envbox_quad( w, -w, z1,  w,  w, z1,  w,  w, z2,  w, -w, z2);
     if(faces&0x04) draw_envbox_quad(-w, -w, z1,  w, -w, z1,  w, -w, z2, -w, -w, z2);
     if(faces&0x08) draw_envbox_quad( w,  w, z1, -w,  w, z1, -w,  w, z2,  w,  w, z2);
     if(z1clip <= 0 && faces&0x10) draw_envbox_quad(-w,  w, -w,  w,  w, -w,  w, -w, -w, -w, -w, -w);
