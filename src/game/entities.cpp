@@ -1922,7 +1922,7 @@ namespace entities
                         e.attrs[2] = int(dir.magnitude());
                         e.attrs[5] = 0;
                     }
-                    if(mtype == MAP_BFGZ && mver <= 39) e.attrs[0] = (e.attrs[0] + 180)%360;
+                    else if(mtype == MAP_BFGZ && mver <= 39) e.attrs[0] = (e.attrs[0] + 180)%360;
                     break;
                 }
                 case FLAG:
