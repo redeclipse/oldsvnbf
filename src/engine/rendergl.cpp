@@ -735,14 +735,12 @@ void findorientation(vec &o, float yaw, float pitch, vec &pos)
 
 void transplayer()
 {
-    glLoadIdentity();
-
-    glRotatef(camera1->roll, 0, 0, 1);
-    glRotatef(camera1->pitch+90, -1, 0, 0);
-    glRotatef(camera1->yaw, 0, 0, 1);
-
     // move from RH to Z-up LH quake style worldspace
-    glScalef(-1, 1, 1);
+    glLoadMatrixf(viewmatrix.v);
+
+    glRotatef(camera1->roll, 0, 1, 0);
+    glRotatef(camera1->pitch, -1, 0, 0);
+    glRotatef(camera1->yaw, 0, 0, -1);
 
     glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
 }
@@ -759,24 +757,21 @@ VARF(IDF_HEX|IDF_WORLD, fogcolour, 0, 0x8099B3, 0xFFFFFF,
 
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
-    vec4 dir1, dir2;
-    invmvpmatrix.transform(vec(x*2-1, 1-2*y, z*2-1), dir1);
-    invmvpmatrix.transform(vec(x*2-1, 1-2*y, -1), dir2);
-    dir = vec(dir1.x, dir1.y, dir1.z).div(dir1.w);
-    dir.sub(vec(dir2.x, dir2.y, dir2.z).div(dir2.w));
-    dir.normalize();
+    vec dir1 = invmvpmatrix.perspectivetransform(vec(x*2-1, 1-2*y, z*2-1)),
+        dir2 = invmvpmatrix.perspectivetransform(vec(x*2-1, 1-2*y, -1));
+    (dir = dir1).sub(dir2).normalize();
 }
 
 void vectocursor(vec &v, float &x, float &y, float &z)
 {
-    vec4 screenpos;
-    mvpmatrix.transform(v, screenpos);
+    vec screenpos = mvpmatrix.perspectivetransform(v);
 
-    x = screenpos.x/screenpos.w*0.5f + 0.5f;
-    y = 0.5f - screenpos.y/screenpos.w*0.5f;
-    z = screenpos.z/screenpos.w*0.5f + 0.5f;
+    x = screenpos.x*0.5f + 0.5f;
+    y = 0.5f - screenpos.y*0.5f;
+    z = screenpos.z*0.5f + 0.5f;
 }
 
+extern const glmatrixf viewmatrix(vec4(-1, 0, 0, 0), vec4(0, 0, 1, 0), vec4(0, -1, 0, 0));
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
 
 void readmatrices()
@@ -1406,7 +1401,7 @@ bool envmapping = false;
 
 void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool flipx, bool flipy, bool swapxy)
 {
-    float fovx = 90.f, fovy = 90.f, aspect = 1.f;
+    float fovy = 90.f, aspect = 1.f;
     envmapping = true;
 
     physent *oldcamera = camera1;
@@ -1472,7 +1467,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
         else dopostfx = true;
     }
 
-    visiblecubes(fovx, fovy);
+    visiblecubes();
 
     if(level > 1 && shadowmap && !hasFBO) rendershadowmap();
 
@@ -1633,7 +1628,7 @@ void drawminimap()
 
     xtravertsva = xtraverts = glde = gbatches = 0;
 
-    visiblecubes(0, 0);
+    visiblecubes(false);
     queryreflections();
     drawreflections();
 
@@ -1992,7 +1987,7 @@ void drawview(int targtype)
         else dopostfx = true;
     }
 
-    visiblecubes(curfov, fovy);
+    visiblecubes();
     if(shadowmap && !hasFBO) rendershadowmap();
 
     glClearColor(0, 0, 0, 0);
