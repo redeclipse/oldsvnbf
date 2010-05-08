@@ -322,7 +322,6 @@ void gl_checkextensions()
     if(!hasOQ)
     {
         conoutf("\frWARNING: No occlusion query support! (large maps may be SLOW)");
-        zpass = 0;
         extern int vacubesize;
         vacubesize = 64;
         waterreflect = 0;
