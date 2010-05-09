@@ -1237,7 +1237,7 @@ void clearsleep(bool clearoverrides, bool clearworlds)
 
 ICOMMAND(0, clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideidents, *b!=0 || worldidents));
 ICOMMAND(0, exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
-ICOMMAND(0, getmillis, "", (), intret(lastmillis));
+ICOMMAND(0, getmillis, "i", (int *total), intret(*total ? totalmillis : lastmillis));
 
 void getvariable(int num)
 {
