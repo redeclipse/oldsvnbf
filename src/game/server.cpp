@@ -3311,7 +3311,7 @@ namespace server
             {
                 case N_POS:
                 {
-                    int lcn = getint(p);
+                    int lcn = getuint(p);
                     if(lcn<0)
                     {
                         disconnect_client(sender, DISC_CN);
@@ -3323,29 +3323,37 @@ namespace server
                     if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
                         havecn = false;
 
-                    vec oldpos, pos;
-                    loopi(3) pos[i] = getuint(p)/DMF;
+                    p.get();
+                    uint flags = getuint(p);
+                    vec pos;
+                    loopk(3)
+                    {
+                        int n = p.get(); n |= p.get()<<8; if(flags&(1<<k)) { n |= p.get()<<16; if(n&0x800000) n |= -1<<24; }
+                        pos[k] = n/DMF;
+                    }
+                    loopk(3) p.get();
+                    p.get(); if(flags&(1<<3)) p.get();
+                    loopk(2) p.get();
+                    if(flags&(1<<4))
+                    {
+                        p.get(); if(flags&(1<<5)) p.get();
+                        if(flags&(1<<6)) loopk(2) p.get();
+                    }
+                    if(flags&(1<<7)) loopk(2) p.get();
                     if(havecn)
                     {
-                        oldpos = cp->state.o;
+                        vec oldpos = cp->state.o;
                         cp->state.o = pos;
-                    }
-                    getuint(p);
-                    loopi(5) getint(p);
-                    int physstate = getuint(p);
-                    if(physstate&0x20) loopi(2) getint(p);
-                    if(physstate&0x10) getint(p);
-                    int flags = getuint(p);
-                    if(flags&0x20) { getuint(p); getint(p); }
-                    if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
-                    {
-                        cp->position.setsize(0);
-                        while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
-                    }
-                    if(havecn && cp->state.state==CS_ALIVE)
-                    {
-                        if(smode) smode->moved(cp, oldpos, cp->state.o);
-                        mutate(smuts, mut->moved(cp, oldpos, cp->state.o));
+                        if(cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING)
+                        {
+                            cp->position.setsize(0);
+                            while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
+                        }
+                        if(cp->state.state==CS_ALIVE)
+                        {
+                            if(smode) smode->moved(cp, oldpos, cp->state.o);
+                            mutate(smuts, mut->moved(cp, oldpos, cp->state.o));
+                        }
                     }
                     break;
                 }
