@@ -147,7 +147,7 @@ void pushgui(menu *m, int pos = -1, int tab = 0)
     if(m)
     {
         m->passes = 0;
-        m->menustart = lastmillis;
+        m->menustart = totalmillis;
         if(tab > 0) m->menutab = tab;
         m->usetitle = tab >= 0 ? true : false;
     }
@@ -161,7 +161,7 @@ void restoregui(int pos, int tab = 0)
     if(m)
     {
         m->passes = 0;
-        m->menustart = lastmillis;
+        m->menustart = totalmillis;
         if(tab > 0) m->menutab = tab;
     }
 }

@@ -51,7 +51,7 @@ namespace ctf
                 {
                     if(!(f.base&BASE_FLAG) || f.owner == game::focus || (!f.owner && !f.droptime)) break;
                     (dir = f.pos()).sub(camera1->o);
-                    int interval = lastmillis%500;
+                    int interval = totalmillis%500;
                     if(interval >= 300 || interval <= 200) fade *= clamp(interval >= 300 ? 1.f-((interval-300)/200.f) : interval/200.f, 0.f, 1.f);
                     if(f.owner) fade *= clamp(f.owner->vel.magnitude()/movespeed, 0.f, 1.f);
                 }
@@ -113,7 +113,7 @@ namespace ctf
             if(headsup || f.lastowner == game::focus)
             {
                 const char *pre = "";
-                int millis = lastmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
+                int millis = totalmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
                 float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
                     r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
                 if(f.owner || f.droptime)
@@ -175,7 +175,7 @@ namespace ctf
             float trans = 0.f;
             if((f.base&BASE_FLAG) && !f.owner && !f.droptime)
             {
-                int millis = lastmillis-f.interptime;
+                int millis = totalmillis-f.interptime;
                 if(millis <= 1000) trans += float(millis)/1000.f;
                 else trans = 1.f;
             }
@@ -232,7 +232,7 @@ namespace ctf
                 while(yaw >= 360.f) yaw -= 360.f;
             }
             else yaw += (f.interptime+(360/st.flags.length()*i))%360;
-            int millis = lastmillis-f.interptime;
+            int millis = totalmillis-f.interptime;
             if(millis <= 1000) trans = float(millis)/1000.f;
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, yaw, 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
             above.z += enttype[FLAG].radius*2/3;
@@ -262,7 +262,7 @@ namespace ctf
             float trans = 1.f;
             if(!f.owner)
             {
-                int millis = lastmillis-f.interptime;
+                int millis = totalmillis-f.interptime;
                 if(millis <= 1000) trans = float(millis)/1000.f;
             }
             adddynlight(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2*trans, vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f), 0, 0, DL_KEEP);
@@ -442,6 +442,7 @@ namespace ctf
         }
         game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
         st.dropflag(i, droploc, lastmillis);
+        st.interp(i, totalmillis);
         dodrop(f, i);
     }
 
@@ -451,6 +452,7 @@ namespace ctf
         {
             ctfstate::flag &f = st.flags[i];
             st.dropflag(i, f.owner->o, lastmillis);
+            st.interp(i, totalmillis);
         }
     }
 
@@ -484,6 +486,7 @@ namespace ctf
         flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
         game::announce(S_V_FLAGRETURN, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::timetostr(lastmillis-(ctfstyle%2 ? f.taketime : f.droptime)));
         st.returnflag(i, lastmillis);
+        st.interp(i, totalmillis);
     }
 
     void resetflag(int i)
@@ -493,6 +496,7 @@ namespace ctf
         flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, 3, "RESET");
         game::announce(S_V_FLAGRESET, CON_INFO, NULL, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
         st.returnflag(i, lastmillis);
+        st.interp(i, totalmillis);
     }
 
     void scoreflag(gameent *d, int relay, int goal, int score)
@@ -508,6 +512,7 @@ namespace ctf
         (st.findscore(d->team)).total = score;
         game::announce(S_V_FLAGSCORE, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::timetostr(lastmillis-f.taketime));
         st.returnflag(relay, lastmillis);
+        st.interp(relay, totalmillis);
     }
 
     void takeflag(gameent *d, int i)
@@ -517,6 +522,7 @@ namespace ctf
         flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
         game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
         st.takeflag(i, d, lastmillis);
+        st.interp(i, totalmillis);
     }
 
     void checkflags(gameent *d)

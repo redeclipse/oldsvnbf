@@ -918,6 +918,17 @@ namespace ai
         }
     }
 
+    bool lockon(gameent *d, gameent *e, float maxdist)
+    {
+        if(d->weapselect == WEAP_MELEE)
+        {
+            vec dir = vec(e->o).sub(d->o);
+            float xydist = dir.x*dir.x+dir.y*dir.y, zdist = dir.z*dir.z, mdist = maxdist*maxdist, ddist = d->radius*d->radius;
+            if(zdist <= ddist+2 && xydist >= ddist+2 && xydist <= mdist+ddist) return true;
+        }
+        return false;
+    }
+
     int process(gameent *d, aistate &b)
     {
         int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
@@ -982,7 +993,7 @@ namespace ai
             if(idle || insight || hasseen)
             {
                 float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-                if(idle || (insight && d->weapselect == WEAP_MELEE && e->o.squaredist(d->o) <= (d->radius*d->radius)+16))
+                if(idle || (insight && lockon(d, e, 4)))
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
@@ -1081,7 +1092,7 @@ namespace ai
             d->strafe = ad.strafe;
             d->aimyaw -= ad.offset;
         }
-        if(d->move && d->weapselect == WEAP_MELEE && enemyok && e->o.squaredist(d->o) <= (d->radius*d->radius)+4) d->move = 0;
+        if(d->move && enemyok && lockon(d, e, 2)) d->move = 0;
         game::fixrange(d->aimyaw, d->aimpitch);
         return result;
     }

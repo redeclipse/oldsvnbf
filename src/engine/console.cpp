@@ -2,11 +2,7 @@
 
 #include "engine.h"
 
-VAR(IDF_PERSIST, showconsole, 0, 1, 1);
-VAR(IDF_PERSIST, consoletime, 200, 20000, INT_MAX-1);
-
 vector<cline> conlines;
-
 int commandmillis = -1;
 string commandbuf;
 char *commandaction = NULL, *commandicon = NULL;
@@ -17,7 +13,7 @@ void conline(int type, const char *sf, int n)
     cline cl;
     cl.type = type;
     cl.cref = conlines.length()>100 ? conlines.pop().cref : newstringbuf("");
-    cl.reftime = cl.outtime = lastmillis;
+    cl.reftime = cl.outtime = totalmillis;
     conlines.insert(n, cl);
 
     int c = 0;
@@ -232,7 +228,7 @@ ICOMMAND(0, searchwaitbinds, "siss", (char *action, int *limit, char *sep, char 
 
 void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns input to the command line on or off
 {
-    commandmillis = init ? lastmillis : -lastmillis;
+    commandmillis = init ? totalmillis : -totalmillis;
     SDL_EnableUNICODE(commandmillis > 0 ? 1 : 0);
     keyrepeat(commandmillis > 0);
     copystring(commandbuf, init ? init : "");
@@ -627,7 +623,7 @@ struct filesval
         listfiles(dir, ext, files);
         files.sort(comparefiles);
         loopv(files) if(i && !strcmp(files[i], files[i-1])) delete[] files.remove(i--);
-        millis = lastmillis;
+        millis = totalmillis;
     }
 };
 

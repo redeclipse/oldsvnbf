@@ -46,7 +46,7 @@ vector<cmenu> cmenus;
 void clearcmenu()
 {
     compasspos = 0;
-    if(compassmillis > 0) compassmillis = -lastmillis;
+    if(compassmillis > 0) compassmillis = -totalmillis;
     if(curcompass)
     {
         curcompass->reset();
@@ -112,7 +112,7 @@ void showcmenu(const char *name)
     if(!name || !*name) return;
     loopv(cmenus) if(!strcmp(name, cmenus[i].name))
     {
-        if(compassmillis <= 0) compassmillis = lastmillis;
+        if(compassmillis <= 0) compassmillis = totalmillis;
         curcompass = &cmenus[i];
         compasspos = 0;
         curcompass->reset();

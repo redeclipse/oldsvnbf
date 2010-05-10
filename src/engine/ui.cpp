@@ -795,7 +795,7 @@ struct gui : guient
     {
         initscale *= 0.025f;
         basescale = initscale;
-        if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(lastmillis-starttime)/300.0f, basescale);
+        if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(totalmillis-starttime)/300.0f, basescale);
         needsinput = allowinput;
         hastitle = wantstitle;
         passthrough = !allowinput;
@@ -963,7 +963,7 @@ namespace UI
     void update()
     {
         bool p = active(false);
-        if(isopen != p) uimillis = (isopen = p) ? lastmillis : -lastmillis;
+        if(isopen != p) uimillis = (isopen = p) ? totalmillis : -totalmillis;
         setsvar("guirollovername", "", true);
         setsvar("guirolloveraction", "", true);
         setsvar("guirolloverimgpath", "", true);

@@ -68,7 +68,7 @@ namespace client
             copystring(m->map, text);
             m->mode = mode;
             m->muts = muts;
-            m->millis = lastmillis;
+            m->millis = totalmillis;
         }
         m->players.add(d);
         mapvotes.sort(votecmp);
@@ -596,7 +596,7 @@ namespace client
         {
             case N_SENDDEMO:
             {
-                defformatstring(fname)("%d.dmo", lastmillis);
+                defformatstring(fname)("%d.dmo", totalmillis);
                 stream *demo = openfile(fname, "wb");
                 if(!demo) return;
                 conoutft(CON_MESG, "received demo \"%s\"", fname);
@@ -1251,7 +1251,7 @@ namespace client
                 {
                     hud::sb.showscores(false);
                     if(!menuactive()) showgui("maps", 1);
-                    if(game::intermission) hud::lastnewgame = lastmillis;
+                    if(game::intermission) hud::lastnewgame = totalmillis;
                     break;
                 }
 

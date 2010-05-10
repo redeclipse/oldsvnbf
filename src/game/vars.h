@@ -8,14 +8,14 @@ GVAR(IDF_ADMIN, automaster, 0, 0, 1);
 GVAR(IDF_ADMIN, modelimit, 0, G_EDITMODE, G_MAX-1);
 GVAR(IDF_ADMIN, mutslimit, 0, G_M_ALL, G_M_ALL);
 GVAR(IDF_ADMIN, modelock, 0, 3, 5); // 0 = off, 1 = master only (+1 admin only), 3 = master can only set limited mode and higher (+1 admin), 5 = no mode selection
-GVAR(IDF_ADMIN, mapslock, 0, 1, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
+GVAR(IDF_ADMIN, mapslock, 0, 3, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
 GVAR(IDF_ADMIN, varslock, 0, 0, 2); // 0 = master, 1 = admin only, 2 = nobody
 GVAR(IDF_ADMIN, votelock, 0, 1, 5); // 0 = off, 1 = master can select same game (+1 admin), 3 = master only can vote (+1 admin), 5 = no voting
 GVAR(IDF_ADMIN, votewait, 0, 3000, INT_MAX-1);
 
 GVAR(IDF_ADMIN, resetbansonend, 0, 1, 2); // reset bans on end (1: just when empty, 2: when matches end)
-GVAR(IDF_ADMIN, resetvarsonend, 0, 2, 2); // reset variables on end (1: just when empty, 2: when matches end)
-GVAR(IDF_ADMIN, resetmmonend, 0, 2, 2); // reset mastermode on end (1: just when empty, 2: when matches end)
+GVAR(IDF_ADMIN, resetvarsonend, 0, 1, 2); // reset variables on end (1: just when empty, 2: when matches end)
+GVAR(IDF_ADMIN, resetmmonend, 0, 1, 2); // reset mastermode on end (1: just when empty, 2: when matches end)
 
 GVARF(IDF_ADMIN, gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
 GVARF(IDF_ADMIN, gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
@@ -75,8 +75,8 @@ GVAR(0, kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade,
 
 GVAR(0, timelimit, 0, 15, INT_MAX-1);
 GVAR(0, triallimit, 0, 60000, INT_MAX-1);
-GVAR(0, intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
-GVAR(0, votelimit, 0, 45000, INT_MAX-1); // .. before vote passes by default
+GVAR(0, intermlimit, 0, 10000, INT_MAX-1); // .. before vote menu comes up
+GVAR(0, votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
 GVAR(0, duelreset, 0, 1, 1); // reset winner in duel
 GVAR(0, duelclear, 0, 1, 1); // clear items in duel
 GVAR(0, duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round

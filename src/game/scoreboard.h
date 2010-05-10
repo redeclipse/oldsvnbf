@@ -59,11 +59,11 @@ namespace hud
             {
                 if(ispress)
                 {
-                    bool within = menulastpress && lastmillis-menulastpress < PHYSMILLIS;
+                    bool within = menulastpress && totalmillis-menulastpress < PHYSMILLIS;
                     if(on)
                     {
                         if(within) onauto = true;
-                        menulastpress = lastmillis;
+                        menulastpress = totalmillis;
                     }
                     else if(within && !scoresoff) { menulastpress = 0; return; }
                 }

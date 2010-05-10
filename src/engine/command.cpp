@@ -1244,11 +1244,11 @@ void getvariable(int num)
     mkstring(text); num--;
     static vector<ident *> ids;
     static int lastupdate = 0;
-    if(ids.empty() || !lastupdate || lastmillis-lastupdate >= 60000)
+    if(ids.empty() || !lastupdate || totalmillis-lastupdate >= 60000)
     {
         ids.setsize(0);
         enumerate(*idents, ident, id, ids.add(&id));
-        lastupdate = lastmillis;
+        lastupdate = totalmillis;
     }
     if(ids.inrange(num))
     {

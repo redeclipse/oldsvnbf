@@ -342,10 +342,10 @@ namespace hud
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
         glColor3f(r, g, b);
         glBegin(GL_TRIANGLE_STRIP);
-        glVertex2f(x, y); 
+        glVertex2f(x, y);
         glVertex2f(x+w, y);
         glVertex2f(x, y+h);
-        glVertex2f(x+w, y+h); 
+        glVertex2f(x+w, y+h);
         glEnd();
         if(!blend) glDisable(GL_BLEND);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -665,7 +665,7 @@ namespace hud
         else if(game::focus->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::focus->state == CS_SPECTATOR || game::focus->state == CS_WAITING) index = POINTER_SPEC;
         else if(game::inzoom() && WEAP(game::focus->weapselect, zooms)) index = POINTER_ZOOM;
-        else if(lastmillis-game::focus->lasthit <= crosshairhitspeed) index = POINTER_HIT;
+        else if(totalmillis-game::focus->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(game::gamemode, game::mutators))
         {
             vec pos = game::focus->headpos();
@@ -692,7 +692,7 @@ namespace hud
         int numkilled = 0;
         loopvrev(teamkills)
         {
-            if(lastmillis-teamkills[i] <= teamkilltime) numkilled++;
+            if(totalmillis-teamkills[i] <= teamkilltime) numkilled++;
             else teamkills.remove(i);
         }
         return numkilled;
@@ -817,8 +817,8 @@ namespace hud
                         ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
                     if(inventoryteams)
                     {
-                        if(target->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
-                        if(lastmillis-lastteam <= inventoryteams)
+                        if(target->state == CS_ALIVE && !lastteam) lastteam = totalmillis;
+                        if(totalmillis-lastteam <= inventoryteams)
                         {
                             if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
                             else if(!m_team(game::gamemode, game::mutators))
@@ -829,7 +829,7 @@ namespace hud
                             else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[target->team].chat, teamtype[target->team].name, teamtype[target->team].chat, teamtype[target->team].colname)*noticescale;
                         }
                     }
-                    if(obitnotices && lastmillis-target->lastkill <= noticetime && *target->obit)
+                    if(obitnotices && totalmillis-target->lastkill <= noticetime && *target->obit)
                     {
                         pushfont("sub");
                         ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, target->obit)*noticescale;
@@ -968,7 +968,7 @@ namespace hud
                 loopvj(conlines) if(conlines[j].type >= CON_CHAT)
                 {
                     int len = !full && conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
-                    if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
+                    if(full || totalmillis-conlines[j].reftime <= len+chatconfade)
                     {
                         if(refs.length() >= numl)
                         {
@@ -984,7 +984,7 @@ namespace hud
                                 }
                                 if(!found) continue;
                             }
-                            conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
+                            conlines[j].reftime = min(conlines[j].reftime, totalmillis-len);
                         }
                         refs.add(j);
                     }
@@ -993,7 +993,7 @@ namespace hud
                 loopvj(refs)
                 {
                     int len = !full && conlines[refs[j]].type > CON_CHAT ? chatcontime/2 : chatcontime;
-                    float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
+                    float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(totalmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
                         g = conlines[refs[j]].type > CON_CHAT ? conblend : chatconblend;
                     z -= draw_textx("%s", r, z, 255, 255, 255, int(255*hudblend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;
                 }
@@ -1007,7 +1007,7 @@ namespace hud
                 loopvj(conlines) if(type ? conlines[j].type >= (confilter && !full ? CON_LO : 0) && conlines[j].type <= CON_HI : conlines[j].type >= (confilter && !full ? CON_LO : 0))
                 {
                     int len = !full && conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
-                    if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime <= len+confade)
+                    if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || totalmillis-conlines[j].reftime <= len+confade)
                     {
                         if(refs.length() >= numl)
                         {
@@ -1023,7 +1023,7 @@ namespace hud
                                 }
                                 if(!found) continue;
                             }
-                            conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
+                            conlines[j].reftime = min(conlines[j].reftime, totalmillis-len);
                         }
                         refs.add(j);
                     }
@@ -1031,7 +1031,7 @@ namespace hud
                 loopvrev(refs)
                 {
                     int len = !full && conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
-                    float f = full || !confade ? 1.f : clamp(((len+confade)-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f),
+                    float f = full || !confade ? 1.f : clamp(((len+confade)-(totalmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f),
                         g = full || conlines[refs[i]].type >= CON_IMPORTANT ? fullconblend : conblend;
                     z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*hudblend*f*g), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
                 }
@@ -1040,7 +1040,7 @@ namespace hud
             {
                 pushfont("command");
                 Texture *t = textureload(commandicon ? commandicon : inputtex, 3);
-                float f = float(lastmillis%1000)/1000.f;
+                float f = float(totalmillis%1000)/1000.f;
                 if(f < 0.5f) f = 1.f-f;
                 glBindTexture(GL_TEXTURE_2D, t->id);
                 glColor4f(1.f, 1.f, 1.f, fullconblend*hudblend*f);
@@ -1492,7 +1492,7 @@ namespace hud
                 if(teamwidgets) skewcolour(r, g, b);
                 if(pulse)
                 {
-                    int timestep = lastmillis%1000;
+                    int timestep = totalmillis%1000;
                     float skew = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal))*inventoryhealthflash, 0.f, 1.f);
                     r += (1.f-r)*skew;
                     g -= g*skew;
@@ -1648,7 +1648,7 @@ namespace hud
                         if(!game::intermission) lastnewgame = 0;
                         else
                         {
-                            int millis = votelimit-(lastmillis-lastnewgame), cg = int(cs*inventorygrow);
+                            int millis = votelimit-(totalmillis-lastnewgame), cg = int(cs*inventorygrow);
                             float amt = float(millis)/float(votelimit);
                             const char *col = "\fw";
                             if(amt > 0.75f) col = "\fg";
@@ -1661,12 +1661,12 @@ namespace hud
                     }
                     if(inventoryteams && game::focus->state != CS_EDITING && game::focus->state != CS_SPECTATOR)
                     {
-                        if(game::focus->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
+                        if(game::focus->state == CS_ALIVE && !lastteam) lastteam = totalmillis;
                         if(!lastnewgame && lastteam)
                         {
                             const char *pre = "";
                             float skew = inventorygrow, fade = blend*inventoryblend, rescale = 1;
-                            int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*inventorygrow) };
+                            int millis = totalmillis-lastteam, pos[2] = { cx[i], cm+int(cs*inventorygrow) };
                             if(millis <= inventoryteams)
                             {
                                 pre = "\fzRw";
@@ -1900,23 +1900,23 @@ namespace hud
         if(!progressing)
         {
             vec colour = vec(1, 1, 1);
-            if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) <= commandfade))
+            if(commandfade && (commandmillis > 0 || totalmillis-abs(commandmillis) <= commandfade))
             {
-                float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
+                float a = min(float(totalmillis-abs(commandmillis))/float(commandfade), 1.f)*commandfadeamt;
                 if(commandmillis > 0) a = 1.f-a;
                 else a += (1.f-commandfadeamt);
                 loopi(3) if(a < colour[i]) colour[i] *= a;
             }
-            if(compassfade && (compassmillis > 0 || lastmillis-(compassmillis > 0 ? compassmillis : -compassmillis) <= compassfade))
+            if(compassfade && (compassmillis > 0 || totalmillis-abs(compassmillis) <= compassfade))
             {
-                float a = min(float(lastmillis-(compassmillis > 0 ? compassmillis : -compassmillis))/float(compassfade), 1.f)*compassfadeamt;
+                float a = min(float(totalmillis-abs(compassmillis))/float(compassfade), 1.f)*compassfadeamt;
                 if(compassmillis > 0) a = 1.f-a;
                 else a += (1.f-compassfadeamt);
                 loopi(3) if(a < colour[i]) colour[i] *= a;
             }
-            if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) <= uifade))
+            if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || totalmillis-abs(uimillis) <= uifade))
             {
-                float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
+                float n = min(float(totalmillis-abs(uimillis))/float(uifade), 1.f), a = n*uifadeamt;
                 if(uimillis > 0) a = 1.f-a;
                 else a += (1.f-uifadeamt);
                 loopi(3) if(a < colour[i]) colour[i] *= a;
