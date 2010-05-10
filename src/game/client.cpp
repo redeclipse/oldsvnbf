@@ -860,40 +860,71 @@ namespace client
 
     void updateposition(gameent *d)
     {
-        if((d->state==CS_ALIVE || d->state==CS_EDITING) && (!d->ai || !d->ai->suspended))
+        if(!(d->state==CS_ALIVE || d->state==CS_EDITING) || (d->ai && d->ai->suspended))
+            return;
+
+        // send position updates separately so as to not stall out aiming
+        packetbuf q(100);
+        putint(q, N_POS);
+        putuint(q, d->clientnum);
+        // 3 bits phys state, 1 bit sprinting, 2 bits move, 2 bits strafe
+        uchar physstate = d->physstate | ((physics::sprinting(d) ? 1 : 0)<<3) | ((d->move&3)<<4) | ((d->strafe&3)<<6);
+        q.put(physstate);
+        ivec o = ivec(vec(d->o.x, d->o.y, d->o.z-d->height).mul(DMF));
+        uint vel = min(int(d->vel.magnitude()*DVELF), 0xFFFF), fall = min(int(d->falling.magnitude()*DVELF), 0xFFFF);
+        // 3 bits position, 1 bit velocity, 3 bits falling, 1 bit aim, 1 bit crouching, 1 bit conopen
+        uint flags = 0;
+        if(o.x < 0 || o.x > 0xFFFF) flags |= 1<<0;
+        if(o.y < 0 || o.y > 0xFFFF) flags |= 1<<1;
+        if(o.z < 0 || o.z > 0xFFFF) flags |= 1<<2;
+        if(vel > 0xFF) flags |= 1<<3;
+        if(fall > 0)
         {
-            // send position updates separately so as to not stall out aiming
-            packetbuf q(100);
-            putint(q, N_POS);
-            putint(q, d->clientnum);
-            putuint(q, (int)(d->o.x*DMF));            // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
-            putuint(q, (int)(d->o.y*DMF));
-            putuint(q, (int)((d->o.z - d->height)*DMF));
-            putuint(q, (int)d->yaw);
-            putint(q, (int)d->pitch);
-            putint(q, (int)d->roll);
-            putint(q, (int)(d->vel.x*DVELF));         // quantize to itself, almost always 1 byte
-            putint(q, (int)(d->vel.y*DVELF));
-            putint(q, (int)(d->vel.z*DVELF));
-            putuint(q, d->physstate | (d->falling.x || d->falling.y ? 0x20 : 0) | (d->falling.z ? 0x10 : 0));
-            if(d->falling.x || d->falling.y)
-            {
-                putint(q, (int)(d->falling.x*DVELF));      // quantize to itself, almost always 1 byte
-                putint(q, (int)(d->falling.y*DVELF));
-            }
-            if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
-            // pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
-            uint flags = (d->strafe&3) | ((d->move&3)<<2) |
-                ((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((physics::sprinting(d) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
-                    ((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
-            putuint(q, flags);
-            if(flags&0x20)
-            {
-                putuint(q, (int)d->aimyaw);
-                putint(q, (int)d->aimpitch);
-            }
-            sendclientpacket(q.finalize(), 0);
+            flags |= 1<<4;
+            if(fall > 0xFF) flags |= 1<<5;
+            if(d->falling.x || d->falling.y || d->falling.z > 0) flags |= 1<<6;
         }
+        if((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch) flags |= 1<<7;
+        if(d->action[AC_CROUCH]) flags |= 1<<8;
+        if(d->conopen) flags |= 1<<9;
+        putuint(q, flags);
+        loopk(3)
+        {
+            q.put(o[k]&0xFF);
+            q.put((o[k]>>8)&0xFF);
+            if(o[k] < 0 || o[k] > 0xFFFF) q.put((o[k]>>16)&0xFF);
+        }
+        uint dir = (d->yaw < 0 ? 360 + int(d->yaw)%360 : int(d->yaw)%360) + clamp(int(d->pitch+90), 0, 180)*360;
+        q.put(dir&0xFF);
+        q.put((dir>>8)&0xFF);
+        q.put(clamp(int(d->roll+90), 0, 180));
+        q.put(vel&0xFF);
+        if(vel > 0xFF) q.put((vel>>8)&0xFF);
+        float velyaw, velpitch;
+        vectoyawpitch(d->vel, velyaw, velpitch);
+        uint veldir = (velyaw < 0 ? 360 + int(velyaw)%360 : int(velyaw)%360) + clamp(int(velpitch+90), 0, 180)*360;
+        q.put(veldir&0xFF);
+        q.put((veldir>>8)&0xFF);
+        if(fall > 0)
+        {
+            q.put(fall&0xFF);
+            if(fall > 0xFF) q.put((fall>>8)&0xFF);
+            if(d->falling.x || d->falling.y || d->falling.z > 0)
+            {
+                float fallyaw, fallpitch;
+                vectoyawpitch(d->falling, fallyaw, fallpitch);
+                uint falldir = (fallyaw < 0 ? 360 + int(fallyaw)%360 : int(fallyaw)%360) + clamp(int(fallpitch+90), 0, 180)*360;
+                q.put(falldir&0xFF);
+                q.put((falldir>>8)&0xFF);
+            }
+        }
+        if((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch)
+        {
+            uint aimdir = (d->aimyaw < 0 ? 360 + int(d->aimyaw)%360 : int(d->aimyaw)%360) + clamp(int(d->aimpitch+90), 0, 180)*360;
+            q.put(aimdir&0xFF);
+            q.put((aimdir>>8)&0xFF);
+        }
+        sendclientpacket(q.finalize(), 0);
     }
 
     void sendmessages(gameent *d)
@@ -1002,47 +1033,54 @@ namespace client
         {
             case N_POS:                        // position of another client
             {
-                int lcn = getint(p);
+                int lcn = getuint(p), physstate = p.get(), flags = getuint(p);
                 vec o, vel, falling;
                 float yaw, pitch, roll, aimyaw, aimpitch;
-                int physstate, f;
-                o.x = getuint(p)/DMF;
-                o.y = getuint(p)/DMF;
-                o.z = getuint(p)/DMF;
-                aimyaw = yaw = (float)getuint(p);
-                aimpitch = pitch = (float)getint(p);
-                roll = (float)getint(p);
-                vel.x = getint(p)/DVELF;
-                vel.y = getint(p)/DVELF;
-                vel.z = getint(p)/DVELF;
-                physstate = getuint(p);
-                falling = vec(0, 0, 0);
-                if(physstate&0x20)
+                loopk(3)
                 {
-                    falling.x = getint(p)/DVELF;
-                    falling.y = getint(p)/DVELF;
+                    int n = p.get(); n |= p.get()<<8; if(flags&(1<<k)) { n |= p.get()<<16; if(n&0x800000) n |= -1<<24; }
+                    o[k] = n/DMF;
                 }
-                if(physstate&0x10) falling.z = getint(p)/DVELF;
-                f = getuint(p);
-                if(f&0x20)
+                int dir = p.get(); dir |= p.get()<<8;
+                aimyaw = yaw = dir%360;
+                aimpitch = pitch = clamp(dir/360, 0, 180)-90;
+                roll = clamp(int(p.get()), 0, 180)-90;
+                int mag = p.get(); if(flags&(1<<3)) mag |= p.get()<<8;
+                dir = p.get(); dir |= p.get()<<8;
+                vecfromyawpitch(dir%360, clamp(dir/360, 0, 180)-90, 1, 0, vel);
+                vel.mul(mag/DVELF);
+                if(flags&(1<<4))
                 {
-                    aimyaw = (float)getuint(p);
-                    aimpitch = (float)getint(p);
+                    mag = p.get(); if(flags&(1<<5)) mag |= p.get()<<8;
+                    if(flags&(1<<6))
+                    {
+                        dir = p.get(); dir |= p.get()<<8;
+                        vecfromyawpitch(dir%360, clamp(dir/360, 0, 180)-90, 1, 0, falling);
+                    }
+                    else falling = vec(0, 0, -1);
+                    falling.mul(mag/DVELF);
+                }
+                else falling = vec(0, 0, 0);
+                if(flags&(1<<7))
+                {
+                    dir = p.get(); dir |= p.get()<<8;
+                    aimyaw = dir%360;
+                    aimpitch = clamp(dir/360, 0, 180)-90;
                 }
                 gameent *d = game::getclient(lcn);
                 if(!d || d==game::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
-                d->action[AC_SPRINT] = f&0x40 ? true : false;
-                d->conopen = f&0x80 ? true : false;
+                d->action[AC_SPRINT] = physstate&(1<<3) ? true : false;
+                d->conopen = flags&(1<<9) ? true : false;
                 d->yaw = yaw;
                 d->pitch = pitch;
                 d->roll = roll;
                 d->aimyaw = aimyaw;
                 d->aimpitch = aimpitch;
-                d->strafe = (f&3)==3 ? -1 : f&3; f >>= 2;
-                d->move = (f&3)==3 ? -1 : f&3; f >>= 2;
+                d->move = (physstate>>4)&2 ? -1 : (physstate>>4)&1;
+                d->strafe = (physstate>>6)&2 ? -1 : (physstate>>6)&1;
                 bool crouch = d->action[AC_CROUCH];
-                d->action[AC_CROUCH] = f&1 ? true : false;
+                d->action[AC_CROUCH] = flags&(1<<8) ? true : false;
                 if(crouch != d->action[AC_CROUCH]) d->actiontime[AC_CROUCH] = lastmillis;
                 vec oldpos(d->o);
                 //if(game::allowmove(d))
@@ -1051,7 +1089,7 @@ namespace client
                     d->o.z += d->height;
                     d->vel = vel;
                     d->falling = falling;
-                    d->physstate = physstate & 0x0F;
+                    d->physstate = physstate&7;
                     physics::updatephysstate(d);
                     updatepos(d);
                 //}
