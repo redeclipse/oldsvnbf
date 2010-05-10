@@ -70,7 +70,7 @@ namespace weapons
 
     void weaponswitch(gameent *d, int a = -1, int b = -1)
     {
-        if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX || (weapselectdelay && lastweapselect && lastmillis-lastweapselect < weapselectdelay)) return;
+        if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX || (weapselectdelay && lastweapselect && totalmillis-lastweapselect < weapselectdelay)) return;
         if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true))) return;
         int s = d->weapselect;
         loopi(WEAP_MAX) // only loop the amount of times we have weaps for
@@ -103,7 +103,7 @@ namespace weapons
 
             if(weapselect(d, s))
             {
-                lastweapselect = lastmillis;
+                lastweapselect = totalmillis;
                 return;
             }
             else if(a >= 0) break;

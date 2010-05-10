@@ -256,14 +256,14 @@ namespace auth
         conoutf("updating authentication server");
         defformatstring(msg)("server %d %d\n", serverport, serverport+1);
         addoutput(msg);
-        lastactivity = lastmillis;
+        lastactivity = totalmillis;
     }
 
     void connect()
     {
         if(socket != ENET_SOCKET_NULL) return;
 
-        lastconnect = lastmillis;
+        lastconnect = totalmillis;
         conoutf("connecting to authentication server %s:[%d]...", servermaster, servermasterport);
         ENetAddress authserver = { ENET_HOST_ANY, servermasterport };
         if(enet_address_set_host(&authserver, servermaster) < 0) conoutf("could not set authentication host");
@@ -312,7 +312,7 @@ namespace auth
         int sent = enet_socket_send(socket, NULL, &buf, 1);
         if(sent > 0)
         {
-            lastactivity = lastmillis;
+            lastactivity = totalmillis;
             outputpos += sent;
             if(outputpos >= output.length())
             {
@@ -345,7 +345,7 @@ namespace auth
     {
         if(!isconnected())
         {
-            if(servertype >= 2 && (!lastconnect || lastmillis - lastconnect > 60*1000)) connect();
+            if(servertype >= 2 && (!lastconnect || totalmillis-lastconnect > 60*1000)) connect();
             if(!isconnected()) return;
         }
         else if(servertype < 2)
@@ -354,7 +354,7 @@ namespace auth
             return;
         }
 
-        if(lastmillis-lastactivity > 10*60*1000) regserver();
+        if(totalmillis-lastactivity > 10*60*1000) regserver();
         flushoutput();
         flushinput();
     }

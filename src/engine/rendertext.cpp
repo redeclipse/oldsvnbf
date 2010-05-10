@@ -139,7 +139,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
 }
 
 #define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
-#define TEXTBLINK(x,y,z) { if(x[y] == 'z') { int q = blinkingtext && lastmillis%500 > 250 ? 2 : 1; if(x[y+q]) { y += q; z; } y += 2-q; } else { z } }
+#define TEXTBLINK(x,y,z) { if(x[y] == 'z') { int q = blinkingtext && totalmillis%500 > 250 ? 2 : 1; if(x[y+q]) { y += q; z; } y += 2-q; } else { z } }
 #define TEXTALIGN \
     x = (!(flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT) ? TEXTTAB(0) : 0); \
     if(!y && (flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT)) maxwidth -= PIXELTAB; \
@@ -269,7 +269,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     xtraverts += varray::end();
     if(cursor >= 0)
     {
-        glColor4ub(color.x, color.y, color.z, int(a*(1.f-(float(lastmillis%1000)/1000.f))));
+        glColor4ub(color.x, color.y, color.z, int(a*(1.f-(float(totalmillis%1000)/1000.f))));
         draw_char('|', left+cx+FONTW/2, top+cy);
         xtraverts += varray::end();
     }

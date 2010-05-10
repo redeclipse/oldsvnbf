@@ -716,7 +716,7 @@ namespace server
         if(smode) smode->intermission();
         mutate(smuts, mut->intermission());
         maprequest = false;
-        interm = gamemillis+GAME(intermlimit);
+        interm = totalmillis+GAME(intermlimit);
         sendf(-1, 1, "ri2", N_TICK, 0);
     }
 
@@ -1385,7 +1385,7 @@ namespace server
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum));
         if(!hasveto)
         {
-            if(ci->lastvote && lastmillis-ci->lastvote <= GAME(votewait)) return;
+            if(ci->lastvote && totalmillis-ci->lastvote <= GAME(votewait)) return;
             if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return;
         }
         if(reqmode < G_START && !ci->local)
@@ -2946,14 +2946,14 @@ namespace server
                 masterupdate = false;
             }
 
-            if(interm && gamemillis >= interm) // wait then call for next map
+            if(interm && totalmillis >= interm) // wait then call for next map
             {
                 if(GAME(votelimit) && !maprequest && GAME(votelock) != 5 && (GAME(modelock) != 5 || GAME(mapslock) != 5))
                 { // if they can't vote, no point in waiting for them to do so
                     if(demorecord) enddemorecord();
                     sendf(-1, 1, "ri", N_NEWGAME);
                     maprequest = true;
-                    interm = gamemillis+GAME(votelimit);
+                    interm = totalmillis+GAME(votelimit);
                 }
                 else
                 {

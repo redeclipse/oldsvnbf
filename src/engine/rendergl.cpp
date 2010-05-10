@@ -874,7 +874,7 @@ void disablepolygonoffset(GLenum type)
     bool clipped = reflectz < 1e15f && reflectclip;
 
     glMatrixMode(GL_PROJECTION);
-    if(clipped) 
+    if(clipped)
     {
         glLoadMatrixf(clipmatrix.v);
         if(fogging)
@@ -1093,7 +1093,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, lastmotion ? pow(amount, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
+    glColor4f(1, 1, 1, lastmotion ? pow(amount, max(float(totalmillis-lastmotion)/motionblurmillis, 1.0f)) : 0);
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
@@ -1112,9 +1112,9 @@ void addmotionblur()
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    if(lastmillis - lastmotion >= motionblurmillis)
+    if(totalmillis-lastmotion >= motionblurmillis)
     {
-        lastmotion = lastmillis - lastmillis%motionblurmillis;
+        lastmotion = totalmillis-totalmillis%motionblurmillis;
 
         glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
     }
@@ -1299,7 +1299,7 @@ void drawreflection(float z, bool refract)
 
     if(fading)
     {
-        float scale = fogging ? -0.25f : 0.25f, offset = 2*fabs(scale) - scale*z; 
+        float scale = fogging ? -0.25f : 0.25f, offset = 2*fabs(scale) - scale*z;
         setenvparamf("waterfadeparams", SHPARAM_VERTEX, 8, scale, offset, -scale, offset + camera1->o.z*scale);
         setenvparamf("waterfadeparams", SHPARAM_PIXEL, 8, scale, offset, -scale, offset + camera1->o.z*scale);
     }

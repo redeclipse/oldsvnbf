@@ -113,7 +113,7 @@ void purgeauths(masterclient &c)
     int expired = 0;
     loopv(c.authreqs)
     {
-        if(ENET_TIME_DIFFERENCE(lastmillis, c.authreqs[i].reqtime) >= AUTH_TIME)
+        if(ENET_TIME_DIFFERENCE(totalmillis, c.authreqs[i].reqtime) >= AUTH_TIME)
         {
             masteroutf(c, "failauth %u\n", c.authreqs[i].id);
             freechallenge(c.authreqs[i].answer);
@@ -148,9 +148,9 @@ void reqauth(masterclient &c, uint id, char *name)
 
     authreq &a = c.authreqs.add();
     a.user = u;
-    a.reqtime = lastmillis;
+    a.reqtime = totalmillis;
     a.id = id;
-    uint seed[3] = { starttime, lastmillis, randomMT() };
+    uint seed[3] = { starttime, totalmillis, randomMT() };
     static vector<char> buf;
     buf.setsize(0);
     a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
@@ -244,7 +244,7 @@ bool checkmasterclientinput(masterclient &c)
         {
             c.port = ENG_SERVER_PORT;
             if(w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
-            c.lastactivity = lastmillis;
+            c.lastactivity = totalmillis;
             if(c.isserver)
             {
                 masteroutf(c, "echo \"server updated\"\n");
@@ -336,7 +336,7 @@ void checkmaster()
                 masterclient *c = new masterclient;
                 c->address = address;
                 c->socket = masterclientsocket;
-                c->lastactivity = lastmillis;
+                c->lastactivity = totalmillis;
                 masterclients.add(c);
                 enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
                 conoutf("master peer %s connected", c->name);
@@ -379,7 +379,7 @@ void checkmaster()
                 else { purgemasterclient(i--); continue; }
             }
             /* if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; } */
-            if(lastmillis - c.lastactivity >= (c.isserver ? SERVER_TIME : CLIENT_TIME))
+            if(totalmillis-c.lastactivity >= (c.isserver ? SERVER_TIME : CLIENT_TIME))
             {
                 purgemasterclient(i--);
                 continue;

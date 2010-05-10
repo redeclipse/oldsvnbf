@@ -90,7 +90,6 @@ struct ctfstate
 #ifdef GAMESERVER
         f.votes.shrink(0);
 #else
-        f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.lastowner = owner;
         f.pickup = true;
 #endif
@@ -106,7 +105,6 @@ struct ctfstate
         f.owner = -1;
         f.votes.shrink(0);
 #else
-        f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.pickup = false;
         f.owner = NULL;
 #endif
@@ -120,7 +118,6 @@ struct ctfstate
         f.owner = -1;
         f.votes.shrink(0);
 #else
-        f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.pickup = false;
         f.owner = NULL;
 #endif
@@ -138,6 +135,14 @@ struct ctfstate
         cs.total = 0;
         return cs;
     }
+
+#ifndef GAMESERVER
+    void interp(int i, int t)
+    {
+        flag &f = flags[i];
+        f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
+    }
+#endif
 };
 
 #ifndef GAMESERVER

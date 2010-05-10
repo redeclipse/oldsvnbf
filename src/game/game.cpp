@@ -512,6 +512,7 @@ namespace game
             if(lastmillis-d->lastfire >= fireburntime) d->resetfire();
             else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != focus ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
         }
+        else if(issound(d->fschan)) removesound(d->fschan);
     }
 
 
@@ -545,8 +546,8 @@ namespace game
         gameent *d, *actor;
         int damage, flags, millis;
 
-        damagetone() { millis = lastmillis; }
-        damagetone(gameent *d, gameent *actor, int damage, int flags) : d(d), actor(actor), damage(damage), flags(flags) { millis = lastmillis; }
+        damagetone() { millis = totalmillis; }
+        damagetone(gameent *d, gameent *actor, int damage, int flags) : d(d), actor(actor), damage(damage), flags(flags) { millis = totalmillis; }
 
         bool merge(const damagetone &m)
         {
@@ -588,7 +589,7 @@ namespace game
     {
         loopv(damagetones)
         {
-            if(damagetones[i].flags&damagetone::CRIT || lastmillis-damagetones[i].millis >= (damagetones[i].flags&damagetone::BURN ? damageburndelay : damagetonedelay))
+            if(damagetones[i].flags&damagetone::CRIT || totalmillis-damagetones[i].millis >= (damagetones[i].flags&damagetone::BURN ? damageburndelay : damagetonedelay))
             {
                 damagetones[i].play();
                 damagetones.remove(i--);
@@ -624,7 +625,7 @@ namespace game
                     bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
                     if(sameteam) { if(actor == focus && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
                     else if(playdamagetones >= (actor == focus ? 1 : (d == focus ? 2 : 3))) mergedamagetone(d, actor, damage, burning ? damagetone::BURN : 0);
-                    if(!burning && !sameteam) actor->lasthit = lastmillis;
+                    if(!burning && !sameteam) actor->lasthit = totalmillis;
                 }
             }
             if(isweap(weap) && !burning && (d == player1 || !isaitype(d->aitype) || aistyle[d->aitype].canmove))
@@ -882,7 +883,7 @@ namespace game
         if(d != actor)
         {
             if(actor->state == CS_ALIVE) copystring(actor->obit, d->obit);
-            actor->lastkill = lastmillis;
+            actor->lastkill = totalmillis;
         }
         if(dth >= 0)
         {
@@ -915,8 +916,8 @@ namespace game
         }
         if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
         {
-            hud::teamkills.add(lastmillis);
-            if(hud::numteamkills() >= hud::teamkillnum) hud::lastteam = lastmillis;
+            hud::teamkills.add(totalmillis);
+            if(hud::numteamkills() >= hud::teamkillnum) hud::lastteam = totalmillis;
         }
         ai::killed(d, actor);
     }
