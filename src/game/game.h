@@ -823,11 +823,7 @@ struct gamestate
         weapreset(true);
         if(!isweap(sweap)) sweap = WEAP_PISTOL;
         ammo[sweap] = WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max);
-        if(!insta)
-        {
-            if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
-            if(sweap != WEAP_PISTOL) ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
-        }
+        if(!insta && sweap != WEAP_PISTOL) ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
         if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WEAP(WEAP_GRENADE, max);
         if(arena)
         {
