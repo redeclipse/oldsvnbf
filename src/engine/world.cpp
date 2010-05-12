@@ -870,8 +870,48 @@ bool enlargemap(bool force)
     return true;
 }
 
+static bool isallempty(cube &c)
+{
+    if(!c.children) return isempty(c);
+    loopi(8) if(!isallempty(c.children[i])) return false;
+    return true;
+}
+
+void shrinkmap()
+{
+    if(noedit(true) || multiplayer()) return;
+    if(hdr.worldsize <= 1<<10) return;
+
+    int octant = -1;
+    loopi(8) if(!isallempty(worldroot[i]))
+    {
+        if(octant >= 0) return;
+        octant = i;
+    }
+    if(octant < 0) return;
+
+    if(!worldroot[octant].children) subdividecube(worldroot[octant], false, false);
+    cube *root = worldroot[octant].children;
+    worldroot[octant].children = NULL;
+    freeocta(worldroot);
+    worldroot = root; 
+    worldscale--;
+    hdr.worldsize /= 2; 
+
+    ivec offset(octant, 0, 0, 0, hdr.worldsize);
+    vector<extentity *> &ents = entities::getents();
+    loopv(ents) ents[i]->o.sub(offset.tovec());
+
+    shrinkblendmap(octant);
+
+    allchanged();
+
+    conoutf("shrunk map to size %d", worldscale);
+}
+
 ICOMMAND(0, newmap, "is", (int *i), if(emptymap(*i, false)) game::newmap(::max(*i, 0)));
 ICOMMAND(0, mapenlarge, "", (), if(enlargemap(false)) game::newmap(-1));
+COMMAND(0, shrinkmap, "");
 ICOMMAND(0, mapsize, "", (void),
 {
     int size = 0;
