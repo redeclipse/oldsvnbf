@@ -162,7 +162,7 @@ namespace physics
         {
             gameent *e = (gameent *)d;
             if(last && e->lastsprint && lastmillis-e->lastsprint <= PHYSMILLIS) return true;
-            if(!iscrouching(d))
+            if(!iscrouching(e) && (e != game::player1 || !WEAP(e->weapselect, zooms) || !game::inzoom()))
             {
                 if(turn && e->turnside) return true;
                 if((d != game::player1 && !e->ai) || !impulsemeter || e->impulse[IM_METER] < impulsemeter)
