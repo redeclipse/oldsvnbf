@@ -22,7 +22,7 @@ CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -Iinclude
 CLIENT_LIBS= -mwindows -lmingw32 -Llib -lSDLmain -lSDL -lSDL_image -lSDL_mixer -lzdll -lopengl32 -lenet -lws2_32 -lwinmm
 else
 CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -I/usr/X11R6/include `sdl-config --cflags`
-CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL
+CLIENT_LIBS= -Lenet/.libs -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL
 endif
 ifeq ($(PLATFORM),Linux)
 CLIENT_LIBS+= -lrt
@@ -105,7 +105,7 @@ SERVER_OBJS= \
 default: all
 
 enet/Makefile:
-	cd enet; chmod +x ./configure; ./configure
+	cd enet; ./configure --enable-shared=no --enable-static=yes
 
 libenet: enet/Makefile
 	$(MAKE) -C enet/ all
