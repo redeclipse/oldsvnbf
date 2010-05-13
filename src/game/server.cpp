@@ -1045,13 +1045,17 @@ namespace server
         bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
         if(ci->state.aitype >= AI_START)
         {
-            int health = aistyle[ci->state.aitype].health;
-            if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[6] > 0)
-                health = sents[ci->state.aientity].attrs[6];
-            maxhealth = max(health+(rnd(health)-(health/2)), max(health/5, 10));
-            if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[5] > 0)
-                weap = sents[ci->state.aientity].attrs[5]-1;
-            else weap = aistyle[ci->state.aitype].weap;
+            if(!m_insta(gamemode, mutators))
+            {
+                int health = aistyle[ci->state.aitype].health;
+                if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[6] > 0)
+                    health = sents[ci->state.aientity].attrs[6];
+                maxhealth = max(health+(rnd(health)-(health/2)), max(health/5, 10));
+                if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[5] > 0)
+                    weap = sents[ci->state.aientity].attrs[5]-1;
+                else weap = aistyle[ci->state.aitype].weap;
+            }
+            else if(ci->state.aitype == AI_ZOMBIE) weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
             arena = grenades = false;
         }
