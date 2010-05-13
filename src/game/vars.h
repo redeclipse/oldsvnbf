@@ -103,7 +103,7 @@ GVAR(0, skillmin, 1, 65, 101);
 GVAR(0, skillmax, 1, 85, 101);
 GVAR(0, botbalance, -1, -1, INT_MAX-1); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
 GVAR(0, botlimit, 0, 16, INT_MAX-1);
-GVAR(0, enemyallowed, 0, 1, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too
+GVAR(0, enemyallowed, 0, 2, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too
 GVAR(0, enemybalance, 0, 1, INT_MAX-1);
 GVAR(0, enemydelay, 0, 15000, INT_MAX-1);
 
