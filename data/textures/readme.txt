@@ -12,10 +12,8 @@ dead.png, dominated.png, dominating.png, flag.png, and melee.png
     Released as Public Domain Royalty Free Clipart
 
 zoom.png
-    Created by Theso, posted at http://www.quadropolis.us/node/2680
-    Use it however you wish, but credit would be greatly appreciated.
-
-contact: johniwas@gmail.com 
+    Created by Theso (johniwas@gmail.com), http://www.quadropolis.us/node/2680
+    Use it however you wish, but credit would be greatly appreciated. 
 
 All other files in this directory are:
     (C) 2007-2010 Blood Frontier Team, all rights reserved.
