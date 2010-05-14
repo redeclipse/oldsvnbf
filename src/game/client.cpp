@@ -170,8 +170,6 @@ namespace client
     }
     ICOMMAND(0, team, "s", (char *s), switchteam(s));
 
-    int numchannels() { return 3; }
-
     void writeclientinfo(stream *f)
     {
         f->printf("name \"%s\"\n\n", game::player1->name);
