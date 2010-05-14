@@ -42,7 +42,6 @@ namespace client
     extern void connectfail();
     extern int state();
     extern int otherclients();
-    extern int numchannels();
     extern int servercompare(serverinfo *a, serverinfo *b);
 }
 
@@ -123,6 +122,7 @@ namespace server
     extern void deleteinfo(void *ci);
     extern int numclients(int exclude = -1, bool nospec = false, int aitype = -1);
     extern int reserveclients();
+    extern int numchannels();
     extern void clientdisconnect(int n, bool local = false, int reason = DISC_NONE);
     extern int clientconnect(int n, uint ip, bool local = false);
     extern bool allowbroadcast(int n);

@@ -789,6 +789,7 @@ void setupserver()
 #endif
         return;
     }
+    enet_host_channel_limit(serverhost, server::numchannels());
     loopi(server::reserveclients()) serverhost->peers[i].data = NULL;
 
     address.port = serverport+1;

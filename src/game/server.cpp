@@ -467,6 +467,8 @@ namespace server
     void *newinfo() { return new clientinfo; }
     void deleteinfo(void *ci) { delete (clientinfo *)ci; }
 
+    int numchannels() { return 3; }
+
     const char *mastermodename(int type)
     {
         switch(type)
