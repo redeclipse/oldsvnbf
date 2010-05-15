@@ -273,7 +273,6 @@ ICOMMAND(0, escape, "si", (const char *s, int *a, int *b, int *c), result(escape
 vector<clientdata *> clients;
 
 ENetHost *serverhost = NULL;
-size_t bsend = 0, brec = 0;
 int laststatus = 0;
 ENetSocket pongsock = ENET_SOCKET_NULL;
 
@@ -323,7 +322,6 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
         case ST_TCPIP:
         {
             enet_peer_send(clients[n]->peer, chan, packet);
-            bsend += packet->dataLength;
             break;
         }
         case ST_LOCAL:
@@ -634,9 +632,9 @@ void serverslice()  // main server update, called from main loop in sp, or from 
     if(servertype >= 2 && totalmillis-laststatus >= 60000)  // display bandwidth stats, useful for server ops
     {
         laststatus = totalmillis;
-        if(bsend || brec || server::numclients())
-            conoutf("status: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(), bsend/60.0f/1024, brec/60.0f/1024);
-        bsend = brec = 0;
+        if(serverhost->totalSentData || serverhost->totalReceivedData || server::numclients()) 
+            conoutf("status: %d clients, %.1f send, %.1f rec (K/sec)\n", server::numclients(), serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
+        serverhost->totalSentData = serverhost->totalReceivedData = 0;
     }
 
     ENetEvent event;
@@ -664,7 +662,6 @@ void serverslice()  // main server update, called from main loop in sp, or from 
             }
             case ENET_EVENT_TYPE_RECEIVE:
             {
-                brec += event.packet->dataLength;
                 clientdata *c = (clientdata *)event.peer->data;
                 if(c) process(event.packet, c->num, event.channelID);
                 if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
