@@ -2795,5 +2795,5 @@ void mergenormalmaps(char *heightfile, char *normalfile) // jpg/png/tga + tga ->
 }
 
 COMMAND(0, flipnormalmapy, "ss");
-COMMAND(0, mergenormalmaps, "sss");
+COMMAND(0, mergenormalmaps, "ss");
 
