@@ -1779,7 +1779,7 @@ void isshadernative(char *name)
 COMMAND(0, isshaderdefined, "s");
 COMMAND(0, isshadernative, "s");
 
-static hashtable<const char *, const char *> shaderparamnames(256);
+static hashset<const char *> shaderparamnames(256);
 
 const char *getshaderparamname(const char *name)
 {
