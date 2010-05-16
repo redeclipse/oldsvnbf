@@ -1,20 +1,17 @@
 * Model layering colour customisation via shaders
 * Commands to perform common geometry operations: slope, arch, stairs, circle, sphere
 * Fix /newmap issues with autoget/send
-* Work out why bans don't stick
 * Optical effects (sprinting. etc)
-* Make 'tags' and/or 'theme' fields
+* Make 'tags' and/or 'theme' fields (or just mark modified gameplay)
 * Move things like mastermode, ban, etc to server side commands/variables
-* Move to mutators: spawngrenades?, vampire, itemsallowed?, itemdropping?, kamikaze?, duelreset?, duelclear?, selfdamage?, trialdamage?, teamdamage?, ctfstyle, stfstyle, (low/high gravity?), extrahealth?
-* Remember ammo counts for dropped weapons
-* Give remaining interactive entities a mode field
+* Remember ammo counts for dropped weapons?
 * Make checkpoints/triggers linkable for a determined order (add to kinship system)
 * Create "assisted secures" for stf (player1, player2, player3 secured flag N)
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
-* Make glass more visible/look better (combined texture?)
-* Elaborate and refine Story mode/AI
+* Elaborate and refine AI (campaign, fix zombie "spinning", add turret, smarter "cooking")
+* Add sword and modify projectile subsystems accordingly
 * Master server tracking and unlockable system
 
 ! Keep an eye out for the elusive grenade bugs
@@ -29,7 +26,6 @@
 * Current "widgets" need glow removed so they are not clipped by image dimensions
 
 = Sounds =
-* Domination/Revenge
 * Double/Triple/Multi kill
 * Spree 5/6 (7/8/9/10?)
 * Team-alert and damage tones
