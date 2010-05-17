@@ -209,6 +209,7 @@ extern void setuptexcompress();
 extern void clearslots();
 extern void compacteditvslots();
 extern void compactmruvslots();
+extern void compactvslot(int &index);
 extern void compactvslots(cube *c, int n = 8);
 extern int compactvslots(bool cull = false);
 

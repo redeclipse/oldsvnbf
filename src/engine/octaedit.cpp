@@ -964,8 +964,11 @@ COMMAND(0, paste, "");
 COMMANDN(0, undo, editundo, "");
 COMMANDN(0, redo, editredo, "");
 
+static VSlot *editingvslot = NULL;
+
 void compacteditvslots()
 {
+    if(editingvslot && editingvslot->layer) compactvslot(editingvslot->layer);
     loopv(editinfos)
     {
         editinfo *e = editinfos[i];
@@ -1641,7 +1644,7 @@ void edittexcube(cube &c, int tex, int orient, bool &findrep)
 
 VAR(0, allfaces, 0, 0, 1);
 
-void mpeditvslot(const VSlot &ds, int allfaces, selinfo &sel, bool local)
+void mpeditvslot(VSlot &ds, int allfaces, selinfo &sel, bool local)
 {
     if(local)
     {
@@ -1651,7 +1654,9 @@ void mpeditvslot(const VSlot &ds, int allfaces, selinfo &sel, bool local)
     }
     bool findrep = local && !allfaces && reptex < 0;
     VSlot *findedit = NULL;
+    editingvslot = &ds;
     loopselxyz(remapvslots(c, ds, allfaces ? -1 : sel.orient, findrep, findedit));
+    editingvslot = NULL;
     remappedvslots.setsize(0);
     if(local && findedit)
     {
