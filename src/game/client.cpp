@@ -856,13 +856,8 @@ namespace client
         sendclientpacket(p.finalize(), 1);
     }
 
-    void updateposition(gameent *d)
+    static void sendposition(gameent *d, packetbuf &q)
     {
-        if(!(d->state==CS_ALIVE || d->state==CS_EDITING) || (d->ai && d->ai->suspended))
-            return;
-
-        // send position updates separately so as to not stall out aiming
-        packetbuf q(100);
         putint(q, N_POS);
         putuint(q, d->clientnum);
         // 3 bits phys state, 1 bit sprinting, 2 bits move, 2 bits strafe
@@ -922,10 +917,30 @@ namespace client
             q.put(aimdir&0xFF);
             q.put((aimdir>>8)&0xFF);
         }
-        sendclientpacket(q.finalize(), 0);
     }
 
-    void sendmessages(gameent *d)
+    void sendpositions()
+    {
+        loopv(game::players)
+        {
+            gameent *d = game::players[i];
+            if(d && (d == game::player1 || (d->ai && !d->ai->suspended)) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+            {
+                packetbuf q(100);
+                sendposition(d, q);
+                for(int j = i+1; j < game::players.length(); j++)
+                {
+                    gameent *d = game::players[j];
+                    if(d && (d == game::player1 || (d->ai && !d->ai->suspended)) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+                        sendposition(d, q);
+                }
+                sendclientpacket(q.finalize(), 0);
+                break;
+            }
+        }
+    }
+
+    void sendmessages()
     {
         packetbuf p(MAXTRANS);
         if(sendcrc)
@@ -969,9 +984,8 @@ namespace client
         static int lastupdate = -1000;
         if(totalmillis-lastupdate < 40 && !force) return;    // don't update faster than 25fps
         lastupdate = totalmillis;
-        updateposition(game::player1);
-        loopv(game::players) if(game::players[i] && game::players[i]->ai) updateposition(game::players[i]);
-        sendmessages(game::player1);
+        sendpositions();
+        sendmessages();
         flushclient();
     }
 
