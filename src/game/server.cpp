@@ -1052,7 +1052,7 @@ namespace server
                 int health = aistyle[ci->state.aitype].health;
                 if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[6] > 0)
                     health = sents[ci->state.aientity].attrs[6];
-                maxhealth = max(health+(rnd(health)-(health/2)), max(health/5, 10));
+                maxhealth = max(health+rnd(health), max(health/5, 10));
                 if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[5] > 0)
                     weap = sents[ci->state.aientity].attrs[5]-1;
                 else weap = aistyle[ci->state.aitype].weap;
@@ -2351,86 +2351,90 @@ namespace server
 
         if(realflags&HIT_KILL)
         {
-            int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
-                pointvalue = smode ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
+            bool isai = target->state.aitype >= AI_START && !m_campaign(gamemode);
+            int fragvalue = isai ? 0 : 1;
+            if(fragvalue && (target == actor || (m_team(gamemode, mutators) && target->team == actor->team))) fragvalue = -fragvalue;
+            int pointvalue = smode && !isai ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
             if(!m_insta(gamemode, mutators) && (realdamage >= (realflags&HIT_EXPLODE ? m_health(gamemode, mutators) : m_health(gamemode, mutators)*3/2)))
                 style = FRAG_OBLITERATE;
             actor->state.frags += fragvalue;
-
             target->state.spree = 0;
-            if(m_team(gamemode, mutators) && actor->team == target->team)
+            if(pointvalue)
             {
-                actor->state.spree = 0;
-                if(actor->state.aitype < AI_START)
+                if(m_team(gamemode, mutators) && actor->team == target->team)
                 {
-                    if(actor != target) actor->state.teamkills++;
-                    pointvalue *= 2;
-                }
-            }
-            else if(actor != target && actor->state.aitype < AI_START)
-            {
-                if((flags&HIT_PROJ) && (flags&HIT_HEAD))
-                {
-                    style |= FRAG_HEADSHOT;
-                    pointvalue *= 2;
-                }
-                if(m_fight(gamemode) && target->state.aitype < AI_START)
-                {
-                    int logs = 0;
-                    actor->state.spree++;
-                    actor->state.fraglog.add(target->clientnum);
-                    if(GAME(multikilldelay))
+                    actor->state.spree = 0;
+                    if(actor->state.aitype < AI_START)
                     {
-                        logs = 0;
-                        loopv(actor->state.fragmillis)
+                        if(actor != target) actor->state.teamkills++;
+                        pointvalue *= 2;
+                    }
+                }
+                else if(actor != target && actor->state.aitype < AI_START)
+                {
+                    if((flags&HIT_PROJ) && (flags&HIT_HEAD))
+                    {
+                        style |= FRAG_HEADSHOT;
+                        pointvalue *= 2;
+                    }
+                    if(m_fight(gamemode) && target->state.aitype < AI_START)
+                    {
+                        int logs = 0;
+                        actor->state.spree++;
+                        actor->state.fraglog.add(target->clientnum);
+                        if(GAME(multikilldelay))
                         {
-                            if(lastmillis-actor->state.fragmillis[i] > GAME(multikilldelay)) actor->state.fragmillis.remove(i--);
-                            else logs++;
+                            logs = 0;
+                            loopv(actor->state.fragmillis)
+                            {
+                                if(lastmillis-actor->state.fragmillis[i] > GAME(multikilldelay)) actor->state.fragmillis.remove(i--);
+                                else logs++;
+                            }
+                            if(!logs) actor->state.rewards &= ~FRAG_MULTI;
+                            actor->state.fragmillis.add(lastmillis); logs++;
+                            if(logs >= 2)
+                            {
+                                int offset = clamp(logs-2, 0, 2), type = 1<<(FRAG_MKILL+offset); // double, triple, multi..
+                                if(!(actor->state.rewards&type))
+                                {
+                                    style |= type;
+                                    actor->state.rewards |= type;
+                                    pointvalue *= offset+1;
+                                    //loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
+                                }
+                            }
                         }
-                        if(!logs) actor->state.rewards &= ~FRAG_MULTI;
-                        actor->state.fragmillis.add(lastmillis); logs++;
-                        if(logs >= 2)
+                        if(actor->state.spree <= GAME(spreecount)*FRAG_SPREES && !(actor->state.spree%GAME(spreecount)))
                         {
-                            int offset = clamp(logs-2, 0, 2), type = 1<<(FRAG_MKILL+offset); // double, triple, multi..
+                            int offset = clamp((actor->state.spree/GAME(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
                             if(!(actor->state.rewards&type))
                             {
                                 style |= type;
                                 actor->state.rewards |= type;
                                 pointvalue *= offset+1;
-                                //loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
                             }
                         }
-                    }
-                    if(actor->state.spree <= GAME(spreecount)*FRAG_SPREES && !(actor->state.spree%GAME(spreecount)))
-                    {
-                        int offset = clamp((actor->state.spree/GAME(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
-                        if(!(actor->state.rewards&type))
+                        logs = 0;
+                        loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
+                        if(logs >= GAME(dominatecount))
                         {
-                            style |= type;
-                            actor->state.rewards |= type;
-                            pointvalue *= offset+1;
+                            style |= FRAG_REVENGE;
+                            pointvalue *= GAME(dominatecount);
+                        }
+                        logs = 0;
+                        loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
+                        if(logs == GAME(dominatecount))
+                        {
+                            style |= FRAG_DOMINATE;
+                            pointvalue *= GAME(dominatecount);
                         }
                     }
-                    logs = 0;
-                    loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-                    if(logs >= GAME(dominatecount))
-                    {
-                        style |= FRAG_REVENGE;
-                        pointvalue *= GAME(dominatecount);
-                    }
-                    logs = 0;
-                    loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-                    if(logs == GAME(dominatecount))
-                    {
-                        style |= FRAG_DOMINATE;
-                        pointvalue *= GAME(dominatecount);
-                    }
                 }
+                if(actor != target && actor->state.aitype >= AI_START && target->state.aitype < AI_START) givepoints(target, -pointvalue);
+                else if(actor->state.aitype < AI_START) givepoints(actor, pointvalue);
             }
             target->state.deaths++;
             dropitems(target);
-            if(actor != target && actor->state.aitype >= AI_START && target->state.aitype < AI_START) givepoints(target, -pointvalue);
-            else if(actor->state.aitype < AI_START) givepoints(actor, pointvalue);
             sendf(-1, 1, "ri8", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, style, weap, realflags, realdamage);
             target->position.setsize(0);
             if(smode) smode->died(target, actor);

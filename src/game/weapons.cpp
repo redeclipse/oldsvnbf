@@ -11,7 +11,24 @@ namespace weapons
 
     int lastweapselect = 0;
     VAR(IDF_PERSIST, weapselectdelay, 0, 100, INT_MAX-1);
+    VARF(IDF_PERSIST, weapselectslot, 0, 1, 1, changedkeys = lastmillis); // 0 = by id, 1 = by slot
 
+    int slot(gameent *d, int n, bool back)
+    {
+        if(d && weapselectslot && n != WEAP_MELEE)
+        {
+            int p = m_weapon(game::gamemode, game::mutators), w = 0;
+            loopi(WEAP_MAX-1) if(d->hasweap(i+1, p))
+            {
+                w++;
+                if(n == (back ? w : i+1)) return back ? i+1 : w;
+            }
+            return -1;
+        }
+        return n;
+    }
+
+    ICOMMAND(0, weapslot, "i", (int *o), intret(slot(game::player1, *o >= 0 ? : game::player1->weapselect))); // -1 = weapselect slot
     ICOMMAND(0, weapselect, "", (), intret(game::player1->weapselect));
     ICOMMAND(0, ammo, "i", (int *n), intret(isweap(*n) ? game::player1->ammo[*n] : -1));
     ICOMMAND(0, hasweap, "ii", (int *n, int *o), intret(isweap(*n) && game::player1->hasweap(*n, *o) ? 1 : 0));
@@ -72,21 +89,21 @@ namespace weapons
     {
         if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX || (weapselectdelay && lastweapselect && totalmillis-lastweapselect < weapselectdelay)) return;
         if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true))) return;
-        int s = d->weapselect;
+        int s = slot(d, d->weapselect);
         loopi(WEAP_MAX) // only loop the amount of times we have weaps for
         {
             if(a >= 0) s = a;
             else s += b;
-
             while(s > WEAP_MAX-1) s -= WEAP_MAX;
             while(s < 0) s += WEAP_MAX;
 
+            int n = slot(d, s, true);
             if(a < 0)
             { // weapon skipping when scrolling
                 int p = m_weapon(game::gamemode, game::mutators);
                 #define skipweap(q,w) \
                 { \
-                    if(q && s == w) switch(q) \
+                    if(q && n == w && (d->aitype >= AI_START || w != WEAP_MELEE || p == WEAP_MELEE || d->weapselect == WEAP_MELEE)) switch(q) \
                     { \
                         case 10: continue; break; \
                         case 7: case 8: case 9: if(d->carry(p, 5, w) > (q-7)) continue; break; \
@@ -101,7 +118,7 @@ namespace weapons
                 skipweap(skipgrenade, WEAP_GRENADE);
             }
 
-            if(weapselect(d, s))
+            if(weapselect(d, n))
             {
                 lastweapselect = totalmillis;
                 return;
