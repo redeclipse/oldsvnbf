@@ -130,6 +130,7 @@ namespace hud
 
     VAR(IDF_PERSIST, showinventory, 0, 1, 1);
     VAR(IDF_PERSIST, inventoryammo, 0, 1, 2);
+    VAR(IDF_PERSIST, inventoryhidemelee, 0, 1, 1);
     VAR(IDF_PERSIST, inventorygame, 0, 1, 2);
     VAR(IDF_PERSIST, inventoryteams, 0, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, inventorystatus, 0, 2, 2);
@@ -1418,7 +1419,7 @@ namespace hud
                     meleetex, pistoltex, tractortex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rockettex
                 };
                 int sweap = m_weapon(game::gamemode, game::mutators);
-                loopi(WEAP_MAX) if(game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i])
+                loopi(WEAP_MAX) if((i != WEAP_MELEE || sweap == WEAP_MELEE || game::focus->weapselect == WEAP_MELEE || !inventoryhidemelee) && (game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i]))
                 {
                     if(y-sy-s < m) break;
                     float fade = blend*inventoryblend, size = s, skew = 0.f;
@@ -1447,18 +1448,22 @@ namespace hud
                     {
                         static string weapids[WEAP_MAX];
                         static int lastweapids = -1;
-                        if(lastweapids != changedkeys)
+                        int n = weapons::slot(game::focus, i);
+                        if(isweap(n))
                         {
-                            loopj(WEAP_MAX)
+                            if(lastweapids != changedkeys)
                             {
-                                defformatstring(action)("weapon %d", j);
-                                const char *actkey = searchbind(action, 0);
-                                if(actkey && *actkey) copystring(weapids[j], actkey);
-                                else formatstring(weapids[j])("%d", j+1);
+                                loopj(WEAP_MAX)
+                                {
+                                    defformatstring(action)("weapon %d", j);
+                                    const char *actkey = searchbind(action, 0);
+                                    if(actkey && *actkey) copystring(weapids[j], actkey);
+                                    else formatstring(weapids[j])("%d", j);
+                                }
+                                lastweapids = changedkeys;
                             }
-                            lastweapids = changedkeys;
+                            drawitemsubtext(x, oldy, size, TEXT_RIGHT_UP, skew, "sub", fade, "%s%s", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[n]);
                         }
-                        drawitemsubtext(x, oldy, size, TEXT_RIGHT_UP, skew, "sub", fade, "%s%s", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
                     }
                 }
             }

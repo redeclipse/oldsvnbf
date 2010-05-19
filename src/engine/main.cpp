@@ -91,9 +91,9 @@ void quit()                  // normal exit
     extern void writeinitcfg();
     inbetweenframes = false;
     writeinitcfg();
+    writecfg();
     abortconnect();
     disconnect(1);
-    writecfg();
     cleanup();
     exit(EXIT_SUCCESS);
 }

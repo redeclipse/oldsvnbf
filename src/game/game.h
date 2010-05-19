@@ -744,14 +744,14 @@ struct gamestate
 
     bool canswitch(int weap, int sweap, int millis, int skip = 0)
     {
-        if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip, true)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, 0, millis, skip, true)))
+        if((aitype >= AI_START || weap != WEAP_MELEE || sweap == WEAP_MELEE || weapselect == WEAP_MELEE) && weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip, true)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, 0, millis, skip, true)))
             return true;
         return false;
     }
 
     bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
     {
-        if((weap == WEAP_MELEE || (hasweap(weap, sweap) && ammo[weap] >= (WEAP2(weap, power, flags&HIT_ALT) ? 1 : WEAP2(weap, sub, flags&HIT_ALT)))) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+        if((hasweap(weap, sweap) && ammo[weap] >= (WEAP2(weap, power, flags&HIT_ALT) ? 1 : WEAP2(weap, sub, flags&HIT_ALT))) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
             return true;
         return false;
     }
@@ -823,14 +823,15 @@ struct gamestate
         health = heal;
         weapreset(true);
         if(!isweap(sweap)) sweap = WEAP_PISTOL;
-        ammo[sweap] = WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max);
+        ammo[WEAP_MELEE] = max(WEAP(WEAP_MELEE, max), 1);
+        if(sweap != WEAP_MELEE) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
         if(!insta && sweap != WEAP_PISTOL) ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
-        if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WEAP(WEAP_GRENADE, max);
+        if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = max(WEAP(WEAP_GRENADE, max), 1);
         if(arena)
         {
             int aweap = loadweap;
             while(aweap < WEAP_OFFSET || aweap >= WEAP_ITEM) aweap = rnd(WEAP_ITEM-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
-            ammo[aweap] = WEAP(aweap, reloads) ? WEAP(aweap, add) : WEAP(aweap, max);
+            ammo[aweap] = max(WEAP(aweap, reloads) ? WEAP(aweap, add) : WEAP(aweap, max), 1);
             lastweap = weapselect = aweap;
         }
         else
@@ -1255,6 +1256,7 @@ namespace projs
 namespace weapons
 {
     extern int autoreloading;
+    extern int slot(gameent *d, int n, bool back = false);
     extern bool weapselect(gameent *d, int weap, bool local = true);
     extern bool weapreload(gameent *d, int weap, int load = -1, int ammo = -1, bool local = true);
     extern void reload(gameent *d);

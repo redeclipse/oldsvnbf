@@ -49,13 +49,6 @@ struct stfservmode : stfstate, servmode
         moveflags(team, vec(-1e10f, -1e10f, -1e10f), o);
     }
 
-    int fragvalue(clientinfo *victim, clientinfo *actor)
-    {
-        int value = 1;
-        loopv(flags) if(insideflag(flags[i], victim->state.o)) value++;
-        return victim==actor || victim->team == actor->team ? -value : value;
-    }
-
     void addscore(int i, int team, int n)
     {
         if(!n) return;

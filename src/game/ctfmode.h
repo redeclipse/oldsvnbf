@@ -32,13 +32,6 @@ struct ctfservmode : ctfstate, servmode
         dropflag(ci, ci->state.o);
     }
 
-    int fragvalue(clientinfo *victim, clientinfo *actor)
-    {
-        int value = 1;
-        loopv(flags) if(flags[i].owner == victim->clientnum) value++;
-        return victim==actor || victim->team == actor->team ? -value : value;
-    }
-
     int addscore(int team)
     {
         score &cs = findscore(team);
