@@ -630,15 +630,16 @@ namespace game
             }
             if(isweap(weap) && !burning && (d == player1 || !isaitype(d->aitype) || aistyle[d->aitype].canmove))
             {
-                float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
-                if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
-                else
+                if(WEAP2(weap, slow, flags&HIT_ALT) != 0 && !(flags&HIT_WAVE) && hithurts(flags))
+                    d->vel.mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(1.f-WEAP2(weap, slow, flags&HIT_ALT))*slowscale);
+                if(WEAP2(weap, hitpush, flags&HIT_ALT) != 0)
                 {
-                    force *= WEAP(weap, pusharea);
-                    if(d->health <= 0) force *= deadpushscale;
-                    else force *= hitpushscale;
+                    float force = 1.f;
+                    if(flags&HIT_WAVE || !hithurts(flags)) force = wavepushscale;
+                    else if(d->health <= 0) force = deadpushscale;
+                    else force = hitpushscale;
+                    d->vel.add(vec(dir).mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, hitpush, flags&HIT_ALT)*force));
                 }
-                d->vel.add(vec(dir).mul(force));
                 if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap <= WEAP_MELEE || weap == WEAP_TRACTOR) d->lastpush = lastmillis;
             }
             ai::damaged(d, actor, weap, flags, damage);
