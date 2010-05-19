@@ -17,7 +17,7 @@
     $app['targets']['google'] = array('name' => 'google', 'url' => 'http://www.google.com/search?q=%22Blood%20Frontier%22', 'alturl' => 'http://www.google.com/search?q=%22Blood%20Frontier%22+', 'nav' => 0, 'redir' => 1);
     $app['targets']['facebook'] = array('name' => 'facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
     $app['targets']['blackboxbeta'] = array('name' => 'blackboxbeta', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
-    $app['targets']['playdeb'] = array('name' => 'playdeb', 'url' => 'http://www.playdeb.net/updates/Blood%20Frontier', 'nav' => 0, 'redir' => 1);
+    $app['targets']['playdeb'] = array('name' => 'playdeb', 'url' => 'http://www.playdeb.net/software/Blood%20Frontier', 'nav' => 0, 'redir' => 1);
 
     function checkarg($arg = "", $def = "") {
         return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
