@@ -2134,7 +2134,7 @@ struct texturegui : guicb
                         if(slot.sts.empty()) continue;
                         else if(!slot.loaded && !slot.thumbnail)
                         {
-                            if(totalmillis-lastthumbnail<thumbtime) 
+                            if(totalmillis-lastthumbnail<thumbtime)
                             {
                                 g.texture(dummyvslot, thumbsize, false); //create an empty space
                                 continue;
@@ -2322,7 +2322,7 @@ struct texturegui : guicb
                             if(variant->linked) { variant->cleanup(); lookupvslot(variant->index); }
                         }
                     }
-                }    
+                }
 
                 g.poplist();
                 g.poplist();
@@ -2353,7 +2353,7 @@ struct texturegui : guicb
                 menutab = 1+clamp(lookupvslot(lasttex, false).slot->index, 0, slots.length()-1)/(thumbwidth*thumbheight);
             menustart = starttime();
             cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
-            menutex = !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
+            menutex = !isempty(c) ? c.texture[sel.orient] : -1;
         }
     }
 
