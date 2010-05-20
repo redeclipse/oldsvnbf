@@ -2336,7 +2336,6 @@ struct texturegui : guicb
                 g.title("no texture selected", 0x666666);
                 g.poplist();
                 g.poplist();
-                menutex = nextslot = -1;
             }
             g.poplist();
             g.poplist();
