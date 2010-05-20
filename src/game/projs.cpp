@@ -47,7 +47,7 @@ namespace projs
                 }
             }
         }
-        if(nodamage || weap == WEAP_TRACTOR || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+        if(nodamage || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         if(hithurts(flags))
         {
             if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceilf(damage*damagescale));
@@ -109,7 +109,7 @@ namespace projs
             if(!WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
             switch(proj.weap)
             {
-                case WEAP_MELEE:
+                case WEAP_MELEE: case WEAP_SWORD:
                     part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
                     break;
                 case WEAP_RIFLE:
@@ -152,7 +152,7 @@ namespace projs
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
         if(explode && dist <= radius*WEAP(proj.weap, pusharea)) { hitpush(d, proj, HIT_WAVE, radius, dist); radiated = true; }
-        if(proj.weap != WEAP_TRACTOR && dist <= radius) { hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist); radiated = true; }
+        if(dist <= radius) { hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist); radiated = true; }
         return radiated;
     }
 
@@ -223,16 +223,6 @@ namespace projs
             {
                 switch(proj.weap)
                 {
-                    case WEAP_TRACTOR:
-                    {
-                        if(proj.owner && proj.local && (!m_team(game::gamemode, game::mutators) || !proj.hit || proj.hit->type != ENT_PLAYER || proj.owner->team != ((gameent *)proj.hit)->team))
-                        {
-                            float mag = proj.lifesize*proj.scale*WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*(100.f/proj.owner->weight);
-                            if(proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner)) mag *= 0.5f;
-                            if(mag != 0) proj.owner->vel.add(vec(proj.o).sub(proj.owner->o).normalize().mul(-mag));
-                        }
-                        break;
-                    }
                     case WEAP_SHOTGUN: case WEAP_SMG:
                     {
                         part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.25f, 1, 20, 0, 16);
@@ -514,7 +504,7 @@ namespace projs
 
     void drop(gameent *d, int g, int n, bool local)
     {
-        if(g > WEAP_MELEE && isweap(g))
+        if(g >= WEAP_OFFSET && isweap(g))
         {
             vec from(d->o), to(d->muzzlepos(g));
             if(entities::ents.inrange(n))
@@ -549,7 +539,7 @@ namespace projs
 
         if(weaptype[weap].sound >= 0)
         {
-            if((weap == WEAP_FLAMER && !(flags&HIT_ALT)) || weap == WEAP_TRACTOR)
+            if(weap == WEAP_FLAMER && !(flags&HIT_ALT))
             {
                 int ends = lastmillis+(WEAP2(weap, adelay, flags&HIT_ALT)*2);
                 if(issound(d->wschan)) sounds[d->wschan].ends = ends;
@@ -641,12 +631,6 @@ namespace projs
             }
             switch(proj.weap)
             {
-                case WEAP_TRACTOR:
-                {
-                    float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.95f)*(0.5f+(rnd(50)/100.f))*proj.scale;
-                    part_create(PART_HINT, 1, proj.o, 0x2244FF, size, blend, 0);
-                    break;
-                }
                 case WEAP_PISTOL:
                 {
                     if(proj.movement > 0.f)
@@ -804,7 +788,6 @@ namespace projs
                 int vol = 255;
                 switch(proj.weap)
                 {
-                    case WEAP_TRACTOR: case WEAP_MELEE: break;
                     case WEAP_PISTOL:
                     {
                         vol = int(255*(1.f-proj.lifespan)*proj.scale);

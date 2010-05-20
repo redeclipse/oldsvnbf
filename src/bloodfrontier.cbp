@@ -16,7 +16,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-hhome -rinit.cfg -du0 -df0 -dw800 -dh400" />
+				<Option parameters="-hhome -r -dw800 -dh400" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="1" />
@@ -59,7 +59,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-hhome -r -df0 -dw1024 -dh768" />
+				<Option parameters="-hhome -r -dw800 -dh400" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="1" />

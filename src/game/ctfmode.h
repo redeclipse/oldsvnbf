@@ -47,7 +47,7 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
                 flag &f = flags[k];
-                if(isctfhome(f, ci->team) && (f.owner < 0 || (GAME(ctfstyle) <= 2 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
+                if(isctfhome(f, ci->team) && (f.owner < 0 || (GAME(ctfstyle) == 1 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
                 {
                     ctfstate::returnflag(i, gamemillis);
                     givepoints(ci, 5);
@@ -109,7 +109,7 @@ struct ctfservmode : ctfstate, servmode
             switch(GAME(ctfstyle))
             {
                 case 3:
-                    if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GAME(ctfresetdelay))
+                    if(f.owner >= 0 && f.taketime && gamemillis-f.taketime >= GAME(ctfresetdelay))
                     {
                         clientinfo *ci = (clientinfo *)getinfo(f.owner);
                         if(f.team != ci->team)
@@ -202,5 +202,13 @@ struct ctfservmode : ctfstate, servmode
             }
             hasflaginfo = true;
         }
+    }
+
+    int points(clientinfo *victim, clientinfo *actor)
+    {
+        bool isteam = victim==actor || victim->team == actor->team;
+        int p = isteam ? -1 : 1, v = p;
+        loopv(flags) if(flags[i].owner == victim->clientnum) p += v;
+        return p;
     }
 } ctfmode;

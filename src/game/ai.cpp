@@ -404,7 +404,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
                             n.target = j;
                             n.targtype = AI_T_ENTITY;
-                            n.score = pos.squaredist(e.o)/(force || attr == d->loadweap ? -1 : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = pos.squaredist(e.o)/(force || attr == d->loadweap ? 100000.f : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
                         }
                         break;
                     }
@@ -431,7 +431,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
                             n.target = proj.id;
                             n.targtype = AI_T_DROP;
-                            n.score = pos.squaredist(proj.o)/(force || attr == d->loadweap ? -1 : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = pos.squaredist(proj.o)/(force || attr == d->loadweap ? 100000.f : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
                         }
                         break;
                     }
@@ -923,7 +923,7 @@ namespace ai
         {
             vec dir = vec(e->o).sub(d->o);
             float xydist = dir.x*dir.x+dir.y*dir.y, zdist = dir.z*dir.z, mdist = maxdist*maxdist, ddist = d->radius*d->radius;
-            if(zdist <= ddist+2 && xydist >= ddist+2 && xydist <= mdist+ddist) return true;
+            if(zdist <= ddist && xydist >= ddist+4 && xydist <= mdist+ddist) return true;
         }
         return false;
     }
@@ -1104,7 +1104,7 @@ namespace ai
             bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_MAX) if(i > WEAP_MELEE && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_MAX) if(i >= WEAP_OFFSET && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);

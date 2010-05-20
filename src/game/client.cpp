@@ -921,18 +921,18 @@ namespace client
 
     void sendpositions()
     {
-        loopv(game::players)
+        gameent *d = NULL;
+        loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)))
         {
-            gameent *d = game::players[i];
-            if(d && (d == game::player1 || (d->ai && !d->ai->suspended)) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+            if((d == game::player1 || (d->ai && !d->ai->suspended)) && (d->state == CS_ALIVE || d->state == CS_EDITING))
             {
                 packetbuf q(100);
                 sendposition(d, q);
-                for(int j = i+1; j < game::players.length(); j++)
+                for(int j = i+1; j < game::numdynents(); j++)
                 {
-                    gameent *d = game::players[j];
-                    if(d && (d == game::player1 || (d->ai && !d->ai->suspended)) && (d->state == CS_ALIVE || d->state == CS_EDITING))
-                        sendposition(d, q);
+                    gameent *e = (gameent *)game::iterdynents(j);
+                    if(e && (e == game::player1 || (e->ai && !e->ai->suspended)) && (e->state == CS_ALIVE || e->state == CS_EDITING))
+                        sendposition(e, q);
                 }
                 sendclientpacket(q.finalize(), 0);
                 break;

@@ -2275,33 +2275,6 @@ namespace server
                 }
             }
         }
-        if(weap == WEAP_TRACTOR)
-        {
-            nodamage++;
-            if(actor != target && m_team(gamemode, mutators) && actor->team == target->team)
-            {
-                if(target->state.onfire(gamemillis, GAME(fireburntime)))
-                {
-                    sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
-                    target->state.lastfire = target->state.lastfireburn = 0;
-                    givepoints(actor, 1);
-                    return;
-                }
-                if(realflags&HIT_ALT)
-                {
-                    int total = m_health(gamemode, mutators), amt = 0, delay = 0;
-                    if(smode) smode->regen(target, total, amt, delay);
-                    if(total && target->state.health < total && realdamage > 0)
-                    {
-                        int rgn = target->state.health, heal = clamp(target->state.health+realdamage, 0, total), eff = heal-rgn;
-                        target->state.health = heal;
-                        target->state.lastregen = gamemillis;
-                        sendf(-1, 1, "ri4", N_REGEN, target->clientnum, target->state.health, eff);
-                    }
-                    return;
-                }
-            }
-        }
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else
         {
@@ -2514,7 +2487,7 @@ namespace server
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
                     if(radial) radial = clamp(radial, 1, WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f));
-                    float size = radial ? (hflags&HIT_WAVE || weap == WEAP_TRACTOR ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
+                    float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
@@ -2817,7 +2790,7 @@ namespace server
         {
             loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < AI_START)
                 items[WEAPON] += clients[i]->state.carry(sweap);
-            loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
+            loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
             {
                 if(finditem(i, true, true)) items[sents[i].type]++;
                 else if(!sents.inrange(lowest[sents[i].type]) || sents[i].millis < sents[lowest[sents[i].type]].millis)
@@ -2847,7 +2820,7 @@ namespace server
                 if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
                     bool found = finditem(i, true, true);
-                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type] && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
+                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
                         if(dist < GAME(itemthreshold)) found = false;
