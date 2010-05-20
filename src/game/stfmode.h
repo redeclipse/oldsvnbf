@@ -242,4 +242,12 @@ struct stfservmode : stfstate, servmode
             }
         }
     }
+
+    int points(clientinfo *victim, clientinfo *actor)
+    {
+        bool isteam = victim==actor || victim->team == actor->team;
+        int p = isteam ? -1 : 1, v = p;
+        loopv(flags) if(insideflag(flags[i], victim->state.o)) p += v;
+        return p;
+    }
 } stfmode;

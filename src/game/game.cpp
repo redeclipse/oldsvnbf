@@ -640,7 +640,7 @@ namespace game
                     else force = hitpushscale;
                     d->vel.add(vec(dir).mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, hitpush, flags&HIT_ALT)*force));
                 }
-                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap <= WEAP_MELEE || weap == WEAP_TRACTOR) d->lastpush = lastmillis;
+                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
             }
             ai::damaged(d, actor, weap, flags, damage);
         }
@@ -722,7 +722,7 @@ namespace game
                     {
                         "punched by",
                         "pierced by",
-                        "tractored by",
+                        "impaled by",
                         "sprayed with buckshot by",
                         "riddled with holes by",
                         "char-grilled by",
@@ -734,19 +734,19 @@ namespace game
                     {
                         "kicked by",
                         "pierced by",
-                        "tractored by",
+                        "impaled by",
                         "filled with lead by",
                         "spliced apart by",
                         "fireballed by",
                         "shown the light by",
-                        "was given laser burn by",
+                        "given laser burn by",
                         "blown to pieces by",
                         "exploded by",
                     },
                     {
                         "given kung-fu lessons by",
                         "capped by",
-                        "warped into next week by",
+                        "sliced in half by",
                         "scrambled by",
                         "air conditioned courtesy of",
                         "char-grilled by",
@@ -758,7 +758,7 @@ namespace game
                     {
                         "given kung-fu lessons by",
                         "skewered by",
-                        "warped into next week by",
+                        "sliced in half by",
                         "turned into little chunks by",
                         "swiss-cheesed by",
                         "barbequed by",
@@ -1810,7 +1810,7 @@ namespace game
 
             if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
             {
-                case ANIM_IDLE: case ANIM_MELEE: case ANIM_LIGHT: case ANIM_HEAVY: case ANIM_GRASP:
+                case ANIM_IDLE: case ANIM_MELEE: case ANIM_LIGHT: case ANIM_HEAVY: case ANIM_GRASP: case ANIM_WIELD:
                 {
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);
@@ -1921,7 +1921,7 @@ namespace game
                     }
                     case WEAP_S_POWER:
                     {
-                        if(weap == WEAP_GRENADE) animflags = weaptype[weap].anim+d->weapstate[weap];
+                        if(weaptype[weap].anim == ANIM_GRASP) animflags = weaptype[weap].anim+d->weapstate[weap];
                         else animflags = weaptype[weap].anim|ANIM_LOOP;
                         break;
                     }
@@ -1935,10 +1935,13 @@ namespace game
                     }
                     case WEAP_S_RELOAD:
                     {
-                        if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!w_reload(weap, m_weapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
-                            showweap = false;
-                        animflags = weaptype[weap].anim+d->weapstate[weap];
-                        break;
+                        if(weaptype[weap].anim != ANIM_MELEE && weaptype[weap].anim != ANIM_WIELD)
+                        {
+                            if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!w_reload(weap, m_weapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+                                showweap = false;
+                            animflags = weaptype[weap].anim+d->weapstate[weap];
+                            break;
+                        }
                     }
                     case WEAP_S_IDLE: case WEAP_S_WAIT: default:
                     {

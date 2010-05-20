@@ -85,7 +85,7 @@ struct ctfstate
     {
         flag &f = flags[i];
         f.owner = owner;
-        f.taketime = f.droptime ? t-max(1000-(t-f.droptime), 0) : t;
+        f.taketime = t;
         f.droptime = 0;
 #ifdef GAMESERVER
         f.votes.shrink(0);
@@ -99,7 +99,7 @@ struct ctfstate
     {
         flag &f = flags[i];
         f.droploc = o;
-        f.droptime = f.taketime ? t-max(1000-(t-f.taketime), 0) : t;
+        f.droptime = t;
         f.taketime = 0;
 #ifdef GAMESERVER
         f.owner = -1;
