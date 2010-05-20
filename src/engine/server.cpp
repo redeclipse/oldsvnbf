@@ -777,7 +777,7 @@ void setupserver()
     {
         if(enet_address_set_host(&address, serverip) < 0) conoutf("\frWARNING: server address not resolved");
     }
-    serverhost = enet_host_create(&address, server::reserveclients(), 0, serveruprate);
+    serverhost = enet_host_create(&address, server::reserveclients(), server::numchannels(), 0, serveruprate);
     if(!serverhost)
     {
         conoutf("\frcould not create server socket");
@@ -786,7 +786,6 @@ void setupserver()
 #endif
         return;
     }
-    enet_host_channel_limit(serverhost, server::numchannels());
     loopi(server::reserveclients()) serverhost->peers[i].data = NULL;
 
     address.port = serverport+1;
