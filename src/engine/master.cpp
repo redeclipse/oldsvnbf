@@ -269,12 +269,15 @@ bool checkmasterclientinput(masterclient &c)
         if(!strcmp(w[0], "list") || !strcmp(w[0], "update"))
         {
             int servs = 0;
+            bool haslocal = false;
             loopvj(masterclients) if(masterclients[j]->isserver)
             {
                 masterclient &s = *masterclients[j];
-                masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.port+1);
+                if(s.address.host == c.address.host) haslocal = true;
+                else masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.port+1);
                 servs++;
             }
+            if(haslocal) masteroutf(c, "searchlan 1\n");
             conoutf("master peer %s was sent %d server(s)",  c.name, servs);
             found = true;
         }
