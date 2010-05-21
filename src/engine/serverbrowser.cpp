@@ -285,7 +285,7 @@ void addserver(const char *name, int port)
         conoutf("added server %s (%d)", name, port);
 }
 ICOMMAND(0, addserver, "si", (char *n, int *a), addserver(n, a ? *a : ENG_SERVER_PORT));
-VAR(IDF_PERSIST, searchlan, 0, 0, 1);
+VAR(0, searchlan, 0, 0, 1);
 VAR(IDF_PERSIST, maxservpings, 0, 10, 1000);
 
 void pingservers()
