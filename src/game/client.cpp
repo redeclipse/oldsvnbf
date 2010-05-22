@@ -570,7 +570,6 @@ namespace client
         game::timeremaining = -1;
         game::maptime = 0;
         mapvotes.shrink(0);
-        if(editmode && !allowedittoggle(editmode)) toggleedit();
         if(m_demo(gamemode)) return;
         needsmap = false;
         if(!name || !*name || !load_world(name, temp))
@@ -579,7 +578,6 @@ namespace client
             setnames(name, MAP_BFGZ);
             needsmap = true;
         }
-        if(editmode) edittoggled(editmode);
         if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
     }
