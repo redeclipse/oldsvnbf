@@ -60,7 +60,7 @@ namespace hud
     VAR(IDF_PERSIST, conoverflow, 0, 6, INT_MAX-1);
     VAR(IDF_PERSIST, concenter, 0, 0, 1);
     VAR(IDF_PERSIST, confilter, 0, 1, 1);
-    FVAR(IDF_PERSIST, conblend, 0, 1, 1);
+    FVAR(IDF_PERSIST, conblend, 0, 0.75f, 1);
     VAR(IDF_PERSIST, chatconsize, 0, 6, 100);
     VAR(IDF_PERSIST, chatcontime, 0, 30000, INT_MAX-1);
     VAR(IDF_PERSIST, chatconfade, 0, 2000, INT_MAX-1);
@@ -132,7 +132,8 @@ namespace hud
     VAR(IDF_PERSIST, inventoryammo, 0, 1, 2);
     VAR(IDF_PERSIST, inventoryhidemelee, 0, 1, 1);
     VAR(IDF_PERSIST, inventorygame, 0, 1, 2);
-    VAR(IDF_PERSIST, inventoryteams, 0, 5000, INT_MAX-1);
+    VAR(IDF_PERSIST, inventoryteams, 0, 10000, INT_MAX-1);
+    VAR(IDF_PERSIST, inventoryaffinity, 0, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, inventorystatus, 0, 2, 2);
     VAR(IDF_PERSIST, inventoryscore, 0, 0, 1);
     VAR(IDF_PERSIST, inventoryweapids, 0, 1, 2);
@@ -211,8 +212,8 @@ namespace hud
     FVAR(IDF_PERSIST, radarplayersize, 0, 0.5f, 1000);
     FVAR(IDF_PERSIST, radarblipblend, 0, 0.5f, 1);
     FVAR(IDF_PERSIST, radarblipsize, 0, 0.5f, 1000);
-    FVAR(IDF_PERSIST, radarflagblend, 0, 1, 1);
-    FVAR(IDF_PERSIST, radarflagsize, 0, 1, 1000);
+    FVAR(IDF_PERSIST, radaraffinityblend, 0, 1, 1);
+    FVAR(IDF_PERSIST, radaraffinitysize, 0, 1, 1000);
     FVAR(IDF_PERSIST, radaritemblend, 0, 0.75f, 1);
     FVAR(IDF_PERSIST, radaritemsize, 0, 0.9f, 1000);
     FVAR(IDF_PERSIST, radarsize, 0, 0.035f, 1000);
@@ -226,8 +227,8 @@ namespace hud
     VAR(IDF_PERSIST, radarplayers, 0, 2, 2);
     VAR(IDF_PERSIST, radarplayerfilter, 0, 1, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
     VAR(IDF_PERSIST, radarplayernames, 0, 0, 2);
-    VAR(IDF_PERSIST, radarflags, 0, 2, 2);
-    VAR(IDF_PERSIST, radarflagnames, 0, 1, 2);
+    VAR(IDF_PERSIST, radaraffinity, 0, 2, 2);
+    VAR(IDF_PERSIST, radaraffinitynames, 0, 1, 2);
 
     VAR(IDF_PERSIST, radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
     VAR(IDF_PERSIST, radardamagetime, 1, 500, INT_MAX-1);
@@ -812,20 +813,23 @@ namespace hud
                 }
                 else if(target->state == CS_ALIVE)
                 {
-                    if(target == game::player1 && teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
-                        ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-                    if(inventoryteams)
+                    if(target == game::player1)
                     {
-                        if(target->state == CS_ALIVE && !lastteam) lastteam = totalmillis;
-                        if(totalmillis-lastteam <= inventoryteams)
+                        if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
+                            ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+                        if(inventoryteams)
                         {
-                            if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-                            else if(!m_team(game::gamemode, game::mutators))
+                            if(target->state == CS_ALIVE && !lastteam) lastteam = totalmillis;
+                            if(totalmillis-lastteam <= inventoryteams)
                             {
-                                if(m_trial(game::gamemode)) ty += draw_textx("Time Trial", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-                                else ty += draw_textx("\fzReFree-for-all Deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+                                if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+                                else if(!m_team(game::gamemode, game::mutators))
+                                {
+                                    if(m_trial(game::gamemode)) ty += draw_textx("Time Trial", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+                                    else ty += draw_textx("\fzReFree-for-all Deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+                                }
+                                else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[target->team].chat, teamtype[target->team].name, teamtype[target->team].chat, teamtype[target->team].colname)*noticescale;
                             }
-                            else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[target->team].chat, teamtype[target->team].name, teamtype[target->team].chat, teamtype[target->team].colname)*noticescale;
                         }
                     }
                     if(obitnotices && totalmillis-target->lastkill <= noticetime && *target->obit)
@@ -1281,7 +1285,7 @@ namespace hud
     void drawradar(int w, int h, float blend)
     {
         if(chkcond(radaritems, game::tvmode()) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend); // 2
-        if(chkcond(radarflags, game::tvmode())) // 3
+        if(chkcond(radaraffinity, game::tvmode())) // 3
         {
             if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
             else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
@@ -1662,7 +1666,7 @@ namespace hud
                             cm += drawprogress(cx[i], cm+cg, 1-amt, amt, cg, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%d", col, int(millis/1000.f));
                         }
                     }
-                    if(inventoryteams && game::focus->state != CS_EDITING && game::focus->state != CS_SPECTATOR)
+                    if(inventoryteams && game::focus == game::player1 && game::focus->state != CS_EDITING && game::focus->state != CS_SPECTATOR)
                     {
                         if(game::focus->state == CS_ALIVE && !lastteam) lastteam = totalmillis;
                         if(!lastnewgame && lastteam)

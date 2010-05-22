@@ -1190,7 +1190,7 @@ namespace ai
             }
         }
 
-        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1))
+        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 0))
         {
             if(weapons::weapreload(d, d->weapselect))
             {
