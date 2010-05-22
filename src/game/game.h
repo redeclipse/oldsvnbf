@@ -648,7 +648,7 @@ struct gamestate
     int lastdeath, lastspawn, lastrespawn, lastpain, lastregen, lastfire;
     int aitype, aientity, ownernum, skill, points, frags, deaths, cpmillis, cptime;
 
-    gamestate() : loadweap(WEAP_PISTOL), weapselect(WEAP_PISTOL), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
+    gamestate() : loadweap(-1), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
         aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), frags(0), deaths(0), cpmillis(0), cptime(0) {}
     ~gamestate() {}
 
