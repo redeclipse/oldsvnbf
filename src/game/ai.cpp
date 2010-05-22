@@ -101,11 +101,13 @@ namespace ai
         if(WEAP2(d->weapselect, radial, alt)) o.z -= e->height;
         if(d->skill <= 100)
         {
-            float scale = 1.f/float(max(d->skill/10, 1));
-            #define rndaioffset (rnd(int(e->radius*WEAP2(d->weapselect, aiskew, alt)*2)+1)-e->radius*WEAP2(d->weapselect, aiskew, alt))
-            if(WEAP2(d->weapselect, radial, alt)) o.z += e->height*scale;
-            else o.z -= e->height*scale;
-            o.x += rndaioffset*scale; o.y += rndaioffset*scale;
+            if(lastmillis-d->ai->lastaimrnd >= (d->skill+10)*20)
+            {
+                #define rndaioffset(r) ((rnd(int(r*WEAP2(d->weapselect, aiskew, alt)*2)+1)-(r*WEAP2(d->weapselect, aiskew, alt)))*(1.f/float(max(d->skill/10, 1))))
+                loopk(3) d->ai->aimrnd[k] = rndaioffset(k < 2 ? e->radius : e->height/10.f);
+                d->ai->lastaimrnd = lastmillis;
+            }
+            loopk(3) o[k] += d->ai->aimrnd[k];
         }
         return o;
     }
@@ -968,16 +970,17 @@ namespace ai
         if(!enemyok || d->skill > 70)
         {
             gameent *f = game::intersectclosest(dp, d->ai->target, d);
-            if(f && targetable(d, f, true)) e = f;
-            else if(!enemyok)
+            if(f && targetable(d, f, true))
             {
-                if(target(d, b, false, false, SIGHTMIN))
-                {
-                    e = game::getclient(d->ai->enemy);
-                    enemyok = e && targetable(d, e, true);
-                }
-                else enemyok = false;
+                enemyok = true;
+                e = f;
             }
+            else if(!enemyok && target(d, b, false, false, SIGHTMIN))
+            {
+                e = game::getclient(d->ai->enemy);
+                enemyok = e && targetable(d, e, true);
+            }
+            else enemyok = false;
         }
         if(enemyok)
         {
@@ -1011,7 +1014,11 @@ namespace ai
                     }
                     else result = insight ? 3 : 2;
                 }
-                else result = hasseen ? 2 : 1;
+                else
+                {
+                    enemyok = false;
+                    result = hasseen ? 2 : 1;
+                }
             }
             else
             {
@@ -1183,7 +1190,7 @@ namespace ai
             }
         }
 
-        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 2 : 1))
+        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1))
         {
             if(weapons::weapreload(d, d->weapselect))
             {

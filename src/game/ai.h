@@ -117,22 +117,22 @@ namespace ai
         vector<int> route;
         vec target, spot;
         int enemy, enemyseen, enemymillis, prevnodes[NUMPREVNODES], targnode, targlast, targtime, targseq,
-            lastrun, lasthunt, lastaction, jumpseed, jumprand, blocktime, huntseq, blockseq;
-        float targyaw, targpitch, views[3];
+            lastrun, lasthunt, lastaction, jumpseed, jumprand, blocktime, huntseq, blockseq, lastaimrnd;
+        float targyaw, targpitch, views[3], aimrnd[3];
         bool suspended, dontmove, becareful, tryreset, trywipe;
 
         aiinfo()
         {
             cleartimers();
             reset();
-            loopk(3) views[k] = 0.f;
+            loopk(3) views[k] = aimrnd[k] = 0.f;
             suspended = true;
         }
         ~aiinfo() {}
 
         void cleartimers()
         {
-            lastaction = lasthunt = enemyseen = enemymillis = blocktime = huntseq = blockseq = targtime = targseq = 0;
+            lastaction = lasthunt = enemyseen = enemymillis = blocktime = huntseq = blockseq = targtime = targseq = lastaimrnd = 0;
             lastrun = jumpseed = lastmillis;
             jumprand = lastmillis+5000;
             targnode = targlast = -1;
