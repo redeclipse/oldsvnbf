@@ -378,7 +378,7 @@ namespace ai
             n.node = e->lastnode;
             n.target = e->clientnum;
             n.targtype = AI_T_PLAYER;
-            n.score = e->o.squaredist(d->o)/(force ? -1 : (d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators)) ? 1000.f : 10.f));
+            n.score = (force ? -1 : e->o.squaredist(d->o)/(d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators)) ? 1000.f : 10.f));
         }
     }
 
@@ -404,7 +404,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
                             n.target = j;
                             n.targtype = AI_T_ENTITY;
-                            n.score = pos.squaredist(e.o)/(force || attr == d->loadweap ? 100000.f : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = (force || attr == d->loadweap ? -1 : pos.squaredist(e.o)/(d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
                         }
                         break;
                     }
@@ -431,7 +431,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
                             n.target = proj.id;
                             n.targtype = AI_T_DROP;
-                            n.score = pos.squaredist(proj.o)/(force || attr == d->loadweap ? 100000.f : (d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = (force || attr == d->loadweap ? -1 : pos.squaredist(proj.o)/(d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
                         }
                         break;
                     }
@@ -446,7 +446,8 @@ namespace ai
         static vector<interest> interests; interests.setsize(0);
         if(d->aitype == AI_BOT)
         {
-            if(!d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators))) items(d, b, interests);
+            int sweap = m_weapon(game::gamemode, game::mutators);
+            items(d, b, interests, !d->hasweap(d->loadweap, sweap) && d->carry(sweap) == 0);
             if(m_fight(game::gamemode))
             {
                 if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
@@ -550,21 +551,20 @@ namespace ai
         {
             d->ai->reset(tryreset);
             d->ai->lastrun = lastmillis;
-            int weap = -1;
             if(d->aitype >= AI_START)
             {
                 if(entities::ents.inrange(d->aientity) && entities::ents[d->aientity]->type == ACTOR && entities::ents[d->aientity]->attrs[5] > 0)
-                    weap = entities::ents[d->aientity]->attrs[5]-1;
-                else weap = aistyle[d->aitype].weap;
-                if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
+                    d->loadweap = entities::ents[d->aientity]->attrs[5]-1;
+                else d->loadweap = aistyle[d->aitype].weap;
+                if(!isweap(d->loadweap)) d->loadweap = rnd(WEAP_MAX-1)+1;
             }
-            if(isweap(weap)) d->loadweap = weap;
-            else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
-                d->loadweap = m_weapon(game::gamemode, game::mutators);
-            else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
-            else weap = rnd(WEAP_MAX-WEAP_OFFSET)+WEAP_OFFSET;
-            if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap >= WEAP_ITEM)
-                d->loadweap -= WEAP_MAX-WEAP_ITEM;
+            else
+            {
+                if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
+                    d->loadweap = m_weapon(game::gamemode, game::mutators);
+                else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
+                else d->loadweap = rnd(WEAP_MAX-WEAP_OFFSET)+WEAP_OFFSET;
+            }
             d->ai->suspended = true;
         }
     }
@@ -1099,9 +1099,9 @@ namespace ai
     bool request(gameent *d, aistate &b)
     {
         int busy = process(d, b), sweap = m_weapon(game::gamemode, game::mutators);
+        bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
         if(d->aitype == AI_BOT)
         {
-            bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
                 loopirev(WEAP_MAX) if(i >= WEAP_OFFSET && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
@@ -1109,10 +1109,10 @@ namespace ai
                     client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
                     d->ai->lastaction = lastmillis;
-                    break;
+                    return true;
                 }
             }
-            if(busy <= 3 && !d->action[AC_USE] && haswaited)
+            if(busy <= 2 && !m_noitems(game::gamemode, game::mutators) && !d->action[AC_USE] && haswaited)
             {
                 static vector<actitem> actitems;
                 actitems.setsize(0);
@@ -1149,22 +1149,18 @@ namespace ai
                         if(entities::ents.inrange(ent))
                         {
                             extentity &e = *entities::ents[ent];
-                            if(enttype[e.type].usetype == EU_ITEM)
+                            int attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
+                            if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
                             {
-                                if(m_noitems(game::gamemode, game::mutators)) continue;
-                                int attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
-                                if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
+                                case WEAPON:
                                 {
-                                    case WEAPON:
-                                    {
-                                        if(d->hasweap(d->loadweap, sweap) || d->hasweap(attr, sweap)) break;
-                                        d->action[AC_USE] = true;
-                                        d->ai->lastaction = d->actiontime[AC_USE] = lastmillis;
-                                        return true;
-                                        break;
-                                    }
-                                    default: break;
+                                    if(d->carry(sweap) >= maxcarry && (d->hasweap(d->loadweap, sweap) || attr != d->loadweap)) break;
+                                    if(d->hasweap(attr, sweap)) break;
+                                    d->action[AC_USE] = true;
+                                    d->ai->lastaction = d->actiontime[AC_USE] = lastmillis;
+                                    return true;
                                 }
+                                default: break;
                             }
                         }
                         actitems.pop();
@@ -1173,7 +1169,7 @@ namespace ai
             }
         }
 
-        if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true)))
+        if(busy <= 2 && haswaited)
         {
             int weap = d->loadweap;
             if(!isweap(weap) || !d->hasweap(d->loadweap, sweap))
@@ -1187,13 +1183,16 @@ namespace ai
             }
         }
 
-        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1) && weapons::weapreload(d, d->weapselect))
+        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 2 : 1))
         {
-            d->ai->lastaction = lastmillis;
-            return true;
+            if(weapons::weapreload(d, d->weapselect))
+            {
+                d->ai->lastaction = lastmillis;
+                return true;
+            }
         }
 
-        return busy >= 2;
+        return busy >= 1;
     }
 
     void timeouts(gameent *d, aistate &b)
@@ -1423,7 +1422,7 @@ namespace ai
             );
         }
         if(s[0]) part_textcopy(vec(d->abovehead()).add(vec(0, 0, above)), s);
-    }
+     }
 
     void drawroute(gameent *d, aistate &b, float amt)
     {
@@ -1489,6 +1488,8 @@ namespace ai
                         else break;
                     }
                 }
+                if(aidebug > 2 && isweap(d->loadweap))
+                    part_textcopy(vec(d->abovehead()).add(vec(0, 0, above += 2)), weaptype[d->loadweap].name);
             }
             if(aidebug >= 4 && !m_edit(game::gamemode))
             {
