@@ -6,26 +6,10 @@ namespace ctf
     void dropflag(gameent *d)
     {
         if(m_ctf(game::gamemode) && ctfstyle <= 2)
-        {
-            vec dir;
-            vecfromyawpitch(d->yaw, d->pitch, -d->move, -d->strafe, dir);
-            dir.mul((d->radius*2.f)+enttype[FLAG].radius);
-            vec o(vec(d->o).add(dir));
-            client::addmsg(N_DROPFLAG, "ri4", game::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
-        }
+            client::addmsg(N_DROPFLAG, "ri4", game::player1->clientnum, int(d->o.x*DMF), int(d->o.y*DMF), int(d->o.z*DMF));
         else if(d == game::player1) playsound(S_ERROR, d->o, d);
     }
     ICOMMAND(0, dropflag, "", (), dropflag(game::player1));
-
-    ICOMMAND(0, ctfdebug, "", (), {
-        loopv(st.flags)
-        {
-            ctfstate::flag &f = st.flags[i];
-            conoutf("flag %2d: %d [%d] %.1f,%.1f,%.1f", i, f.team, f.base, f.spawnloc.x, f.spawnloc.y, f.spawnloc.z);
-            if(f.droptime) conoutf("    dropped [%d] %.1f,%.1f,%1.f", f.droptime, f.droploc.x, f.droploc.y, f.droploc.z);
-            if(f.owner) conoutf("    taken [%s] %.1f,%.1f,%1.f", game::colorname(f.owner), f.owner->o.x, f.owner->o.y, f.owner->o.z);
-        }
-    });
 
     void preload()
     {
@@ -519,6 +503,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
         ctfstate::flag &f = st.flags[i];
+        if(f.lastowner == d && f.droptime && lastmillis-f.droptime <= 5000) return;
         flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
         game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
         st.takeflag(i, d, lastmillis);
