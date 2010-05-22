@@ -261,19 +261,19 @@ WEAPON(sword,
     1,      1,      0,      0,      500,        500,        50,     50,     75,     250,        250,        0,      0,      100,        100,        0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
     IMPACT_PLAYER,                                                          IMPACT_PLAYER,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    200,        200,        0.1f,   0.1f,   16,     16,     1,      2,      0,      0,      1,      1,      2,      0,      0,      0
+    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    200,        200,        0.4f,   0.4f,   16,     16,     1,      2,      0,      0,      1,      1,      2,      0,      0,      0
 );
 WEAPON(shotgun,
     1,      8,      1,      2,      400,        600,        800,    15,     15,     2500,       2500,       0,      0,      1000,       750,        0,      0,      0,      0,      15,     30,     20,     20,     1,      1,      10,     10,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      0,      1,
-    0.25f,  0.35f,  0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,      15,     15,     20,         40,         0.1f,   0.1f,   150,    300,    1,      1,      50,     50,     1,      2,      2,      6,      0,      0
+    0.25f,  0.35f,  0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,      15,     15,     20,         40,         0.2f,   0.2f,   150,    300,    1,      1,      50,     50,     1,      2,      2,      6,      0,      0
 );
 WEAPON(smg,
     40,     40,     1,      5,      75,         250,        1500,   20,     20,     5000,       3000,       0,      0,      750,        500,        0,      0,      0,      0,      1,      5,      5,      5,      4,      1,      20,     20,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      1,      1,      1,
-    0.35f,  0.35f,  0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      0.5f,   3,      100,        120,        0.1f,   0.1f,   300,    400,    1,      1,      40,     40,     1,      2,      3,      12,     0,      0
+    0.35f,  0.35f,  0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      0.5f,   3,      100,        120,        0.2f,   0.2f,   300,    400,    1,      1,      40,     40,     1,      2,      3,      12,     0,      0
 );
 WEAPON(flamer,
     50,     50,     1,      10,     100,        500,        2000,   5,      10,     150,        200,        0,      500,    500,        1000,       0,      50,     20,     28,     1,      5,      10,     5,      0,      0,      10,     10,
@@ -1270,8 +1270,8 @@ namespace weapons
 namespace hud
 {
     extern char *conopentex, *playertex, *deadtex, *dominatingtex, *dominatedtex, *inputtex, *bliptex, *cardtex, *flagtex, *arrowtex, *alerttex;
-    extern int hudwidth, hudheight, hudsize, lastteam, lastnewgame, damageresidue, damageresiduefade, shownotices, radarflagnames, inventorygame, teamkillnum;
-    extern float noticescale, inventoryblend, inventoryskew, inventorygrow, radarflagblend, radarblipblend, radarflagsize;
+    extern int hudwidth, hudheight, hudsize, lastteam, lastnewgame, damageresidue, damageresiduefade, shownotices, radaraffinitynames, inventorygame, inventoryaffinity, teamkillnum;
+    extern float noticescale, inventoryblend, inventoryskew, inventorygrow, radaraffinityblend, radarblipblend, radaraffinitysize;
     extern vector<int> teamkills;
     extern bool chkcond(int val, bool cond);
     extern char *timetostr(int millis, bool limited = false);

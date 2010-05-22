@@ -81,7 +81,7 @@ namespace stf
         {
             stfstate::flag &f = st.flags[i];
             vec dir(f.o); dir.sub(camera1->o);
-            float r = 1, g = 1, b = 1, fade = blend*hud::radarflagblend; skewrgb(r, g, b, f.owner, f.enemy);
+            float r = 1, g = 1, b = 1, fade = blend*hud::radaraffinityblend; skewrgb(r, g, b, f.owner, f.enemy);
             if(f.owner != game::focus->team && f.enemy != game::focus->team)
             {
                 float dist = dir.magnitude(),
@@ -90,8 +90,8 @@ namespace stf
             }
             dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
             const char *tex = f.hasflag ? hud::arrowtex : (f.owner == game::focus->team && f.enemy ? hud::alerttex : hud::flagtex);
-            float size = hud::radarflagsize*(f.hasflag ? 2 : 1);
-            if(hud::radarflagnames >= (f.hasflag ? 1 : 2))
+            float size = hud::radaraffinitysize*(f.hasflag ? 2 : 1);
+            if(hud::radaraffinitynames >= (f.hasflag ? 1 : 2))
             {
                 float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
                 bool overthrow = f.owner && f.enemy == game::focus->team;

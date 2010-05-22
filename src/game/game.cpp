@@ -883,7 +883,7 @@ namespace game
         }
         if(d != actor)
         {
-            if(actor->state == CS_ALIVE) copystring(actor->obit, d->obit);
+            if(actor->state == CS_ALIVE && d->aitype < AI_START) copystring(actor->obit, d->obit);
             actor->lastkill = totalmillis;
         }
         if(dth >= 0)
@@ -891,7 +891,7 @@ namespace game
             if(issound(d->vschan)) removesound(d->vschan);
             playsound(dth, d->o, d, 0, -1, -1, -1, &d->vschan);
         }
-        if(showobituaries && (d->aitype < AI_START || actor->aitype < (d->aitype >= AI_START ? AI_BOT : AI_START)))
+        if(showobituaries && d->aitype < AI_START)
         {
             bool isme = (d == focus || actor == focus), show = false;
             if(((!m_fight(gamemode) && !isme) || actor->aitype >= AI_START) && anc >= 0) anc = -1;
@@ -1338,7 +1338,7 @@ namespace game
                 if(!cameras.empty()) break;
             }
             gameent *d = NULL;
-            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI) && d->aitype < AI_START)
             {
                 camstate &c = cameras.add();
                 c.pos = d->headpos();
@@ -1368,7 +1368,7 @@ namespace game
                 {
                     camstate &c = cameras[j]; c.reset();
                     gameent *d, *t = c.ent < 0 && c.idx >= 0 ? (gameent *)iterdynents(c.idx) : NULL;
-                    loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD))
+                    loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && (d->state == CS_ALIVE || d->state == CS_DEAD) && d->aitype < AI_START)
                     {
                         vec trg, pos = d->feetpos();
                         float dist = c.pos.dist(d->feetpos());

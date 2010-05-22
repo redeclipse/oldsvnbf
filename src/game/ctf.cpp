@@ -46,7 +46,7 @@ namespace ctf
                 int colour = teamtype[f.team].colour;
                 const char *tex = hud::flagtex;
                 bool arrow = false;
-                float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
+                float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radaraffinityblend;
                 if(k)
                 {
                     if(!(f.base&BASE_FLAG) || f.owner == game::focus || (!f.owner && !f.droptime)) break;
@@ -72,8 +72,8 @@ namespace ctf
                     }
                 }
                 dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
-                if(hud::radarflagnames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
-                else hud::drawblip(tex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
+                if(hud::radaraffinitynames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h, hud::radaraffinitysize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
+                else hud::drawblip(tex, 3, w, h, hud::radaraffinitysize, fade, dir, r, g, b);
             }
         }
     }
@@ -122,19 +122,19 @@ namespace ctf
                     {
                         pre = "\fzRw";
                         skew = 1; // override it
-                        if(millis <= 2000)
+                        if(hud::inventoryaffinity && millis <= hud::inventoryaffinity)
                         {
                             int off[2] = { hud::hudwidth/2, hud::hudheight/4 };
-                            if(millis <= 1000)
+                            if(millis <= hud::inventoryaffinity/2)
                             {
-                                float tweak = millis <= 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
+                                float tweak = millis <= hud::inventoryaffinity/4 ? clamp(float(millis)/float(hud::inventoryaffinity/4), 0.f, 1.f) : 1.f;
                                 skew += tweak*hud::inventorygrow;
                                 loopk(2) pos[k] = off[k]+(s/2*tweak*skew);
                                 skew *= tweak; fade *= tweak; rescale = 0;
                             }
                             else
                             {
-                                float tweak = clamp(float(millis-1000)/1000.f, 0.f, 1.f);
+                                float tweak = clamp(float(millis-(hud::inventoryaffinity/2))/float(hud::inventoryaffinity/2), 0.f, 1.f);
                                 skew += (1.f-tweak)*hud::inventorygrow;
                                 loopk(2) pos[k] -= int((pos[k]-(off[k]+s/2*skew))*(1.f-tweak));
                                 rescale = tweak;
