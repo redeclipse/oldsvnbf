@@ -1075,10 +1075,10 @@ namespace hud
             vec norm;
             switch(k)
             {
-                case 0: vecfromyawpitch(yaw, 0, 1, -1, norm);   glTexCoord2f(1, 0); break;
-                case 1: vecfromyawpitch(yaw, 0, 1, 1, norm);    glTexCoord2f(0, 0); break;
-                case 2: vecfromyawpitch(yaw, 0, -1, -1, norm);  glTexCoord2f(1, 1); break;
-                case 3: vecfromyawpitch(yaw, 0, -1, 1, norm);   glTexCoord2f(0, 1); break;
+                case 0: vecfromyawpitch(yaw, 0, 1, -1, norm);   glTexCoord2f(0, 1); break;
+                case 1: vecfromyawpitch(yaw, 0, 1, 1, norm);    glTexCoord2f(1, 1); break;
+                case 2: vecfromyawpitch(yaw, 0, -1, -1, norm);  glTexCoord2f(0, 0); break;
+                case 3: vecfromyawpitch(yaw, 0, -1, 1, norm);   glTexCoord2f(1, 0); break;
             }
             norm.z = 0; norm.normalize().mul(tq).add(pos);
             glVertex2f(norm.x, norm.y);
@@ -1425,7 +1425,7 @@ namespace hud
                 {
                     if(y-sy-s < m) break;
                     float fade = blend*inventoryblend, size = s, skew = 0.f;
-                    if(game::focus->weapstate[i] == WEAP_S_SWITCH || game::focus->weapstate[i] == WEAP_S_PICKUP)
+                    if((game::focus->weapstate[i] == WEAP_S_SWITCH || game::focus->weapstate[i] == WEAP_S_PICKUP) && (i != game::focus->weapselect || i != game::focus->lastweap))
                     {
                         float amt = clamp(float(lastmillis-game::focus->weaplast[i])/float(game::focus->weapwait[i]), 0.f, 1.f);
                         if(i != game::focus->weapselect) skew = game::focus->hasweap(i, sweap) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt;

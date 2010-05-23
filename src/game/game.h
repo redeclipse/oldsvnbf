@@ -182,7 +182,6 @@ enum
 };
 
 #define WEAPSWITCHDELAY PHYSMILLIS*2
-#define WEAPPICKUPDELAY PHYSMILLIS*2
 
 enum
 {
@@ -718,11 +717,10 @@ struct gamestate
     {
         if(isweap(weap))
         {
-            int delay = state == WEAP_S_PICKUP ? WEAPPICKUPDELAY : WEAPSWITCHDELAY;
             lastweap = weapselect;
-            setweapstate(lastweap, state, delay, millis);
+            setweapstate(lastweap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
             weapselect = weap;
-            setweapstate(weap, state, delay, millis);
+            setweapstate(weap, state, WEAPSWITCHDELAY, millis);
         }
     }
 
@@ -790,7 +788,7 @@ struct gamestate
             case WEAPON:
             {
                 int prev = ammo[attr];
-                weapswitch(attr, millis, weapselect != attr ? WEAP_S_SWITCH : WEAP_S_PICKUP);
+                weapswitch(attr, millis, hasweap(attr, sweap) ? WEAP_S_SWITCH : WEAP_S_PICKUP);
                 ammo[attr] = clamp(max(ammo[attr], 0)+WEAP(attr, add), 1, WEAP(attr, max));
                 weapload[attr] = ammo[attr]-prev;
                 entid[attr] = id;
