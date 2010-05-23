@@ -99,8 +99,8 @@ GVAR(0, stfpoints, 0, 1, INT_MAX-1); // points added to score
 GVAR(0, stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 GVAR(0, stfflags, 0, 3, 3); // 0 = init all (neutral), 1 = init neutral and team only, 2 = init team only, 3 = init all (team + neutral + converted)
 
-GVAR(0, skillmin, 1, 65, 101);
-GVAR(0, skillmax, 1, 85, 101);
+GVAR(0, skillmin, 1, 75, 101);
+GVAR(0, skillmax, 1, 95, 101);
 GVAR(0, botbalance, -1, -1, INT_MAX-1); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
 GVAR(0, botlimit, 0, 16, INT_MAX-1);
 GVAR(0, enemyallowed, 0, 2, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too

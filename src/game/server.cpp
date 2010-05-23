@@ -3021,7 +3021,7 @@ namespace server
         putint(p, GAMEVERSION);         // 1
         putint(p, gamemode);            // 2
         putint(p, mutators);            // 3
-        putint(p, timeremaining/60);    // 4
+        putint(p, timeremaining);       // 4
         putint(p, GAME(serverclients)); // 5
         putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
         sendstring(smapname, p);

@@ -101,11 +101,12 @@ namespace ai
         if(WEAP2(d->weapselect, radial, alt)) o.z -= e->height;
         if(d->skill <= 100)
         {
-            if(lastmillis-d->ai->lastaimrnd >= (d->skill+10)*20)
+            if(lastmillis >= d->ai->lastaimrnd)
             {
-                #define rndaioffset(r) ((rnd(int(r*WEAP2(d->weapselect, aiskew, alt)*2)+1)-(r*WEAP2(d->weapselect, aiskew, alt)))*(1.f/float(max(d->skill/10, 1))))
-                loopk(3) d->ai->aimrnd[k] = rndaioffset(k < 2 ? e->radius : e->height/10.f);
-                d->ai->lastaimrnd = lastmillis;
+                #define rndaioffset(r) ((rnd(int(r*WEAP2(d->weapselect, aiskew, alt)*2)+1)-(r*WEAP2(d->weapselect, aiskew, alt)))*(1.f/float(max(d->skill, 1))))
+                loopk(3) d->ai->aimrnd[k] = rndaioffset(e->radius);
+                int dur = (d->skill+10)*10;
+                d->ai->lastaimrnd = lastmillis+dur+rnd(dur);
             }
             loopk(3) o[k] += d->ai->aimrnd[k];
         }
@@ -1190,7 +1191,7 @@ namespace ai
             }
         }
 
-        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 0))
+        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 0) && d->weapstate[d->weapselect] == WEAP_S_IDLE && (!d->ammo[d->weapselect] || lastmillis-d->weaplast[d->weapselect] >= 6000-(d->skill*50)))
         {
             if(weapons::weapreload(d, d->weapselect))
             {
