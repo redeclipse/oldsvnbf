@@ -275,24 +275,30 @@ namespace hud
         return UI::keypress(code, isdown, cooked); // ignore UI if compass is open
     }
 
-    char *timetostr(int millis, bool limited)
+    char *timetostr(int dur, int style)
     {
         static string timestr; timestr[0] = 0;
-        int tm = millis, ms = 0, ss = 0, mn = 0;
-        if(tm > 0)
+        int tm = dur, ms = 0, ss = 0, mn = 0;
+        if(style <= 1 && tm > 0)
         {
             ms = tm%1000;
             tm = (tm-ms)/1000;
-            if(tm > 0)
-            {
-                ss = tm%60;
-                tm = (tm-ss)/60;
-                if(tm > 0) mn = tm;
-            }
         }
-        formatstring(timestr)(limited ? "%d:%02d.%d" : "%d:%02d.%03d", mn, ss, limited ? ms/100 : ms);
+        if(style <= 2 && tm > 0)
+        {
+            ss = tm%60;
+            tm = (tm-ss)/60;
+        }
+        if(tm > 0) mn = tm;
+        switch(style)
+        {
+            case 0: formatstring(timestr)("%d:%02d.%03d", mn, ss, ms); break;
+            case 1: formatstring(timestr)("%d:%02d.%d", mn, ss, ms/100); break;
+            case 2: formatstring(timestr)("%d:%02d", mn, ss); break;
+        }
         return timestr;
     }
+    ICOMMAND(0, timetostr, "ii", (int *d, int *s), result(timetostr(*d, *s)));
 
     float motionblur(float scale)
     {
@@ -1618,7 +1624,7 @@ namespace hud
             {
                 pushfont("default");
                 if(game::focus->cpmillis > 0)
-                    sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(lastmillis-game::focus->cpmillis, true));
+                    sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(lastmillis-game::focus->cpmillis, 1));
                 else if(game::focus->cplast)
                     sy += draw_textx("\fzwe%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(game::focus->cplast));
                 popfont();

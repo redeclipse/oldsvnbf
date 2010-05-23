@@ -256,7 +256,7 @@ namespace hud
             {
                 if(!game::timeremaining) g.textf(", \fs\fyintermission\fS", 0xFFFFFF, NULL);
                 else if(paused) g.textf(", \fs\fopaused\fS", 0xFFFFFF, NULL);
-                else g.textf(", \fs\fg%.1f\fS %s remain", 0xFFFFFF, NULL, game::timeremaining/60.f, game::timeremaining==60 ? "min" : "mins");
+                else g.textf(", \fs\fg%s\fS remain", 0xFFFFFF, NULL, hud::timetostr(game::timeremaining, 2));
             }
             g.popfont();
             g.poplist();
