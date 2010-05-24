@@ -498,7 +498,7 @@ namespace hud
                     g.text("sk", fgcolor);
                     loopscoregroup({
                         if(o->aitype >= 0) g.textf("%d", 0xFFFFFF, NULL, o->skill);
-                        else g.textf("%d", 0xFFFFFF, NULL, int(o->totaldamage*100.f/float(max(o->totalshots, 1))));
+                        else g.space(1);
                     });
                     g.poplist();
                 }
@@ -547,14 +547,13 @@ namespace hud
             }
             if(m_play(game::gamemode) && game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
             {
-                float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
-                    accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
+                float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1)));
                 g.space(1);
                 g.pushfont("sub");
-                g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio, \fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL,
+                g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio, \fs\fg%d\fS damage", 0xFFFFFF, NULL,
                     game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
                     game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio,
-                    game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+                    game::player1->totaldamage);
                 g.popfont();
             }
             g.end();

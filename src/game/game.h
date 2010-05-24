@@ -936,7 +936,7 @@ extern const char * const animnames[];
 struct gameent : dynent, gamestate
 {
     editinfo *edit; ai::aiinfo *ai;
-    int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, totaldamage, totalshots,
+    int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, totaldamage,
         actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake,
         lastpush, lastjump;
     float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
@@ -947,7 +947,7 @@ struct gameent : dynent, gamestate
     vector<gameent *> dominating, dominated;
 
     gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
-        totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
+        totaldamage(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
         lastattacker(-1), lastpoints(0), quake(0), lastpush(0), lastjump(0),
         head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
         lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
@@ -1027,7 +1027,7 @@ struct gameent : dynent, gamestate
     void resetstate(int millis, int heal)
     {
         respawn(millis, heal);
-        frags = deaths = totaldamage = totalshots = 0;
+        frags = deaths = totaldamage = 0;
     }
 
     void mapchange(int millis, int heal)
