@@ -823,16 +823,15 @@ struct gamestate
     {
         health = heal;
         weapreset(true);
-        if(!isweap(sweap)) sweap = WEAP_PISTOL;
-        ammo[WEAP_MELEE] = max(WEAP(WEAP_MELEE, max), 1);
-        if(sweap != WEAP_MELEE) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
-        if(!insta && sweap != WEAP_PISTOL) ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
+        ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+        if(isweap(sweap) && sweap != WEAP_MELEE) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
         if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = max(WEAP(WEAP_GRENADE, max), 1);
         if(arena)
         {
             int aweap = loadweap;
             while(aweap < WEAP_OFFSET || aweap >= WEAP_ITEM) aweap = rnd(WEAP_ITEM-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
             ammo[aweap] = max(WEAP(aweap, reloads) ? WEAP(aweap, add) : WEAP(aweap, max), 1);
+            ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
             lastweap = weapselect = aweap;
         }
         else
