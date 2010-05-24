@@ -79,7 +79,7 @@ namespace ctf
                 }
             }
             pushfont("super");
-            if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag")*hud::noticescale;
+            if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have the flag", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
             if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
             if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
             popfont();
@@ -103,10 +103,10 @@ namespace ctf
                 {
                     if(f.owner == game::focus)
                     {
-                        skew = 1; // override it
                         if(hud::inventoryaffinity && millis <= hud::inventoryaffinity)
                         {
                             int off[2] = { hud::hudwidth/2, hud::hudheight/4 };
+                            skew = 1; // override it
                             if(millis <= hud::inventoryaffinity/2)
                             {
                                 float tweak = millis <= hud::inventoryaffinity/4 ? clamp(float(millis)/float(hud::inventoryaffinity/4), 0.f, 1.f) : 1.f;
@@ -126,6 +126,9 @@ namespace ctf
                         {
                             float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
                             fade += (1.f-fade)*amt;
+                            if(!hud::inventoryaffinity && millis <= 1000)
+                                skew += (1.f-skew)*clamp(float(millis)/1000.f, 0.f, 1.f);
+                            else skew = 1; // override it
                         }
                     }
                     else if(millis <= 1000) skew += (1.f-skew)*clamp(float(millis)/1000.f, 0.f, 1.f);
