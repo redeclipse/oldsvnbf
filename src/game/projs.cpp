@@ -291,12 +291,12 @@ namespace projs
                     } // all falls through to ..
                 default: return;
             }
-            setbbfrommodel(&proj, proj.mdl, size);
+            setbbfrommodel(&proj, proj.mdl, size*proj.scale);
             switch(proj.projtype)
             {
-                case PRJ_GIBS: case PRJ_DEBRIS: proj.height += 0.5f; break;
-                case PRJ_EJECT: proj.height += proj.lifesize*proj.scale*0.25f; break;
-                case PRJ_ENT: proj.height += 2.5f; break;
+                case PRJ_GIBS: case PRJ_DEBRIS: proj.height += size*proj.scale*0.5f; break;
+                case PRJ_EJECT: proj.height += size*proj.scale*0.25f; break;
+                case PRJ_ENT: proj.height += size*proj.scale*4.f; break;
             }
         }
         if(init)
@@ -584,7 +584,8 @@ namespace projs
             create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
 
         int adelay = WEAP2(weap, adelay, flags&HIT_ALT);
-        if(d->aitype >= AI_BOT) adelay += int(adelay*(1.f/d->skill));
+        if(d->aitype >= AI_BOT && (!WEAP2(weap, fullauto, flags&HIT_ALT) || adelay >= PHYSMILLIS))
+            adelay += int(adelay*(1.f/d->skill));
         d->setweapstate(weap, flags&HIT_ALT ? WEAP_S_SECONDARY : WEAP_S_PRIMARY, adelay, lastmillis);
         d->ammo[weap] = max(d->ammo[weap]-offset, 0);
         d->totalshots += int(WEAP2(weap, damage, flags&HIT_ALT)*damagescale)*WEAP2(weap, rays, flags&HIT_ALT);

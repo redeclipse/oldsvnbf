@@ -32,7 +32,7 @@ namespace ai
     bool weaprange(gameent *d, int weap, bool alt, float dist)
     {
         if(!isweap(weap) || (WEAP2(weap, extinguish, alt) && d->inliquid)) return false;
-        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? d->radius*2 : 0),
+        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? d->radius*2 : 0),
             maxdist = WEAP2(weap, maxdist, alt) ? WEAP2(weap, maxdist, alt) : hdr.worldsize;
         return dist >= mindist*mindist && dist <= maxdist*maxdist;
     }
@@ -991,9 +991,10 @@ namespace ai
             game::getyawpitch(dp, ep, yaw, pitch);
             game::fixrange(yaw, pitch);
             bool targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)), insight = cansee(d, dp, ep) && targeting,
-                hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000, quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
+                hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000,
+                quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (WEAP2(d->weapselect, fullauto, alt) ? skmod*10 : skmod);
             if(insight) d->ai->enemyseen = lastmillis;
-            if(idle || insight || hasseen)
+            if(idle || insight || hasseen || quick)
             {
                 float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
                 if(idle || (insight && lockon(d, e, 4)))
@@ -1025,7 +1026,7 @@ namespace ai
             {
                 enemyok = false;
                 d->ai->enemy = -1;
-                d->ai->enemymillis = 0;
+                d->ai->enemyseen = d->ai->enemymillis = 0;
                 result = 0;
                 frame *= 0.5f;
             }
@@ -1036,7 +1037,7 @@ namespace ai
             if(!enemyok)
             {
                 d->ai->enemy = -1;
-                d->ai->enemymillis = 0;
+                d->ai->enemyseen = d->ai->enemymillis = 0;
             }
             result = 0;
             frame *= 0.5f;
