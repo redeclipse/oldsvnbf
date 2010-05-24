@@ -883,8 +883,11 @@ namespace game
         }
         if(d != actor)
         {
-            if(actor->state == CS_ALIVE && d->aitype < AI_START) copystring(actor->obit, d->obit);
-            actor->lastkill = totalmillis;
+            if(actor->state == CS_ALIVE && d->aitype < AI_START)
+            {
+                copystring(actor->obit, d->obit);
+                actor->lastkill = totalmillis;
+            }
         }
         if(dth >= 0)
         {
