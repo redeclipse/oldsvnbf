@@ -317,7 +317,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                //if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
                 proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
                 proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -556,7 +556,7 @@ namespace projs
         } weapfx[WEAP_MAX] = {
             { 0, 0, 0, 0, 0, 0 },
             { 200, PART_MUZZLE_FLASH, 0xFFCC22, 1.5f, 2, 4 },
-            { 0, PART_PLASMA, 0x2244FF, 1.f, 0, 0 },
+            { 0, 0, 0, 0, 0, 0 },
             { 350, PART_MUZZLE_FLASH, 0xFFAA00, 3, 5, 16 },
             { 50, PART_MUZZLE_FLASH, 0xFF8800, 2.5f, 4, 12 },
             { 150, PART_MUZZLE_FLASH, -1, 1.5f, 0, 0 },
@@ -1016,8 +1016,7 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        if(!(proj.projcollide&COLLIDE_OWNER) || (proj.spawntime && lastmillis-proj.spawntime >= (proj.projtype == PRJ_SHOT ? max(600-WEAP2(proj.weap, speed, proj.flags&HIT_ALT), 100) : 100))) proj.escaped = true;
-#if 0
+        if(!(proj.projcollide&COLLIDE_OWNER) || (proj.spawntime && lastmillis-proj.spawntime >= PHYSMILLIS)) proj.escaped = true;
         else if(proj.projcollide&COLLIDE_TRACE)
         {
             vec to = vec(pos).add(dir);
@@ -1027,7 +1026,6 @@ namespace projs
             if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
         }
         else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
-#endif
     }
 
     bool move(projent &proj, int qtime)
