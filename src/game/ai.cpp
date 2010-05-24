@@ -29,11 +29,20 @@ namespace ai
         return d->team;
     }
 
+    float weapmindist(int weap, bool alt)
+    {
+        return WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? 4 : 0);
+    }
+
+    float weapmaxdist(int weap, bool alt)
+    {
+        return WEAP2(weap, aidist, alt) ? WEAP2(weap, aidist, alt) : hdr.worldsize;
+    }
+
     bool weaprange(gameent *d, int weap, bool alt, float dist)
     {
         if(!isweap(weap) || (WEAP2(weap, extinguish, alt) && d->inliquid)) return false;
-        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? d->radius*2 : 0),
-            maxdist = WEAP2(weap, aidist, alt) ? WEAP2(weap, aidist, alt) : hdr.worldsize;
+        float mindist = weapmindist(weap, alt), maxdist = weapmaxdist(weap, alt);
         return dist >= mindist*mindist && dist <= maxdist*maxdist;
     }
 
@@ -85,12 +94,14 @@ namespace ai
 
     bool hastarget(gameent *d, aistate &b, gameent *e, bool alt, float yaw, float pitch, float dist)
     { // add margins of error
-        if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-        if(weaprange(d, d->weapselect, alt, dist))
+        if(weaprange(d, d->weapselect, alt, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
             if(d->weapselect == WEAP_MELEE) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f);
-            if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
+            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/5000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/500.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f),
+                offy = yaw-d->yaw, offp = pitch-d->pitch;
+            if(offy > 180) offy -= 360;
+            else if(offy < -180) offy += 360;
+            if(fabs(offy) <= d->ai->views[0]*skew && fabs(offp) <= d->ai->views[1]*skew) return true;
         }
         return false;
     }
@@ -270,25 +281,19 @@ namespace ai
     bool enemy(gameent *d, aistate &b, const vec &pos, float guard, bool pursue, bool force)
     {
         gameent *t = NULL, *e = NULL;
-        vec dp = d->headpos(), tp(0, 0, 0);
-        bool insight = false, tooclose = false;
-        float mindist = d->weapselect != WEAP_MELEE ? guard*guard : 0;
+        vec dp = d->headpos();
+        float mindist = guard*guard, bestdist = 1e16f;
         loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
         {
             vec ep = getaimpos(d, e, altfire(d, e));
-            bool close = ep.squaredist(pos) < mindist;
-            if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
+            float dist = ep.squaredist(dp);
+            if(dist < bestdist && (cansee(d, dp, ep) || dist <= mindist))
             {
-                bool see = cansee(d, dp, ep);
-                if(!insight || see || close)
-                {
-                    t = e; tp = ep;
-                    if(!insight && see) insight = see;
-                    if(!tooclose && close && (see || force)) tooclose = close;
-                }
+                t = e;
+                bestdist = dist;
             }
         }
-        if(t && violence(d, b, t, pursue && (tooclose || insight))) return insight || tooclose;
+        if(t && violence(d, b, t, pursue)) return true;
         return false;
     }
 
@@ -767,7 +772,7 @@ namespace ai
                         bool alt = altfire(d, e);
                         if(aistyle[d->aitype].canmove)
                         {
-                            float mindist = WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) ? WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
+                            float mindist = weapmindist(d->weapselect, alt);
                             return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
                         }
                         else
@@ -1324,15 +1329,15 @@ namespace ai
                 if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
                     obs.add(d, d->airnodes[j]);
             if(d->state != CS_ALIVE || !physics::issolid(d)) continue;
-            obs.avoidnear(d, d->feetpos(), d->radius+1);
+            obs.avoidnear(d, d->feetpos(), d->radius+2);
         }
         loopv(projs::projs)
         {
             projent *p = projs::projs[i];
             if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators, p->scale))
-                obs.avoidnear(p, p->o, (WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators, p->scale)*p->lifesize)+1);
+                obs.avoidnear(p, p->o, (WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators, p->scale)*p->lifesize)+2);
         }
-        loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
+        loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && !entities::ents[i]->links.empty() && !entities::ents[i]->spawned)
         {
             mapmodelinfo &mmi = getmminfo(entities::ents[i]->attrs[0]);
             vec center, radius;
