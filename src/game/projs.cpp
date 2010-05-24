@@ -1036,19 +1036,52 @@ namespace projs
             if(returningfire && lastmillis-proj.spawntime >= min(WEAP2(proj.weap, time, proj.flags&HIT_ALT)/3, 100))
             {
                 if(!proj.stuck) proj.stuck = false;
-                vec trg = vec(proj.owner->feetpos(proj.owner->height/2)).sub(proj.o).normalize();
-                if(!trg.iszero()) proj.vel = trg.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+                vec targ = vec(proj.owner->feetpos(proj.owner->height/2)).sub(proj.o).normalize();
+                if(!targ.iszero()) proj.vel = targ.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
             }
-            else if(proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
+            else if(proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) && lastmillis-proj.spawntime >= WEAP2(proj.weap, gdelay, proj.flags&HIT_ALT))
             {
-                vec trg, ori = proj.vel.normalize();
-                findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, trg);
-                trg.sub(proj.o).normalize();
-                if(!trg.iszero())
+                bool failed = false;
+                vec targ, dir = proj.vel.normalize();
+                switch(WEAP2(proj.weap, guided, proj.flags&HIT_ALT))
                 {
-                    float amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)*secs;
-                    ori.mul(1.f-amt).add(trg.mul(amt)).normalize();
-                    if(!ori.iszero()) proj.vel = ori.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+                    case 5: case 4: case 3: case 2:
+                    {
+                        switch(WEAP2(proj.weap, guided, proj.flags&HIT_ALT))
+                        {
+                            case 4: case 5:
+                            {
+                                if(WEAP2(proj.weap, guided, proj.flags&HIT_ALT)%2 && proj.target) break;
+                                float yaw, pitch;
+                                vectoyawpitch(dir, yaw, pitch);
+                                findorientation(proj.o, yaw, pitch, targ);
+                                physent *t = game::intersectclosest(proj.o, targ, proj.owner);
+                                if(t) proj.target = t;
+                                break;
+                            }
+                            case 2: case 3: default:
+                            {
+                                if(WEAP2(proj.weap, guided, proj.flags&HIT_ALT)%2 && proj.target) break;
+                                findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, targ);
+                                physent *t = game::intersectclosest(proj.owner->o, targ, proj.owner);
+                                if(t) proj.target = t;
+                                break;
+                            }
+                        }
+                        if(proj.target) targ = proj.target->headpos();
+                        else failed = true;
+                    }
+                    case 1: default: findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, targ); break;
+                }
+                if(!failed)
+                {
+                    targ.sub(proj.o).normalize();
+                    if(!targ.iszero())
+                    {
+                        float amt = clamp(WEAP2(proj.weap, delta, proj.flags&HIT_ALT)*secs, 1e-8f, 1.f);
+                        dir.mul(1.f-amt).add(targ.mul(amt)).normalize();
+                        if(!dir.iszero()) proj.vel = dir.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+                    }
                 }
             }
         }

@@ -33,7 +33,7 @@ namespace ai
     {
         if(!isweap(weap) || (WEAP2(weap, extinguish, alt) && d->inliquid)) return false;
         float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? d->radius*2 : 0),
-            maxdist = WEAP2(weap, maxdist, alt) ? WEAP2(weap, maxdist, alt) : hdr.worldsize;
+            maxdist = WEAP2(weap, aidist, alt) ? WEAP2(weap, aidist, alt) : hdr.worldsize;
         return dist >= mindist*mindist && dist <= maxdist*maxdist;
     }
 
