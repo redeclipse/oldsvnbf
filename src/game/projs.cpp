@@ -588,7 +588,6 @@ namespace projs
             adelay += int(adelay*(1.f/d->skill));
         d->setweapstate(weap, flags&HIT_ALT ? WEAP_S_SECONDARY : WEAP_S_PRIMARY, adelay, lastmillis);
         d->ammo[weap] = max(d->ammo[weap]-offset, 0);
-        d->totalshots += int(WEAP2(weap, damage, flags&HIT_ALT)*damagescale)*WEAP2(weap, rays, flags&HIT_ALT);
         d->weapshot[weap] = offset;
     }
 
