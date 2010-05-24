@@ -96,7 +96,6 @@ namespace ctf
             bool headsup = hud::chkcond(hud::inventorygame, game::player1->state == CS_SPECTATOR || f.team == TEAM_NEUTRAL || f.team == game::focus->team);
             if(headsup || f.lastowner == game::focus)
             {
-                const char *pre = "";
                 int millis = totalmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
                 float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
                     r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
@@ -104,7 +103,6 @@ namespace ctf
                 {
                     if(f.owner == game::focus)
                     {
-                        pre = "\fzRw";
                         skew = 1; // override it
                         if(hud::inventoryaffinity && millis <= hud::inventoryaffinity)
                         {
@@ -134,7 +132,7 @@ namespace ctf
                     else skew = 1;
                 }
                 else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
-                sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fy%ssecured by" : "\fr%staken by") : (f.droptime ? "\fo%sdropped" : "\fg%ssafe"), pre)*rescale);
+                sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fy%ssecured by" : "\fr%staken by") : (f.droptime ? "\fo%sdropped" : ""))*rescale);
                 if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
                 {
                     float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
