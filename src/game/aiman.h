@@ -1,7 +1,7 @@
 // server-side ai manager
 namespace aiman
 {
-    int oldteambalance = -1, oldskillmin = -1, oldskillmax = -1, oldbotbalance = -2, oldbotlimit = -1, oldenemyallowed = -1, oldenemybalance = -1;
+    int oldteambalance = -1, oldskillmin = -1, oldskillmax = -1, oldbotbalance = -2, oldbotlimit = -1;
 
     int findaiclient(int exclude)
     {
@@ -253,21 +253,24 @@ namespace aiman
             while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
         }
         else clearai(1);
+    }
 
+    void checkenemies()
+    {
         if(GAME(enemybalance) && GAME(enemyallowed) >= (m_campaign(gamemode) ? 0 : (m_insta(gamemode, mutators) ? 2 : 1)))
         {
-            loopvj(sents) if(sents[j].type == ACTOR && sents[j].attrs[0] >= AI_START && sents[j].attrs[0] < AI_MAX && (sents[j].attrs[4] == triggerid || !sents[j].attrs[4]) && m_check(sents[j].attrs[3], gamemode))
+            loopvj(sents) if(sents[j].type == ACTOR && sents[j].attrs[0] >= AI_START && sents[j].attrs[0] < AI_MAX && gamemillis >= sents[j].millis && (sents[j].attrs[4] == triggerid || !sents[j].attrs[4]) && m_check(sents[j].attrs[3], gamemode))
             {
                 int count = 0;
                 loopvrev(clients) if(clients[i]->state.aientity == j)
                 {
-                    if(++count > GAME(enemybalance)) deleteai(clients[i]);
+                    count++;
+                    if(count > GAME(enemybalance)) deleteai(clients[i]);
                 }
                 if(count < GAME(enemybalance))
                 {
                     int amt = GAME(enemybalance)-count;
                     loopk(amt) addai(sents[j].attrs[0], j, -1);
-                    sents[j].millis = gamemillis;
                 }
             }
         }
@@ -293,9 +296,8 @@ namespace aiman
                 checkold(skillmax);
                 checkold(botbalance);
                 checkold(botlimit);
-                checkold(enemyallowed);
-                checkold(enemybalance);
                 if(dorefresh) { checksetup(); dorefresh = false; }
+                checkenemies();
                 loopvrev(clients) if(clients[i]->state.aitype >= 0) reinitai(clients[i]);
                 while(true) if(!reassignai()) break;
             }

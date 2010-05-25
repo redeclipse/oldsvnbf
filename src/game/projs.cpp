@@ -317,7 +317,18 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner)
+                proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
+                proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
+                proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
+                proj.relativity = WEAP2(proj.weap, relativity, proj.flags&HIT_ALT);
+                proj.waterfric = WEAP2(proj.weap, waterfric, proj.flags&HIT_ALT);
+                proj.weight = WEAP2(proj.weap, weight, proj.flags&HIT_ALT);
+                proj.projcollide = WEAP2(proj.weap, collide, proj.flags&HIT_ALT);
+                proj.extinguish = WEAP2(proj.weap, extinguish, proj.flags&HIT_ALT);
+                proj.lifesize = 1;
+                proj.mdl = weaptype[proj.weap].proj;
+                proj.escaped = !proj.owner || weaptype[proj.weap].traced;
+                if(proj.owner && proj.owner->state == CS_ALIVE)
                 {
                     if(weaptype[proj.weap].traced)
                     {
@@ -330,17 +341,6 @@ namespace projs
                         if(waited) proj.o = proj.from;
                     }
                 }
-                proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
-                proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
-                proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
-                proj.relativity = WEAP2(proj.weap, relativity, proj.flags&HIT_ALT);
-                proj.waterfric = WEAP2(proj.weap, waterfric, proj.flags&HIT_ALT);
-                proj.weight = WEAP2(proj.weap, weight, proj.flags&HIT_ALT);
-                proj.projcollide = WEAP2(proj.weap, collide, proj.flags&HIT_ALT);
-                proj.extinguish = WEAP2(proj.weap, extinguish, proj.flags&HIT_ALT);
-                proj.lifesize = 1;
-                proj.mdl = weaptype[proj.weap].proj;
-                proj.escaped = !proj.owner || weaptype[proj.weap].traced;
                 break;
             }
             case PRJ_GIBS:
@@ -478,6 +478,7 @@ namespace projs
         proj.hit = NULL;
         proj.hitflags = HITFLAG_NONE;
         proj.movement = 1;
+        #if 0
         if(proj.projtype == PRJ_SHOT && proj.owner && !weaptype[proj.weap].traced)
         {
             vec eyedir = vec(proj.o).sub(proj.owner->o);
@@ -489,6 +490,7 @@ namespace projs
                 if(blocked >= 0) proj.o = vec(eyedir).mul(blocked+proj.radius).add(proj.owner->o);
             }
         }
+        #endif
         proj.resetinterp();
     }
 

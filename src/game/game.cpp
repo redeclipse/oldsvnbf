@@ -345,7 +345,7 @@ namespace game
         float total = amt;
         if(d->state == CS_DEAD || d->state == CS_WAITING)
         {
-            int len = d->aitype >= AI_START ? min(ai::aideadfade, enemydelay ? enemydelay : INT_MAX-1) : m_delay(gamemode, mutators);
+            int len = d->aitype >= AI_START ? min(ai::aideadfade, enemyspawntime ? enemyspawntime : INT_MAX-1) : m_delay(gamemode, mutators);
             if(len > 0 && (!timechk || len > 1000))
             {
                 int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
