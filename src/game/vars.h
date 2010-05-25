@@ -104,7 +104,7 @@ GVAR(0, skillmax, 1, 95, 101);
 GVAR(0, botbalance, -1, -1, INT_MAX-1); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
 GVAR(0, botlimit, 0, 16, INT_MAX-1);
 GVAR(0, enemyallowed, 0, 2, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too
-GVAR(0, enemybalance, 0, 1, INT_MAX-1);
+GVAR(0, enemybalance, 0, 1, 3);
 GVAR(0, enemydelay, 0, 15000, INT_MAX-1);
 
 GFVAR(0, forcegravity, -1, -1, 1000);
@@ -113,10 +113,10 @@ GFVAR(0, forceliquidcurb, -1, -1, 1000);
 GFVAR(0, forcefloorcurb, -1, -1, 1000);
 GFVAR(0, forceaircurb, -1, -1, 1000);
 
-GFVAR(0, jumpspeed, 0, 100.f, 1000); // extra velocity to add when jumping
-GFVAR(0, movespeed, 0, 100.f, 1000); // speed
+GFVAR(0, jumpspeed, 0, 90.f, 1000); // extra velocity to add when jumping
+GFVAR(0, movespeed, 0, 90.f, 1000); // speed
 GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
-GFVAR(0, impulsespeed, 0, 100.f, 1000); // extra velocity to add when impulsing
+GFVAR(0, impulsespeed, 0, 90.f, 1000); // extra velocity to add when impulsing
 
 GVAR(0, impulseallowed, 0, 3, 3); // impulse allowed; 0 = off, 1 = dash/boost only, 2 = dash/boost and sprint, 3 = all mechanics including parkour
 GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
