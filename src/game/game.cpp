@@ -640,7 +640,7 @@ namespace game
                     else force = hitpushscale;
                     d->vel.add(vec(dir).mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, hitpush, flags&HIT_ALT)*force));
                 }
-                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
+                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weaptype[weap].melee) d->lastpush = lastmillis;
             }
             ai::damaged(d, actor, weap, flags, damage);
         }
@@ -831,7 +831,7 @@ namespace game
                 }
             }
 
-            if(weap > WEAP_MELEE && style&FRAG_HEADSHOT)
+            if(style&FRAG_HEADSHOT)
             {
                 part_text(az, "<super>\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
                 if(!override) anc = S_V_HEADSHOT;

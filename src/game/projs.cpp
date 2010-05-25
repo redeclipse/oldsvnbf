@@ -109,15 +109,15 @@ namespace projs
             if(!WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
             switch(proj.weap)
             {
-                case WEAP_MELEE: case WEAP_SWORD:
-                    part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
-                    break;
                 case WEAP_RIFLE:
                     part_splash(PART_SPARK, 25, 250, proj.o, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.125f, 1, 20, 0, 24);
                     part_create(PART_PLASMA, 250, proj.o, 0x6611FF, 2, 1, 0, 0);
                     adddynlight(proj.o, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.5f, vec(0.4f, 0.05f, 1.f), 250, 10);
                     break;
-                default: break;
+                default:
+                    if(weaptype[proj.weap].melee)
+                        part_create(PART_PLASMA_SOFT, 250, proj.o, 0xAA8811, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
+                    break;
             }
             return (proj.projcollide&COLLIDE_CONT) ? false : true;
         }
@@ -317,7 +317,19 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                //if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                if(proj.owner)
+                {
+                    if(weaptype[proj.weap].traced)
+                    {
+                        proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
+                        proj.to = proj.owner->muzzlepos(proj.weap);
+                    }
+                    else
+                    {
+                        proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                        if(waited) proj.o = proj.from;
+                    }
+                }
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
                 proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
                 proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -328,7 +340,7 @@ namespace projs
                 proj.extinguish = WEAP2(proj.weap, extinguish, proj.flags&HIT_ALT);
                 proj.lifesize = 1;
                 proj.mdl = weaptype[proj.weap].proj;
-                proj.escaped = !proj.owner;
+                proj.escaped = !proj.owner || weaptype[proj.weap].traced;
                 break;
             }
             case PRJ_GIBS:
@@ -433,38 +445,40 @@ namespace projs
             default: break;
         }
         if(proj.projtype != PRJ_SHOT) updatebb(proj, true);
-
-        vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
-        float maxdist = dir.magnitude();
-        if(maxdist > 1e-3f)
+        if(proj.projtype != PRJ_SHOT || !weaptype[proj.weap].traced)
         {
-            dir.mul(1/maxdist);
-            if(proj.projtype != PRJ_EJECT) vectoyawpitch(dir, proj.yaw, proj.pitch);
-        }
-        else if(proj.owner)
-        {
-            if(proj.projtype != PRJ_EJECT)
+            vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
+            float maxdist = dir.magnitude();
+            if(maxdist > 1e-3f)
             {
-                proj.yaw = proj.owner->yaw;
-                proj.pitch = proj.owner->pitch;
+                dir.mul(1/maxdist);
+                if(proj.projtype != PRJ_EJECT) vectoyawpitch(dir, proj.yaw, proj.pitch);
             }
-            vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
+            else if(proj.owner)
+            {
+                if(proj.projtype != PRJ_EJECT)
+                {
+                    proj.yaw = proj.owner->yaw;
+                    proj.pitch = proj.owner->pitch;
+                }
+                vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
+            }
+            vec rel = vec(proj.vel).add(dir);
+            if(proj.owner && proj.relativity > 0)
+            {
+                vec r = vec(proj.owner->vel).add(proj.owner->falling);
+                if(r.x*rel.x < 0) r.x = 0;
+                if(r.y*rel.y < 0) r.y = 0;
+                if(r.z*rel.z < 0) r.z = 0;
+                rel.add(r.mul(proj.relativity));
+            }
+            proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
         }
-        vec rel = vec(proj.vel).add(dir);
-        if(proj.owner && proj.relativity > 0)
-        {
-            vec r = vec(proj.owner->vel).add(proj.owner->falling);
-            if(r.x*rel.x < 0) r.x = 0;
-            if(r.y*rel.y < 0) r.y = 0;
-            if(r.z*rel.z < 0) r.z = 0;
-            rel.add(r.mul(proj.relativity));
-        }
-        proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
         proj.spawntime = lastmillis;
         proj.hit = NULL;
         proj.hitflags = HITFLAG_NONE;
         proj.movement = 1;
-        if(proj.projtype == PRJ_SHOT && proj.owner)
+        if(proj.projtype == PRJ_SHOT && proj.owner && !weaptype[proj.weap].traced)
         {
             vec eyedir = vec(proj.o).sub(proj.owner->o);
             float eyedist = eyedir.magnitude();
@@ -480,7 +494,7 @@ namespace projs
 
     void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id, int weap, int flags, float scale)
     {
-        if(!d || !speed) return;
+        if(!d) return;
 
         projent &proj = *new projent;
         proj.o = proj.from = from;
@@ -526,7 +540,7 @@ namespace projs
 
     void shootv(int weap, int flags, int offset, float scale, vec &from, vector<vec> &locs, gameent *d, bool local)
     {
-        int delay = WEAP2(weap, pdelay, flags&HIT_ALT), millis = delay,
+        int delay = WEAP2(weap, pdelay, flags&HIT_ALT), millis = delay, adelay = WEAP2(weap, adelay, flags&HIT_ALT),
             life = WEAP2(weap, time, flags&HIT_ALT), speed = WEAP2(weap, speed, flags&HIT_ALT);
 
         if(WEAP2(weap, power, flags&HIT_ALT)) switch(WEAP2(weap, cooked, flags&HIT_ALT))
@@ -579,11 +593,15 @@ namespace projs
             adddynlight(from, 32, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).div(512.f), WEAP2(weap, adelay, flags&HIT_ALT)/4, 0, DL_FLASH);
         }
 
-        loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, max(life, 1), WEAP2(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags, scale);
+        loopv(locs)
+        {
+            int pdelay = delay*i, plife = life;
+            if(weaptype[weap].traced && plife > adelay-pdelay) plife = max(adelay-pdelay, 40);
+            create(from, locs[i], local, d, PRJ_SHOT, max(plife, 1), WEAP2(weap, time, flags&HIT_ALT), millis+pdelay, speed, 0, weap, flags, scale);
+        }
         if(ejectfade && weaptype[weap].eject) loopi(clamp(offset, 1, WEAP2(weap, sub, flags&HIT_ALT)))
             create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
 
-        int adelay = WEAP2(weap, adelay, flags&HIT_ALT);
         if(d->aitype >= AI_BOT && (!WEAP2(weap, fullauto, flags&HIT_ALT) || adelay >= PHYSMILLIS))
             adelay += int(adelay*(1.f/d->skill));
         d->setweapstate(weap, flags&HIT_ALT ? WEAP_S_SECONDARY : WEAP_S_PRIMARY, adelay, lastmillis);
@@ -596,7 +614,15 @@ namespace projs
         proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
         if(proj.projtype == PRJ_SHOT)
         {
-            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+            if(proj.owner)
+            {
+                if(weaptype[proj.weap].traced)
+                {
+                    proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
+                    proj.to = proj.owner->muzzlepos(proj.weap);
+                }
+                else proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+            }
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
@@ -786,8 +812,15 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner)
-                    proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                if(proj.owner)
+                {
+                    if(weaptype[proj.weap].traced)
+                    {
+                        proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
+                        proj.to = proj.owner->muzzlepos(proj.weap);
+                    }
+                    else proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                }
                 int vol = 255;
                 switch(proj.weap)
                 {
@@ -1202,6 +1235,38 @@ namespace projs
         return alive;
     }
 
+    bool raymove(projent &proj)
+    {
+        if((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis)
+        {
+            if(proj.lifetime < 0) proj.lifetime = 0;
+            return false;
+        }
+        if(!proj.lastbounce || lastmillis-proj.lastbounce >= 40)
+        {
+            vec to(proj.to), ray = vec(proj.to).sub(proj.from).mul(weaptype[proj.weap].tracesize);
+            float maxdist = ray.magnitude();
+            if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
+            ray.mul(1/maxdist);
+            float dist = tracecollide(&proj, proj.from, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
+            if((dist >= 0 && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM)))
+            {
+                proj.o = vec(proj.from).add(vec(ray).mul(dist));
+                if(hitplayer)
+                {
+                    proj.lastbounce = lastmillis;
+                    if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.from).normalize())) return true;
+                }
+                else proj.norm = hitsurface;
+                if(proj.projcollide&(hitplayer ? IMPACT_PLAYER : IMPACT_GEOM))
+                    return false; // die on impact
+                return true;
+            }
+        }
+        proj.o = proj.to;
+        return true;
+    }
+
     void update()
     {
         vector<projent *> canremove;
@@ -1247,7 +1312,7 @@ namespace projs
                 iter(proj);
                 if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
                 {
-                    if(!move(proj)) switch(proj.projtype)
+                    if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].traced ? !raymove(proj) : !move(proj)) switch(proj.projtype)
                     {
                         case PRJ_ENT:
                         {
@@ -1279,6 +1344,7 @@ namespace projs
             if(proj.local && proj.owner && proj.projtype == PRJ_SHOT)
             {
                 int radius = 0;
+                if(weaptype[proj.weap].traced) proj.o = proj.to;
                 if(proj.state == CS_DEAD)
                 {
                     if(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) > 0)

@@ -229,61 +229,75 @@ namespace weapons
         }
         else offset = sub;
 
-        vec to = targ, from = weap == WEAP_MELEE && secondary ? d->feetpos(1) : d->muzzlepos(weap), unitv;
-        float dist = to.dist(from, unitv);
-        if(dist > 0) unitv.div(dist);
-        else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
-        if(d->aitype < AI_START || d->maxspeed)
+        vec to, from;
+        vector<vec> vshots;
+        vector<ivec> shots;
+        #define addshot(p) { vshots.add(p); shots.add(ivec(int(p.x*DMF), int(p.y*DMF), int(p.z*DMF))); }
+        if(weaptype[weap].traced)
         {
-            float kickmod = kickpushscale;
-            if(d == game::player1 && WEAP(weap, zooms) && game::inzoom()) kickmod = kickpushzoom;
-            else if(physics::iscrouching(d)) kickmod = kickpushcrouch;
-            vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, secondary)*kickmod);
-            if(d == game::focus) game::swaypush.add(vec(kick).mul(kickpushsway));
-            d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, secondary)*kickmod), 1), 0, 1000);
-        }
-
-        // move along the eye ray towards the weap origin, stopping when something is hit
-        // nudge the target a tiny bit forward in the direction of the target for stability
-        vec eyedir(from);
-        eyedir.sub(d->o);
-        float eyedist = eyedir.magnitude();
-        if(eyedist > 0) eyedir.div(eyedist);
-        float barrier = eyedist > 0 ? raycube(d->o, eyedir, eyedist, RAY_CLIPMAT) : eyedist;
-        if(barrier < eyedist)
-        {
-            (from = eyedir).mul(barrier).add(d->o);
-            (to = targ).sub(from).rescale(1e-3f).add(from);
+            from = d->headpos(d->height/2);
+            to = d->muzzlepos(weap);
+            int rays = WEAP2(weap, rays, secondary);
+            if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
+            loopi(rays) addshot(to);
         }
         else
         {
-            barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
-            if(barrier < dist)
+            to = targ;
+            from = weap == WEAP_MELEE && secondary ? d->feetpos(1) : d->muzzlepos(weap);
+            vec unitv;
+            float dist = to.dist(from, unitv);
+            if(dist > 0) unitv.div(dist);
+            else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
+            if(d->aitype < AI_START || aistyle[d->aitype].canmove)
             {
-                to = unitv;
-                to.mul(barrier);
-                to.add(from);
+                float kickmod = kickpushscale;
+                if(d == game::player1 && WEAP(weap, zooms) && game::inzoom()) kickmod = kickpushzoom;
+                else if(physics::iscrouching(d)) kickmod = kickpushcrouch;
+                vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, secondary)*kickmod);
+                if(d == game::focus) game::swaypush.add(vec(kick).mul(kickpushsway));
+                d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, secondary)*kickmod), 1), 0, 1000);
             }
-        }
 
-        vector<vec> vshots;
-        vector<ivec> shots;
-        #define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
-        int rays = WEAP2(weap, rays, secondary);
-        if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
-        float accmod = d->physstate == PHYS_FALL && !d->onladder ? jumpspread : 0;
-        if(physics::sprinting(d, false)) accmod += impulsespread;
-        else if(d->move || d->strafe) accmod += movespread;
-        else if(!physics::iscrouching(d) && (weap != WEAP_RIFLE || !secondary)) accmod += stillspread;
-        int spread = WEAPSP(weap, secondary, game::gamemode, game::mutators, accmod);
-        loopi(rays)
-        {
-            vec dest;
-            if(spread) offsetray(from, to, spread, WEAP2(weap, zdiv, secondary), dest);
-            else dest = to;
-            if(weaptype[weap].thrown[secondary ? 1 : 0] > 0)
-                dest.z += from.dist(dest)*weaptype[weap].thrown[secondary ? 1 : 0];
-            addshot;
+            // move along the eye ray towards the weap origin, stopping when something is hit
+            // nudge the target a tiny bit forward in the direction of the target for stability
+            vec eyedir(from);
+            eyedir.sub(d->o);
+            float eyedist = eyedir.magnitude();
+            if(eyedist > 0) eyedir.div(eyedist);
+            float barrier = eyedist > 0 ? raycube(d->o, eyedir, eyedist, RAY_CLIPMAT) : eyedist;
+            if(barrier < eyedist)
+            {
+                (from = eyedir).mul(barrier).add(d->o);
+                (to = targ).sub(from).rescale(1e-3f).add(from);
+            }
+            else
+            {
+                barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
+                if(barrier < dist)
+                {
+                    to = unitv;
+                    to.mul(barrier);
+                    to.add(from);
+                }
+            }
+
+            int rays = WEAP2(weap, rays, secondary);
+            if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
+            float accmod = d->physstate == PHYS_FALL && !d->onladder ? jumpspread : 0;
+            if(physics::sprinting(d, false)) accmod += impulsespread;
+            else if(d->move || d->strafe) accmod += movespread;
+            else if(!physics::iscrouching(d) && (weap != WEAP_RIFLE || !secondary)) accmod += stillspread;
+            int spread = WEAPSP(weap, secondary, game::gamemode, game::mutators, accmod);
+            loopi(rays)
+            {
+                vec dest;
+                if(spread) offsetray(from, to, spread, WEAP2(weap, zdiv, secondary), dest);
+                else dest = to;
+                if(weaptype[weap].thrown[secondary ? 1 : 0] > 0)
+                    dest.z += from.dist(dest)*weaptype[weap].thrown[secondary ? 1 : 0];
+                addshot(dest);
+            }
         }
         projs::shootv(weap, secondary ? HIT_ALT : 0, offset, scale, from, vshots, d, true);
         client::addmsg(N_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, weap, secondary ? HIT_ALT : 0, int(scale*DMF), int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());

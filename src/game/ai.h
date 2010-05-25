@@ -20,7 +20,7 @@ aistyles aistyle[] = {
             false,      false,      false,      true,       false,                 "turret",   "weapons/smg/vwep",          "actors/player/gamma/vwep"
     },
     {
-        AI_ZOMBIE,      WEAP_MELEE,     50,     35,         3,              3,          3,          14,         150,
+        AI_ZOMBIE,      WEAP_MELEE,     50,     30,         3,              3,          3,          14,         150,
             true,       false,      true,       true,       true,                  "zombie",   "actors/z1",                 "actors/player/gamma/vwep"
     },
     {
@@ -28,11 +28,11 @@ aistyles aistyle[] = {
             true,       true,       true,       true,       true,                  "guard",    "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {
-        AI_HEAVY,       WEAP_SHOTGUN,   200,    25,         2,              3,          3,          14,         200,
+        AI_HEAVY,       WEAP_SHOTGUN,   200,    20,         2,              3,          3,          14,         200,
             true,       true,       true,       true,       true,                  "heavy",    "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {
-        AI_PYRO,        WEAP_FLAMER,    150,    45,         2,              3,          3,          14,         175,
+        AI_PYRO,        WEAP_FLAMER,    150,    40,         2,              3,          3,          14,         175,
             true,       true,       true,       true,       true,                  "pyro",     "actors/player/gamma",       "actors/player/gamma/vwep"
     },
     {

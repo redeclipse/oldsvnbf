@@ -247,22 +247,22 @@ enum
 //  ext1    ext2    cook1   cook2   guide1  guide2  radl1   radl2   brn1    brn2    rlds    crd     zooms   fa1     fa2     allowed
 //  tpr1    tpr2    elas1   elas2   rflt1   rflt2   relt1   relt2   wfrc1   wfrc2   wght1   wght2   rads1   rads2   kpsh1   kpsh2   hpsh1       hpsh2       slow1   slow2   aidst1  aidst2  psz1    psz2    plen1   plen2   freq    push    cmult   cdist   delta1  delta2
 WEAPON(melee,
-    1,      1,      0,      0,      500,        500,        0,      20,     40,     250,        250,        0,      0,      100,        100,        0,      0,      0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
+    1,      1,      0,      0,      500,        500,        0,      25,     50,     200,        200,        0,      0,      250,        250,        0,      0,      0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
     IMPACT_PLAYER,                                                          IMPACT_PLAYER,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    200,        200,        0.1f,   0.1f,   16,     16,     1,      2,      0,      0,      0,      1,      2,      0,      100,    100
+    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    250,        250,        0.25f,  0.25f,  16,     16,     1,      2,      0,      0,      0,      1,      2,      0,      100,    100
 );
 WEAPON(pistol,
-    10,     10,     1,      1,      100,        200,        1000,   40,     40,     2500,       2500,       0,      0,      2000,       2000,       0,      0,      0,      0,      0,      0,      1,      1,      2,      2,      1,      1,      100,    100,
+    10,     10,     1,      1,      100,        150,        1000,   40,     40,     2500,       2500,       0,      0,      2000,       2000,       0,      0,      0,      0,      0,      0,      1,      1,      2,      2,      1,      1,      100,    100,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      0,      0,      1,      1,
     0,      0,      0,      0,      0,      0,      0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      2,      2,      150,        150,        0.1f,   0.1f,   300,    300,    1,      1,      10,     10,     1,      2,      4,      16,     100,    100
 );
 WEAPON(sword,
-    1,      1,      0,      0,      500,        500,        50,     50,     75,     250,        250,        0,      0,      100,        100,        0,      0,      0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
-    IMPACT_PLAYER,                                                          IMPACT_PLAYER,
+    1,      1,      0,      0,      500,        500,        50,     75,     150,    0,          0,          0,      0,      500,        500,        0,      0,      0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      1,      1,
+    IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,                               IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    200,        200,        0.4f,   0.4f,   16,     16,     1,      2,      0,      0,      1,      1,      2,      0,      100,    100
+    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      -1,      -1,    500,        750,        0.5f,   0.75f,  16,     16,     1,      2,      0,      0,      1,      1,      2,      0,      100,    100
 );
 WEAPON(shotgun,
     1,      8,      1,      2,      250,        500,        750,    15,     10,     2500,       2500,       0,      0,      1000,       750,        0,      0,      0,      0,      0,      0,      15,     30,     20,     20,     1,      1,      10,     10,
@@ -309,72 +309,72 @@ WEAPON(rocket,
 
 struct weaptypes
 {
-    int info,               anim,               colour,         sound,      esound,     fsound,     rsound,         espeed;
-    bool    follows[2],         muzzle,     eject;
-    float   thrown[2],              halo,       esize;
+    int     anim,               colour,         sound,      esound,     fsound,     rsound,         espeed;
+    bool    melee,      traced,     muzzle,     eject;
+    float   thrown[2],              halo,       esize,      tracesize;
     const char *name,       *text,  *item,                      *vwep,                      *proj,                  *eprj;
 };
 #ifdef GAMESERVER
 weaptypes weaptype[] =
 {
     {
-        WEAP_MELEE,         ANIM_MELEE,         0x444444,       S_MELEE,    -1,          -1,         -1,             1,
-            { false, false },   false,      false,
-            { 0, 0 },               1,          0,
+            ANIM_MELEE,         0x444444,       S_MELEE,    -1,          -1,         -1,             1,
+            true,       false,      false,      false,
+            { 0, 0 },               1,          0,          0,
             "melee",        "\fd",  "",                         "",                         "",                     ""
     },
     {
-        WEAP_PISTOL,        ANIM_LIGHT,         0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
-            { true, true },     true,       true,
-            { 0, 0 },               4,          0.35f,
+            ANIM_LIGHT,         0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
+            false,      false,      true,       true,
+            { 0, 0 },               4,          0.35f,      0,
             "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep",      "",                     "projs/cartridge"
     },
     {
-        WEAP_SWORD,        ANIM_WIELD,          0x2222FF,       S_SWORD,    -1,          -1,         -1,             1,
-            { true, true },     true,       false,
-            { 0, 0 },               14,         0,
+            ANIM_WIELD,          0x2222FF,       S_SWORD,    -1,          -1,         -1,             1,
+            true,       true,       true,       false,
+            { 0, 0 },               14,         0,          1.5f,
             "sword",     "\fb",     "weapons/sword/item",       "weapons/sword/vwep",     "",                     ""
     },
     {
-        WEAP_SHOTGUN,       ANIM_HEAVY,         0xFFFF22,       S_SHOTGUN,  S_BZAP,     S_WHIZZ,    S_RICOCHET,     10,
-            { true, true },     true,       true,
-            { 0, 0 },               6,          0.45f,
+            ANIM_HEAVY,         0xFFFF22,       S_SHOTGUN,  S_BZAP,     S_WHIZZ,    S_RICOCHET,     10,
+            false,      false,      true,       true,
+            { 0, 0 },               6,          0.45f,      0,
             "shotgun",      "\fy",  "weapons/shotgun/item",     "weapons/shotgun/vwep",     "",                     "projs/shell"
     },
     {
-        WEAP_SMG,           ANIM_LIGHT,         0xFF8822,       S_SMG,      S_BZAP,     S_WHIZZ,    S_RICOCHET,     20,
-            { true, true },     true,       true,
-            { 0, 0 },               5.5f,       0.35f,
+            ANIM_LIGHT,         0xFF8822,       S_SMG,      S_BZAP,     S_WHIZZ,    S_RICOCHET,     20,
+            false,      false,      true,       true,
+            { 0, 0 },               5.5f,       0.35f,      0,
             "smg",          "\fo",  "weapons/smg/item",         "weapons/smg/vwep",         "",                     "projs/cartridge"
     },
     {
-        WEAP_FLAMER,        ANIM_HEAVY,         0xFF2222,       S_FLAMER,   S_BURN,     S_BURNING,  -1,             1,
-            { true, true },     true,       false,
-            { 0, 0 },               7,          0,
+            ANIM_HEAVY,         0xFF2222,       S_FLAMER,   S_BURN,     S_BURNING,  -1,             1,
+            false,      false,      true,       false,
+            { 0, 0 },               7,          0,          0,
             "flamer",       "\fr",  "weapons/flamer/item",      "weapons/flamer/vwep",      "",                     ""
     },
     {
-        WEAP_PLASMA,        ANIM_LIGHT,         0x22FFFF,       S_PLASMA,   S_ENERGY,   S_HUM,      -1,             1,
-            { true, true },     true,       false,
-            { 0, 0 },               5,          0,
+            ANIM_LIGHT,         0x22FFFF,       S_PLASMA,   S_ENERGY,   S_HUM,      -1,             1,
+            false,      false,      true,       false,
+            { 0, 0 },               5,          0,          0,
             "plasma",       "\fc",  "weapons/plasma/item",      "weapons/plasma/vwep",      "",                     ""
     },
     {
-        WEAP_RIFLE,         ANIM_HEAVY,         0xAA66FF,       S_RIFLE,    S_ENERGY,   S_BZZT,     -1,             1,
-            { false, false },   true,       false,
-            { 0, 0 },               7,          0,
+            ANIM_HEAVY,         0xAA66FF,       S_RIFLE,    S_ENERGY,   S_BZZT,     -1,             1,
+            false,      false,      true,       false,
+            { 0, 0 },               7,          0,          0,
             "rifle",        "\fv",  "weapons/rifle/item",       "weapons/rifle/vwep",       "",                     ""
     },
     {
-        WEAP_GRENADE,       ANIM_GRASP,         0x22FF22,       S_GRENADE,  S_EXPLODE,  S_BEEP, S_TINK,             1,
-            { true, true },     false,      false,
-            { 0.0625f, 0.0625f },   3,          0,
+            ANIM_GRASP,         0x22FF22,       S_GRENADE,  S_EXPLODE,  S_BEEP, S_TINK,             1,
+            false,      false,      false,      false,
+            { 0.0625f, 0.0625f },   3,          0,          0,
             "grenade",      "\fg",  "weapons/grenade/item",     "weapons/grenade/vwep",     "weapons/grenade/proj", ""
     },
     {
-        WEAP_ROCKET,        ANIM_HEAVY,         0x993311,       S_ROCKET,   S_EXPLODE,  S_WHIZZ,    -1,             1,
-            { false, false },     true,      false,
-            { 0, 0 },               8,          0,
+            ANIM_HEAVY,         0x993311,       S_ROCKET,   S_EXPLODE,  S_WHIZZ,    -1,             1,
+            false,      false,      true,      false,
+            { 0, 0 },               8,          0,          0,
             "rocket",      "\fn",  "weapons/rocket/item",       "weapons/rocket/vwep",      "weapons/rocket/proj",  ""
     }
 };

@@ -244,10 +244,10 @@ namespace physics
 
     float movevelocity(physent *d)
     {
-        if(d->type == ENT_CAMERA) return game::player1->maxspeed*(floatspeed/100.0f);
+        if(d->type == ENT_CAMERA) return max(game::player1->maxspeed,1.f)*(floatspeed/100.0f);
         else if(d->type == ENT_PLAYER || d->type == ENT_AI)
         {
-            if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(floatspeed/100.0f);
+            if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return max(d->maxspeed,1.f)*(floatspeed/100.0f);
             else
             {
                 float speed = movespeed;

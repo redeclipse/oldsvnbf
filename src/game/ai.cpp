@@ -31,7 +31,7 @@ namespace ai
 
     float weapmindist(int weap, bool alt)
     {
-        return WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? 4 : 0);
+        return WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) && WEAP2(weap, collide, alt)&COLLIDE_OWNER ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (!weaptype[weap].melee ? 4 : 0);
     }
 
     float weapmaxdist(int weap, bool alt)
@@ -84,8 +84,8 @@ namespace ai
             {
                 case WEAP_PISTOL: break;
                 case WEAP_MELEE: case WEAP_ROCKET: default: return false; break;
-                case WEAP_SHOTGUN: case WEAP_SMG: case WEAP_PLASMA: case WEAP_GRENADE: if(rnd(d->skill*3) <= d->skill) return false;
-                case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false;
+                case WEAP_SWORD: case WEAP_SHOTGUN: case WEAP_SMG: case WEAP_PLASMA: case WEAP_GRENADE: if(rnd(d->skill*3) <= d->skill) return false; break;
+                case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false; break;
             }
             return true;
         }
@@ -96,7 +96,7 @@ namespace ai
     { // add margins of error
         if(weaprange(d, d->weapselect, alt, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
-            if(d->weapselect == WEAP_MELEE) return true;
+            if(weaptype[d->weapselect].melee) return true;
             float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/5000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/500.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f),
                 offy = yaw-d->yaw, offp = pitch-d->pitch;
             if(offy > 180) offy -= 360;
@@ -927,7 +927,7 @@ namespace ai
 
     bool lockon(gameent *d, gameent *e, float maxdist)
     {
-        if(d->weapselect == WEAP_MELEE)
+        if(weaptype[d->weapselect].melee)
         {
             vec dir = vec(e->o).sub(d->o);
             float xydist = dir.x*dir.x+dir.y*dir.y, zdist = dir.z*dir.z, mdist = maxdist*maxdist, ddist = d->radius*d->radius;
