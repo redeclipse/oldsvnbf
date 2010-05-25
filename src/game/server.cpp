@@ -830,29 +830,48 @@ namespace server
         return false;
     }
 
-    int sortitems(int *a, int *b) { return rnd(3)-1; }
+    int sortrandomly(int *a, int *b) { return rnd(3)-1; }
     void setupitems(bool update)
     {
-        static vector<int> items; items.setsize(0);
-        loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
+        static vector<int> items, actors;
+        items.setsize(0); actors.setsize(0);
+        loopv(sents)
         {
-            sents[i].millis += GAME(itemspawndelay);
-            switch(GAME(itemspawnstyle))
+            if(!m_campaign(gamemode) && sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
             {
-                case 1: items.add(i); break;
-                case 2:
+                sents[i].millis += GAME(enemyspawndelay);
+                switch(GAME(enemyspawnstyle) == 3 ? rnd(2)+1 : GAME(enemyspawnstyle))
                 {
-                    int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
-                    if(delay > 1) sents[i].millis += delay/2+rnd(delay/2);
-                    break;
+                    case 1: actors.add(i); break;
+                    case 2: sents[i].millis += (GAME(enemyspawntime)+rnd(GAME(enemyspawntime)))/2; break;
+                    default: break;
                 }
-                default: break;
+            }
+            else if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
+            {
+                sents[i].millis += GAME(itemspawndelay);
+                switch(GAME(itemspawnstyle) == 3 ? rnd(2)+1 : GAME(itemspawnstyle))
+                {
+                    case 1: items.add(i); break;
+                    case 2:
+                    {
+                        int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                        if(delay > 1) sents[i].millis += (delay+rnd(delay))/2;
+                        break;
+                    }
+                    default: break;
+                }
             }
         }
         if(!items.empty())
         {
-            items.sort(sortitems);
+            items.sort(sortrandomly);
             loopv(items) sents[items[i]].millis += GAME(itemspawndelay)*i;
+        }
+        if(!actors.empty())
+        {
+            actors.sort(sortrandomly);
+            loopv(actors) sents[actors[i]].millis += GAME(enemyspawndelay)*i;
         }
     }
 
@@ -1043,25 +1062,26 @@ namespace server
     void sendspawn(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
+        int weap = m_weapon(gamemode, mutators), health = m_health(gamemode, mutators);
         bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
         if(ci->state.aitype >= AI_START)
         {
+            weap = aistyle[ci->state.aitype].weap;
             if(!m_insta(gamemode, mutators))
             {
-                int health = aistyle[ci->state.aitype].health;
-                if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[6] > 0)
-                    health = sents[ci->state.aientity].attrs[6];
-                maxhealth = max(health+rnd(health), max(health/5, 10));
-                if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[5] > 0)
-                    weap = sents[ci->state.aientity].attrs[5]-1;
-                else weap = aistyle[ci->state.aitype].weap;
+                health = aistyle[ci->state.aitype].health;
+                if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR)
+                {
+                    if(sents[ci->state.aientity].attrs[6] > 0) health = sents[ci->state.aientity].attrs[6];
+                    if(sents[ci->state.aientity].attrs[5] > 0) weap = sents[ci->state.aientity].attrs[5]-1;
+                }
+                health = max(health+rnd(health), max(health/5, 10));
             }
             else if(ci->state.aitype == AI_ZOMBIE) weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
             arena = grenades = false;
         }
-        gs.spawnstate(weap, maxhealth, m_insta(gamemode, mutators), arena, grenades);
+        gs.spawnstate(weap, health, m_insta(gamemode, mutators), arena, grenades);
         int spawn = pickspawn(ci);
         sendf(ci->clientnum, 1, "ri9v", N_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.points, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
         gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -2887,7 +2907,7 @@ namespace server
                 if(ci->state.aitype >= AI_START && ci->state.lastdeath)
                 {
                     if(m_campaign(gamemode)) continue;
-                    else delay = GAME(enemydelay);
+                    else delay = GAME(enemyspawntime);
                 }
                 if(delay && ci->state.respawnwait(gamemillis, delay)) continue;
                 int nospawn = 0;
