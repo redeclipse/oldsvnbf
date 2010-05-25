@@ -1603,12 +1603,9 @@ namespace game
             flushdamagetones();
             if(player1->state == CS_DEAD || player1->state == CS_WAITING)
             {
-                if(!player1->obliterated)
-                {
-                    if(player1->ragdoll) moveragdoll(player1, true);
-                    else if(lastmillis-player1->lastpain <= 2000)
-                        physics::move(player1, 10, false);
-                }
+                if(player1->ragdoll) moveragdoll(player1, true);
+                else if(lastmillis-player1->lastpain <= 2000)
+                    physics::move(player1, 10, false);
             }
             else
             {
@@ -1845,7 +1842,7 @@ namespace game
 
     void renderplayer(gameent *d, bool third, float trans, float size, bool early = false)
     {
-        if(d->state == CS_SPECTATOR || d->obliterated) return;
+        if(d->state == CS_SPECTATOR) return;
         if(trans <= 0.f || (d == focus && (third ? thirdpersonmodel : firstpersonmodel) < 1))
         {
             if(d->state == CS_ALIVE && rendernormally && (early || d != focus))
