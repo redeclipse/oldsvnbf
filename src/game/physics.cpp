@@ -673,7 +673,7 @@ namespace physics
                 d->vel.normalize().mul(mag); d->vel.z += mag/4;
                 d->doimpulse(allowimpulse() && impulsemeter ? impulsecost : 0, IM_T_DASH, lastmillis);
                 playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_DASH);
             }
             if(!d->turnside && onfloor && d->action[AC_JUMP])
             {
@@ -698,7 +698,7 @@ namespace physics
                 if(impulseaction < (PHYS(gravity) > 0 && impulsestyle < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
                 playsound(S_IMPULSE, d->o, d);
                 game::impulseeffect(d, true);
-                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_BOOST);
             }
             bool found = false;
             if(d->turnside || d->action[AC_JUMP] || d->action[AC_SPECIAL])
@@ -741,7 +741,7 @@ namespace physics
                         d->turnroll = 0;
                         playsound(S_IMPULSE, d->o, d);
                         game::impulseeffect(d, true);
-                        client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                        client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_KICK);
                         break;
                     }
                     if(d->turnside || (!onfloor && d->action[AC_SPECIAL] && canimpulse(d, -1, 3)))

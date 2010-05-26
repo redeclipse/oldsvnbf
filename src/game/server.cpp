@@ -127,10 +127,10 @@ namespace server
         int state;
         projectilestate dropped, weapshots[WEAP_MAX][2];
         int score, spree, crits, rewards, flags, teamkills, shotdamage, damage;
-        int lasttimeplayed, timeplayed, aireinit, lastfireburn, lastfireowner;
+        int lasttimeplayed, timeplayed, aireinit, lastfireburn, lastfireowner, lastdash;
         vector<int> fraglog, fragmillis, cpnodes;
 
-        servstate() : state(CS_SPECTATOR), aireinit(0), lastfireburn(0), lastfireowner(-1) {}
+        servstate() : state(CS_SPECTATOR), aireinit(0), lastfireburn(0), lastfireowner(-1), lastdash(0) {}
 
         bool isalive(int millis)
         {
@@ -151,7 +151,8 @@ namespace server
 
         void respawn(int millis, int heal)
         {
-            lastfireburn = 0; lastfireowner = -1;
+            lastfireburn = lastdash = 0;
+            lastfireowner = -1;
             gamestate::respawn(millis, heal);
             o = vec(-1e10f, -1e10f, -1e10f);
         }
@@ -2305,24 +2306,34 @@ namespace server
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else
         {
-            if(isweap(weap) && GAME(damagecritchance))
+            if(isweap(weap))
             {
-                actor->state.crits++;
-                if(WEAP(weap, critmult) > 0)
+                bool docrit = false;
+                if(WEAP2(weap, critdash, flags&HIT_ALT) && actor->state.lastdash && gamemillis-actor->state.lastdash <= WEAP2(weap, critdash, flags&HIT_ALT))
+                    docrit = true;
+                else if(GAME(damagecritchance) > 0)
                 {
-                    int offset = GAME(damagecritchance)-actor->state.crits;
-                    if(target != actor && WEAP(weap, critdist) > 0)
+                    actor->state.crits++;
+                    if(WEAP(weap, critmult) > 0)
                     {
-                        float dist = actor->state.o.dist(target->state.o);
-                        if(dist <= WEAP(weap, critdist))
-                            offset = int(offset*clamp(dist, 1.f, WEAP(weap, critdist))/WEAP(weap, critdist));
+                        int offset = GAME(damagecritchance)-actor->state.crits;
+                        if(target != actor && WEAP(weap, critdist) > 0)
+                        {
+                            float dist = actor->state.o.dist(target->state.o);
+                            if(dist <= WEAP(weap, critdist))
+                                offset = int(offset*clamp(dist, 1.f, WEAP(weap, critdist))/WEAP(weap, critdist));
+                        }
+                        if(offset <= 0 || !rnd(offset))
+                        {
+                            docrit = true;
+                            actor->state.crits = 0;
+                        }
                     }
-                    if(offset <= 0 || !rnd(offset))
-                    {
-                        realflags |= HIT_CRIT;
-                        realdamage = int(realdamage*WEAP(weap, critmult));
-                        actor->state.crits = 0;
-                    }
+                }
+                if(docrit)
+                {
+                    realflags |= HIT_CRIT;
+                    realdamage = int(realdamage*WEAP(weap, critmult));
                 }
             }
             target->state.dodamage(target->state.health -= realdamage);
@@ -3378,6 +3389,7 @@ namespace server
                         if(cp->state.onfire(gamemillis, GAME(fireburntime))) cp->state.lastfire = cp->state.lastfireburn = 0;
                         else break; // don't propogate
                     }
+                    else if(idx == SPHY_DASH) cp->state.lastdash = gamemillis;
                     QUEUE_MSG;
                     break;
                 }
