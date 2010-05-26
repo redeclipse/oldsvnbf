@@ -68,7 +68,7 @@ GVAR(0, regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carry
 
 GVAR(0, itemsallowed, 0, 2, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 GVAR(0, itemdropping, 0, 1, 1); // 0 = never, 1 = yes
-GVAR(0, itemspawntime, 1, 15000, INT_MAX-1); // when items respawn
+GVAR(0, itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 GVAR(0, itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
 GVAR(0, itemspawnstyle, 0, 1, 3); // 0 = all at once, 1 = staggered, 2 = random, 3 = randomise between both
 GFVAR(0, itemthreshold, 0, 1, 1000); // if numitems/numclients/maxcarry is less than this, spawn one of this type
@@ -105,7 +105,7 @@ GVAR(0, botbalance, -1, -1, INT_MAX-1); // -1 = populate bots to map defined num
 GVAR(0, botlimit, 0, 16, INT_MAX-1);
 GVAR(0, enemyallowed, 0, 2, 2); // 0 = off (campaign only), 1 = deathmatch, 2 = instagib too
 GVAR(0, enemybalance, 0, 1, 3);
-GVAR(0, enemyspawntime, 1, 30000, INT_MAX-1); // when enemies respawn
+GVAR(0, enemyspawntime, 1, 60000, INT_MAX-1); // when enemies respawn
 GVAR(0, enemyspawndelay, 0, 2000, INT_MAX-1); // after map start enemies first spawn
 GVAR(0, enemyspawnstyle, 0, 1, 3); // 0 = all at once, 1 = staggered, 2 = random, 3 = randomise between both
 

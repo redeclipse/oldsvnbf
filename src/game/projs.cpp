@@ -1052,16 +1052,19 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        if(!(proj.projcollide&COLLIDE_OWNER) || (proj.spawntime && lastmillis-proj.spawntime >= PHYSMILLIS)) proj.escaped = true;
-        else if(proj.projcollide&COLLIDE_TRACE)
+        if(!(proj.projcollide&COLLIDE_OWNER)) proj.escaped = true;
+        else if(proj.spawntime && lastmillis-proj.spawntime >= (proj.projtype == PRJ_SHOT ? WEAP2(proj.weap, edelay, proj.flags&HIT_ALT) : 40))
         {
-            vec to = vec(pos).add(dir);
-            float x1 = floor(min(pos.x, to.x)), y1 = floor(min(pos.y, to.y)),
-                  x2 = ceil(max(pos.x, to.x)), y2 = ceil(max(pos.y, to.y)),
-                  maxdist = dir.magnitude(), dist = 1e16f;
-            if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
+            if(proj.projcollide&COLLIDE_TRACE)
+            {
+                vec to = vec(pos).add(dir);
+                float x1 = floor(min(pos.x, to.x)), y1 = floor(min(pos.y, to.y)),
+                      x2 = ceil(max(pos.x, to.x)), y2 = ceil(max(pos.y, to.y)),
+                      maxdist = dir.magnitude(), dist = 1e16f;
+                if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
+            }
+            else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
         }
-        else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
     }
 
     bool move(projent &proj, int qtime)
