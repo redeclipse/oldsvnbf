@@ -332,12 +332,12 @@ namespace projs
                 {
                     if(weaptype[proj.weap].traced)
                     {
-                        proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
-                        proj.to = proj.owner->muzzlepos(proj.weap);
+                        proj.o = proj.from = proj.owner->handpos();
+                        proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
                     }
                     else
                     {
-                        proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                        proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
                         if(waited) proj.o = proj.from;
                     }
                 }
@@ -620,10 +620,10 @@ namespace projs
             {
                 if(weaptype[proj.weap].traced)
                 {
-                    proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
-                    proj.to = proj.owner->muzzlepos(proj.weap);
+                    proj.o = proj.from = proj.owner->handpos();
+                    proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
                 }
-                else proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                else proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
             }
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
@@ -661,6 +661,11 @@ namespace projs
             }
             switch(proj.weap)
             {
+                case WEAP_SWORD:
+                {
+                    part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.5f);
+                    break;
+                }
                 case WEAP_PISTOL:
                 {
                     if(proj.movement > 0.f)
@@ -818,10 +823,10 @@ namespace projs
                 {
                     if(weaptype[proj.weap].traced)
                     {
-                        proj.o = proj.from = proj.owner->headpos(proj.owner->height/2);
-                        proj.to = proj.owner->muzzlepos(proj.weap);
+                        proj.o = proj.from = proj.owner->handpos();
+                        proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
                     }
-                    else proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
+                    else proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
                 }
                 int vol = 255;
                 switch(proj.weap)
@@ -1249,7 +1254,7 @@ namespace projs
         }
         if(!proj.lastbounce || lastmillis-proj.lastbounce >= 40)
         {
-            vec to(proj.to), ray = vec(proj.to).sub(proj.from).mul(weaptype[proj.weap].tracesize);
+            vec to(proj.to), ray = vec(proj.to).sub(proj.from).mul(WEAP2(proj.weap, tracemult, proj.flags&HIT_ALT));
             float maxdist = ray.magnitude();
             if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
             ray.mul(1/maxdist);
@@ -1440,6 +1445,7 @@ namespace projs
             projent &proj = *projs[i];
             switch(proj.weap)
             {
+                case WEAP_SWORD: adddynlight(proj.o, 12, vec(0.1f, 0.1f, 0.95f)); break;
                 case WEAP_SHOTGUN: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
                 case WEAP_SMG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
                 case WEAP_FLAMER:

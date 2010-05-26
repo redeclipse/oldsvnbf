@@ -784,7 +784,7 @@ struct lineprimitiverenderer : listrenderer<lineprimitive>
     // use addline() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL) { return NULL; }
 };
-static lineprimitiverenderer lineprimitives(PT_LINE|PT_LERP);
+static lineprimitiverenderer lineprimitives(PT_LINE|PT_LERP), lineontopprimitives(PT_LINE|PT_LERP|PT_ONTOP);
 
 struct trisprimitive : listparticle<trisprimitive>
 {
@@ -845,7 +845,7 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
     // use addtriangle() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL) { return NULL; }
 };
-static trisprimitiverenderer trisprimitives(PT_TRIANGLE|PT_LERP);
+static trisprimitiverenderer trisprimitives(PT_TRIANGLE|PT_LERP), trisontopprimitives(PT_TRIANGLE|PT_LERP|PT_ONTOP);
 
 struct loopprimitive : listparticle<loopprimitive>
 {
@@ -916,7 +916,7 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
     // use addellipse() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL) { return NULL; }
 };
-static loopprimitiverenderer loopprimitives(PT_ELLIPSE|PT_LERP);
+static loopprimitiverenderer loopprimitives(PT_ELLIPSE|PT_LERP), loopontopprimitives(PT_ELLIPSE|PT_LERP|PT_ONTOP);
 
 struct coneprimitive : listparticle<coneprimitive>
 {
@@ -988,12 +988,13 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
     // use addcone() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL) { return NULL; }
 };
-static coneprimitiverenderer coneprimitives(PT_CONE|PT_LERP);
+static coneprimitiverenderer coneprimitives(PT_CONE|PT_LERP), coneontopprimitives(PT_CONE|PT_LERP|PT_ONTOP);
 
 static partrenderer *parts[] =
 {
     new portalrenderer("textures/teleport"), &icons,
-    &lineprimitives, &trisprimitives, &loopprimitives, &coneprimitives,
+    &lineprimitives, &lineontopprimitives, &trisprimitives, &trisontopprimitives,
+    &loopprimitives, &loopontopprimitives, &coneprimitives, &coneontopprimitives,
     new softquadrenderer("<grey>particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_LERP|PT_SHRINK),
     new softquadrenderer("<grey>particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_LERP|PT_SHRINK),
     new taperenderer("particles/sflare", PT_TAPE|PT_GLARE|PT_LERP),

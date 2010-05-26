@@ -1992,7 +1992,7 @@ namespace game
         }
 
         bool hasweapon = showweap && *weaptype[weap].vwep;
-        modelattach a[9]; int ai = 0;
+        modelattach a[10]; int ai = 0;
         if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
         if(rendernormally && (early || d != focus))
         {
@@ -2003,6 +2003,7 @@ namespace game
                 if(weaptype[weap].eject) a[ai++] = modelattach("tag_eject", &d->eject);
             }
             a[ai++] = modelattach(muzzle, &d->muzzle);
+            a[ai++] = modelattach("tag_weapon", &d->hand);
             if(third && d->wantshitbox())
             {
                 a[ai++] = modelattach("tag_head", &d->head);

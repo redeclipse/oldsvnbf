@@ -235,16 +235,16 @@ namespace weapons
         #define addshot(p) { vshots.add(p); shots.add(ivec(int(p.x*DMF), int(p.y*DMF), int(p.z*DMF))); }
         if(weaptype[weap].traced)
         {
-            from = d->headpos(d->height/2);
-            to = d->muzzlepos(weap);
+            from = d->handpos();
+            to = d->muzzlepos(weap, secondary);
             int rays = WEAP2(weap, rays, secondary);
             if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
             loopi(rays) addshot(to);
         }
         else
         {
+            from = d->muzzlepos(weap, secondary);
             to = targ;
-            from = weap == WEAP_MELEE && secondary ? d->feetpos(1) : d->muzzlepos(weap);
             vec unitv;
             float dist = to.dist(from, unitv);
             if(dist > 0) unitv.div(dist);
