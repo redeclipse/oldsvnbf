@@ -290,6 +290,7 @@ namespace game
                 follow += clamp(n, -1, 1);
                 checkfollow;
             }
+            else break;
         }
     }
     ICOMMAND(0, followdelta, "i", (int *n), followswitch(*n ? *n : 1));
