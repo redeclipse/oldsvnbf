@@ -54,7 +54,7 @@ struct duelservmode : servmode
 
     bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
     {
-        if(dueltime) return false;
+        if(dueltime && target->state.aitype < AI_START) return false;
         return true;
     }
 
