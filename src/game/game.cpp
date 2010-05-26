@@ -282,10 +282,14 @@ namespace game
             if(follow >= numdynents()) follow = 0; \
             else if(follow < 0) follow = numdynents()-1;
         checkfollow;
-        while(!iterdynents(follow))
+        while(true)
         {
-            follow += clamp(n, -1, 1);
-            checkfollow;
+            gameent *d = (gameent *)iterdynents(follow);
+            if(!d || d->aitype >= AI_START)
+            {
+                follow += clamp(n, -1, 1);
+                checkfollow;
+            }
         }
     }
     ICOMMAND(0, followdelta, "i", (int *n), followswitch(*n ? *n : 1));
