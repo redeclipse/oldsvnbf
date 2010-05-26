@@ -631,7 +631,7 @@ namespace game
             if(isweap(weap) && !burning && (d == player1 || !isaitype(d->aitype) || aistyle[d->aitype].canmove))
             {
                 if(WEAP2(weap, slow, flags&HIT_ALT) != 0 && !(flags&HIT_WAVE) && hithurts(flags))
-                    d->vel.mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(1.f-WEAP2(weap, slow, flags&HIT_ALT))*slowscale);
+                    d->vel.mul(1.f-((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, slow, flags&HIT_ALT))*slowscale);
                 if(WEAP2(weap, hitpush, flags&HIT_ALT) != 0)
                 {
                     float force = 1.f;
