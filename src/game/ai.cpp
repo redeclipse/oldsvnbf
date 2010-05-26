@@ -940,7 +940,7 @@ namespace ai
     {
         int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
         float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aistyle[d->aitype].frame);
-        if(!aistyle[d->aitype].canstrafe) frame *= 25;
+        if(!aistyle[d->aitype].canstrafe) frame *= 10;
         vec dp = d->headpos();
 
         bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aistyle[d->aitype].canmove || d->ai->suspended;
