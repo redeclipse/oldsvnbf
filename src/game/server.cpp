@@ -802,9 +802,16 @@ namespace server
         switch(sents[i].type)
         {
             case WEAPON:
-                if(!isweap(sents[i].attrs[0]) || (WEAP(sents[i].attrs[0], allowed) < (m_insta(gamemode, mutators) ? 2 : 1))) return false;
-                if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
+                if(!isweap(sents[i].attrs[0])) return false;
                 if(m_arena(gamemode, mutators) && sents[i].attrs[0] < WEAP_ITEM) return false;
+                switch(WEAP(sents[i].attrs[0], allowed))
+                {
+                    case 0: return false;
+                    case 1: if(m_duke(gamemode, mutators)) return false; // fall through
+                    case 2: if(m_insta(gamemode, mutators)) return false;
+                    case 3: default: break;
+                }
+                if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
                 break;
             default: break;
         }
@@ -3447,7 +3454,15 @@ namespace server
                     int lcn = getint(p), aweap = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
                     if(!hasclient(cp, ci) || !isweap(aweap)) break;
-                    if(WEAP(aweap, allowed) < (m_insta(gamemode, mutators) ? 2 : 1))
+                    bool allowed = true;
+                    switch(WEAP(aweap, allowed))
+                    {
+                        case 0: allowed = false;
+                        case 1: if(m_duke(gamemode, mutators)) allowed = false; // fall through
+                        case 2: if(m_insta(gamemode, mutators)) allowed = false;
+                        case 3: default: break;
+                    }
+                    if(!allowed)
                     {
                         if(cp->state.aitype < 0)
                         {
