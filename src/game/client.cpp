@@ -232,7 +232,7 @@ namespace client
     void edittoggled(bool edit)
     {
         game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), m_insta(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
-        game::player1->state = edit ? CS_EDITING : CS_ALIVE;
+        game::player1->state = edit ? CS_EDITING : (m_edit(game::gamemode) ? CS_ALIVE : CS_DEAD);
         game::player1->resetinterp();
         game::resetstate();
         physics::entinmap(game::player1, true); // find spawn closest to current floating pos
@@ -563,13 +563,13 @@ namespace client
 
     void changemapserv(char *name, int gamemode, int mutators, bool temp)
     {
-        if(editmode) toggleedit();
         game::gamemode = gamemode; game::mutators = mutators;
         server::modecheck(game::gamemode, game::mutators);
         game::nextmode = game::gamemode; game::nextmuts = game::mutators;
         game::timeremaining = -1;
         game::maptime = 0;
         mapvotes.shrink(0);
+        if(editmode) toggleedit();
         if(m_demo(gamemode)) return;
         needsmap = false;
         if(!name || !*name || !load_world(name, temp))
