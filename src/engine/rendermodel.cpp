@@ -326,6 +326,13 @@ void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *
 }
 COMMAND(0, rdlimitrot, "iifffff");
 
+void rdanimjoints(int *on)
+{
+    checkragdoll;
+    ragdoll->animjoints = *on!=0;
+}
+COMMAND(0, rdanimjoints, "i");
+
 // mapmodels
 
 vector<mapmodelinfo> mapmodels;
