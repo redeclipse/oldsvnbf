@@ -175,7 +175,7 @@ WEAPON(rifle,
     2,      12,     10,     10,     1,      1
 );
 WEAPON(grenade,
-    1,      2,      1,      1,      1500,   1500,   2000,   200,    200,    250,    250,    2500,   2500,   5000,   5000,
+    1,      2,      1,      1,      1500,   1500,   2000,   150,    150,    250,    250,    2500,   2500,   5000,   5000,
     100,    100,    0,      0,      40,     40,     48,     48,     1,      1,      1,      1,
     0,      0,      5,      5,
     BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
@@ -186,7 +186,7 @@ WEAPON(grenade,
     2,      0,      10,     10,     1,      1
 );
 WEAPON(rocket,
-    1,      1,      1,      1,      1000,   1000,   1000,   350,     350,    1000,   250,    2500,   2500,  5000,   5000,
+    1,      1,      1,      1,      1000,   1000,   1000,   150,     150,    1000,   250,    2500,   2500,  5000,   5000,
     0,      0,      0,      0,      40,     40,     64,     64,      1,      1,      1,      1,
     0,      0,      10,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
@@ -286,7 +286,7 @@ extern weaptypes weaptype[];
 #define WEAP2(weap,name,second) (*weap_stat_##name[weap][second?1:0])
 #define WEAPSTR(a,weap,attr)    defformatstring(a)("%s%s", weaptype[weap].name, #attr)
 #endif
-#define WEAPLM(a,b,c)           (a*(m_special(b, c) || m_arena(b, c) ? GAME(limitedscale) : GAME(normalscale)))
+#define WEAPLM(a,b,c)           (a*(m_limited(b, c) || m_arena(b, c) ? GAME(limitedscale) : GAME(normalscale)))
 #define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAPLM(WEAP2(a, explode, b)*e, c, d))) : 0)
 #define WEAPSP(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b)+(int(min(WEAP2(a, spread, b), 1)*e)) : 0)
 
