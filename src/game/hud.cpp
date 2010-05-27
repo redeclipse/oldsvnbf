@@ -461,9 +461,9 @@ namespace hud
         float r = 1, g = 1, b = 1, amt = 0;
         switch(game::focus->weapstate[weap])
         {
-            case WEAP_S_POWER: if(WEAP2(weap, power, secondary))
+            case WEAP_S_POWER: if(game::focus->weapwait[weap])
             {
-                amt = clamp(float(millis)/float(WEAP2(weap, power, secondary)), 0.f, 1.f);
+                amt = clamp(float(millis)/float(game::focus->weapwait[weap]), 0.f, 1.f);
                 colourskew(r, g, b, 1.f-amt);
                 break;
             }

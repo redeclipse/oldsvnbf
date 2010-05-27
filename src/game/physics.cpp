@@ -673,7 +673,7 @@ namespace physics
                 d->vel.normalize().mul(mag); d->vel.z += mag/4;
                 d->doimpulse(allowimpulse() && impulsemeter ? impulsecost : 0, IM_T_DASH, lastmillis);
                 playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_DASH);
+                client::addmsg(N_SPHY, "ri2", d->clientnum, SPHY_DASH);
             }
             if(!d->turnside && onfloor && d->action[AC_JUMP])
             {
@@ -689,7 +689,7 @@ namespace physics
                 d->lastjump = lastmillis;
                 playsound(S_JUMP, d->o, d);
                 regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
-                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_JUMP);
+                client::addmsg(N_SPHY, "ri2", d->clientnum, SPHY_JUMP);
             }
             if(!d->turnside && !onfloor && d->action[AC_JUMP] && canimpulse(d, 0, 1))
             {
@@ -698,7 +698,7 @@ namespace physics
                 if(impulseaction < (PHYS(gravity) > 0 && impulsestyle < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
                 playsound(S_IMPULSE, d->o, d);
                 game::impulseeffect(d, true);
-                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_BOOST);
+                client::addmsg(N_SPHY, "ri2", d->clientnum, SPHY_BOOST);
             }
             bool found = false;
             if(d->turnside || d->action[AC_JUMP] || d->action[AC_SPECIAL])
@@ -741,7 +741,7 @@ namespace physics
                         d->turnroll = 0;
                         playsound(S_IMPULSE, d->o, d);
                         game::impulseeffect(d, true);
-                        client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_KICK);
+                        client::addmsg(N_SPHY, "ri2", d->clientnum, SPHY_KICK);
                         break;
                     }
                     if(d->turnside || (!onfloor && d->action[AC_SPECIAL] && canimpulse(d, -1, 3)))
@@ -888,7 +888,7 @@ namespace physics
                     d->resetfire();
                     playsound(S_EXTINGUISH, d->o, d, 0, d != game::focus ? 128 : 224, -1, -1);
                     part_create(PART_SMOKE, 500, d->feetpos(d->height/2), 0xAAAAAA, d->height/2, 0.5f, -10);
-                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
+                    client::addmsg(N_SPHY, "ri2", d->clientnum, SPHY_EXTINGUISH);
                 }
                 if(pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
                     pl->vel.z = max(pl->vel.z, max(jumpforce(pl, false), max(gravityforce(pl), 50.f)));

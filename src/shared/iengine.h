@@ -248,8 +248,8 @@ struct particle
 
 extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
 extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL);
-extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, int radius = 150, int delay = 0);
-extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, int radius = 4);
+extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, float radius = 150, int delay = 0);
+extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, float radius = 4);
 extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f, float blend = 1, int grav = 0, int collide = 0);
 extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void part_textcopy(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL);
@@ -274,9 +274,9 @@ extern int particletext, maxparticledistance;
 extern particle *newparticle(const vec &o, const vec &d, int fade, int type, int color = 0xFFFFFF, float size = 2, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void create(int type, int color, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void regularcreate(int type, int color, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
-extern void splash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0);
-extern void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, int delay = 0);
-extern void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, float vel = 1);
+extern void splash(int type, int color, float radius, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0);
+extern void regularsplash(int type, int color, float radius, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, int delay = 0);
+extern void regularshape(int type, float radius, int color, int dir, int num, int fade, const vec &p, float size = 2, float blend = 1, int grav = 0, int collide = 0, float vel = 1);
 extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2, float blend = 1, int grav = -1, int collide = 0, float vel = 1);
 
 #if 0

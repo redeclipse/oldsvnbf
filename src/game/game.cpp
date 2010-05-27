@@ -503,11 +503,53 @@ namespace game
         if(d->aitype < AI_START) heightoffset(d, local);
         loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
         {
-            if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
+            if(d->state != CS_ALIVE || lastmillis-d->weaplast[i] >= d->weapwait[i]+(d->weapselect != i || d->weapstate[i] != WEAP_S_POWER ? 0 : PHYSMILLIS))
             {
                 if(playreloadnotify >= ((d == focus ? 1 : 2)*(WEAP(i, add) < WEAP(i, max) ? 2 : 1)) && i == d->weapselect && d->weapstate[i] == WEAP_S_RELOAD)
                     playsound(S_NOTIFY, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
                 d->setweapstate(i, WEAP_S_IDLE, 0, lastmillis);
+            }
+            else if(d->weapselect == i && d->weapstate[i] == WEAP_S_POWER && lastmillis-d->weaplast[i] > 0)
+            {
+                const struct powerfxs {
+                    int type, parttype, colour;
+                    float size, radius;
+                } powerfx[WEAP_MAX] = {
+                    { 0, 0, 0, 0 },
+                    { 2, PART_SPARK, 0xFFCC22, 0.1f, 1.5f },
+                    { 4, PART_LIGHTNING, 0x1111CC, 1, 1 },
+                    { 2, PART_SPARK, 0xFFAA00, 0.15f, 2 },
+                    { 2, PART_SPARK, 0xFF8800, 0.1f, 2 },
+                    { 2, PART_FIREBALL_SOFT, 0, 0.25f, 3 },
+                    { 1, PART_PLASMA_SOFT, 0x226688, 0.2f, 2 },
+                    { 2, PART_PLASMA_SOFT, 0x6611FF, 0.2f, 2.5f },
+                    { 3, PART_PLASMA_SOFT, 0, 1, 5 },
+                    { 0, 0, 0, 0 },
+                };
+                float amt = (lastmillis-d->weaplast[i])/float(d->weapwait[i]);
+                switch(powerfx[i].type)
+                {
+                    case 1: case 2:
+                    {
+                        int colour = powerfx[i].colour > 0 ? powerfx[i].colour : firecols[rnd(FIRECOLOURS)];
+                        regularshape(powerfx[i].parttype, 1+(amt*powerfx[i].radius), colour, powerfx[i].type == 2 ? 21 : 53, 5, 60+int(30*amt), d->muzzlepos(i), powerfx[i].size*max(amt, 0.25f), max(amt, 0.5f), 1, 0, 5+(amt*5));
+                        break;
+                    }
+                    case 3:
+                    {
+                        int colour = powerfx[i].colour > 0 ? powerfx[i].colour : ((int(254*max(1.f-amt,0.5f))<<16)+1)|((int(98*max(1.f-amt,0.f))+1)<<8), interval = lastmillis%1000;
+                        float fluc = powerfx[i].size+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
+                        part_create(powerfx[i].parttype, 1, d->handpos(), colour, (powerfx[i].radius*max(amt, 0.25f))+fluc);
+                        break;
+                    }
+                    case 4:
+                    {
+                        int colour = powerfx[i].colour > 0 ? powerfx[i].colour : firecols[rnd(FIRECOLOURS)];
+                        part_flare(d->handpos(), d->muzzlepos(i), 1, PART_LIGHTNING, colour, powerfx[i].size, max(amt, 0.1f));
+                        break;
+                    }
+                    case 0: default: break;
+                }
             }
         }
         if(d->respawned > 0 && lastmillis-d->respawned >= PHYSMILLIS*4) d->respawned = -1;

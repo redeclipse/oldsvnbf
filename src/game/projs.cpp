@@ -575,11 +575,11 @@ namespace projs
             { 0, 0, 0, 0, 0, 0 },
             { 350, PART_MUZZLE_FLASH, 0xFFAA00, 3, 5, 16 },
             { 50, PART_MUZZLE_FLASH, 0xFF8800, 2.5f, 4, 12 },
-            { 150, PART_MUZZLE_FLASH, -1, 1.5f, 0, 0 },
+            { 150, PART_MUZZLE_FLASH, 0, 1.5f, 0, 0 },
             { 150, PART_PLASMA, 0x226688, 1.5f, 0, 0 },
             { 150, PART_PLASMA, 0x6611FF, 1.5f, 3, 9 },
             { 0, 0, 0, 0, 0, 0 },
-            { 500, PART_MUZZLE_FLASH, -1, 2, 0, 0 },
+            { 0, 0, 0, 0, 0, 0 },
         };
         if(weapfx[weap].colour && WEAP2(weap, adelay, flags&HIT_ALT) >= 5)
         {
@@ -589,8 +589,9 @@ namespace projs
                 part_create(weapfx[weap].parttype, WEAP2(weap, adelay, flags&HIT_ALT)/3, from, colour, weapfx[weap].partsize, muz, 0, 0, d);
             if(muzzlechk(muzzleflare, d) && weapfx[weap].flaresize > 0)
             {
-                vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-                part_flare(from, to.mul(weapfx[weap].flarelen).add(from), WEAP2(weap, adelay, flags&HIT_ALT)/2, PART_MUZZLE_FLARE, colour, weapfx[weap].flaresize, muz, 0, 0, d);
+                vec targ; findorientation(d->o, d->yaw, d->pitch, targ);
+                targ.sub(from).normalize().mul(weapfx[weap].flarelen).add(from);
+                part_flare(from, targ, WEAP2(weap, adelay, flags&HIT_ALT)/2, PART_MUZZLE_FLARE, colour, weapfx[weap].flaresize, muz, 0, 0, d);
             }
             adddynlight(from, 32, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).div(512.f), WEAP2(weap, adelay, flags&HIT_ALT)/4, 0, DL_FLASH);
         }
@@ -629,11 +630,11 @@ namespace projs
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
                 {
-                    if(proj.lifespan > 0.125f)
+                    if(proj.lifespan > WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT))
                     {
-                        if(!proj.stuck) proj.lifesize = clamp(1.125f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
+                        if(!proj.stuck) proj.lifesize = clamp((1+WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT))-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
                     }
-                    else proj.lifesize = clamp(0.0625f+(proj.lifespan*10), 0.0625f, 1.f);
+                    else proj.lifesize = proj.lifespan*(1.f/WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT));
                 }
                 else proj.lifesize = proj.lifespan;
             }
