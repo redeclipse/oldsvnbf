@@ -1249,7 +1249,7 @@ void regularcreate(int type, int color, int fade, const vec &p, float size, floa
     create(type, color, fade, p, size, blend, grav, collide, pl);
 }
 
-void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, float blend, int grav, int collide)
+void splash(int type, int color, float radius, int num, int fade, const vec &p, float size, float blend, int grav, int collide)
 {
     if(camera1->o.dist(p) > maxparticledistance) return;
     float collidez = collide ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR : -1;
@@ -1257,13 +1257,13 @@ void splash(int type, int color, int radius, int num, int fade, const vec &p, fl
     int fmax = fade*3;
     loopi(num)
     {
-        vec tmp(rnd(max(radius*2,1))-radius, rnd(max(radius*2,1))-radius, rnd(max(radius*2,1))-radius);
+        vec tmp(rnd(max(int(ceilf(radius*2)),1))-radius, rnd(max(int(ceilf(radius*2)),1))-radius, rnd(max(int(ceilf(radius*2)),1))-radius);
         int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
         newparticle(p, tmp, f, type, color, size, blend, grav, collide)->val = collidez;
     }
 }
 
-void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, float blend, int grav, int collide, int delay)
+void regularsplash(int type, int color, float radius, int num, int fade, const vec &p, float size, float blend, int grav, int collide, int delay)
 {
     if(!emit_particles() || (delay > 0 && rnd(delay) != 0)) return;
     splash(type, color, radius, num, fade, p, size, blend, grav, collide);
@@ -1286,13 +1286,13 @@ void part_create(int type, int fade, const vec &p, int color, float size, float 
     create(type, color, fade, p, size, blend, grav, collide, pl);
 }
 
-void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, float blend, int grav, int collide, int radius, int delay)
+void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, float blend, int grav, int collide, float radius, int delay)
 {
     if(!canaddparticles()) return;
     regularsplash(type, color, radius, num, fade, p, size, blend, grav, collide, delay);
 }
 
-void part_splash(int type, int num, int fade, const vec &p, int color, float size, float blend, int grav, int collide, int radius)
+void part_splash(int type, int num, int fade, const vec &p, int color, float size, float blend, int grav, int collide, float radius)
 {
     if(!canaddparticles()) return;
     splash(type, color, radius, num, fade, p, size, blend, grav, collide);
@@ -1466,7 +1466,7 @@ static inline vec offsetvec(vec o, int dir, int dist)
  * 21 sphere
  * +32 to inverse direction
  */
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float blend, int grav, int collide, float vel)
+void regularshape(int type, float radius, int color, int dir, int num, int fade, const vec &p, float size, float blend, int grav, int collide, float vel)
 {
     if(!emit_particles()) return;
 
@@ -1500,8 +1500,8 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
         }
         else if(dir < 15) //plane
         {
-            to[dir%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
-            to[(dir+1)%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+            to[dir%3] = float(rnd(int(ceilf(radius))<<4)-(int(ceilf(radius))<<3))/8.0;
+            to[(dir+1)%3] = float(rnd(int(ceilf(radius))<<4)-(int(ceilf(radius))<<3))/8.0;
             to[(dir+2)%3] = radius;
             to.add(p);
             from = to;
@@ -1511,13 +1511,13 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
         {
             if(dir < 18)
             {
-                to[dir%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+                to[dir%3] = float(rnd(int(ceilf(radius))<<4)-(int(ceilf(radius))<<3))/8.0;
                 to[(dir+1)%3] = 0.0;
             }
             else
             {
                 to[dir%3] = 0.0;
-                to[(dir+1)%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+                to[(dir+1)%3] = float(rnd(int(ceilf(radius))<<4)-(int(ceilf(radius))<<3))/8.0;
             }
             to[(dir+2)%3] = 0.0;
             to.add(p);

@@ -3379,7 +3379,7 @@ namespace server
                     break;
                 }
 
-                case N_PHYS:
+                case N_SPHY:
                 {
                     int lcn = getint(p), idx = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
@@ -3390,6 +3390,7 @@ namespace server
                         else break; // don't propogate
                     }
                     else if(idx == SPHY_DASH) cp->state.lastdash = gamemillis;
+                    else if(idx == SPHY_POWER) getint(p);
                     QUEUE_MSG;
                     break;
                 }

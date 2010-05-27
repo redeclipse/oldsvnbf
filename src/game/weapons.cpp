@@ -209,8 +209,8 @@ namespace weapons
                 {
                     if(pressed)
                     {
-                        client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_POWER);
-                        d->setweapstate(weap, WEAP_S_POWER, 0, lastmillis);
+                        client::addmsg(N_SPHY, "ri3", d->clientnum, SPHY_POWER, len);
+                        d->setweapstate(weap, WEAP_S_POWER, len, lastmillis);
                     }
                     else return false;
                 }

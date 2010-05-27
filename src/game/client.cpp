@@ -1188,7 +1188,7 @@ namespace client
                     break;
                 }
 
-                case N_PHYS: // simple phys events
+                case N_SPHY: // simple phys events
                 {
                     int lcn = getint(p), st = getint(p);
                     gameent *t = game::getclient(lcn);
@@ -1207,7 +1207,7 @@ namespace client
                         }
                         case SPHY_POWER:
                         {
-                            t->setweapstate(t->weapselect, WEAP_S_POWER, 0, lastmillis);
+                            t->setweapstate(t->weapselect, WEAP_S_POWER, getint(p), lastmillis);
                             break;
                         }
                         case SPHY_EXTINGUISH:
