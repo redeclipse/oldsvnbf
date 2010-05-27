@@ -605,9 +605,9 @@ struct gamestate
     {
         health = heal ? heal : m_health(gamemode, mutators);
         weapreset(true);
-        if(aitype < AI_START) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
         if(!isweap(sweap)) sweap = aitype >= AI_START ? WEAP_MELEE : m_weapon(gamemode, mutators);
-        if(isweap(sweap) && sweap != WEAP_MELEE) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
+        if(aitype < AI_START && sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+        if(isweap(sweap)) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
         if(GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1) && sweap != WEAP_GRENADE)
             ammo[WEAP_GRENADE] = max(WEAP(WEAP_GRENADE, max), 1);
         if(m_arena(gamemode, mutators))

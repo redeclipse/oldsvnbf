@@ -78,7 +78,7 @@ namespace ai
 
     bool altfire(gameent *d, gameent *e)
     {
-        if(e && !WEAP(d->weapselect, zooms) && canshoot(d, e))
+        if(e && !WEAP(d->weapselect, zooms) && canshoot(d, e, true))
         {
             switch(d->weapselect)
             {
@@ -1002,7 +1002,7 @@ namespace ai
             if(idle || insight || hasseen || quick)
             {
                 float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-                if(idle || (insight && lockon(d, e, 4)))
+                if(idle || (insight && lockon(d, e, 16)))
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
@@ -1011,7 +1011,7 @@ namespace ai
                 }
                 else if(!insight) frame *= 0.5f;
                 game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
-                if((insight || quick) && !d->ai->becareful)
+                if(insight || quick)
                 {
                     if(canshoot(d, e, alt))
                     {
