@@ -259,6 +259,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &addre
 }
 
 vector<serverinfo *> servers;
+bool sortedservers = true;
 ENetSocket pingsock = ENET_SOCKET_NULL;
 int lastinfo = 0;
 
@@ -274,6 +275,7 @@ static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, uint 
     }
 
     servers.add(si);
+    sortedservers = false;
 
     return si;
 }
@@ -397,10 +399,11 @@ void checkpings()
             getstring(text, p);
             if(text[0]) si->players.add(newstring(text));
         }
+        sortedservers = false;
     }
 }
 
-int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
+int serverinfocompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
 VAR(IDF_PERSIST, serverupdateinterval, 0, 5, INT_MAX-1);
 
@@ -408,7 +411,11 @@ void refreshservers()
 {
     static int lastrefresh = 0;
     if(lastrefresh == totalmillis) return;
-    if(totalmillis - lastrefresh > 1000) loopv(servers) servers[i]->reset();
+    if(totalmillis - lastrefresh > 1000) 
+    {
+        loopv(servers) servers[i]->reset();
+        sortedservers = false;
+    }
     lastrefresh = totalmillis;
 
     checkresolver();
@@ -451,7 +458,11 @@ void updateservers()
         reqmaster = true;
     }
     refreshservers();
-    servers.sort(sicompare);
+    if(!sortedservers)
+    {
+        servers.sort(serverinfocompare);
+        sortedservers = true;
+    }
     intret(servers.length());
 }
 COMMAND(0, updateservers, "");

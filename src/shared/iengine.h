@@ -431,7 +431,7 @@ struct serverinfo
     }
     ~serverinfo() { reset(); }
 
-    void reset() { loopvrev(players) { DELETEP(players[i]); players.remove(i); } players.shrink(0); }
+    void reset() { players.deletearrays(); }
 };
 extern vector<serverinfo *> servers;
 extern void sendclientpacket(ENetPacket *packet, int chan);
