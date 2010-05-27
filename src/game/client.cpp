@@ -2057,9 +2057,8 @@ namespace client
 
     void resetserversort()
     {
-        static const int defaults[] = { SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING };
-        serversortstyles.setsize(0);
-        serversortstyles.put(defaults, sizeof(defaults)/sizeof(defaults[0]));
+        defformatstring(val)("[%d %d %d]", SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING);
+        setsvarchecked(getident("serversort"), val);
     }
     ICOMMAND(0, serversortreset, "", (), resetserversort());
 
