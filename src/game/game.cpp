@@ -14,7 +14,7 @@ namespace game
     vector<gameent *> players;
     vector<camstate> cameras;
 
-    VAR(IDF_WORLD, numplayers, 0, 0, MAXCLIENTS);
+    VAR(IDF_WORLD, numplayers, 0, 8, MAXCLIENTS);
     SVAR(IDF_WORLD, obitwater, "");
     SVAR(IDF_WORLD, obitdeath, "");
     SVAR(IDF_WORLD, mapmusic, "");
@@ -321,7 +321,7 @@ namespace game
                 break;
             }
             if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_ITEM) d->loadweap = WEAP_MELEE;
-            if(WEAP(d->loadweap, allowed) >= (m_insta(gamemode, mutators) ? 2 : 1))
+            if(WEAP(d->loadweap, allowed) >= (m_special(gamemode, mutators) ? 2 : 1))
             {
                 client::addmsg(N_LOADWEAP, "ri2", d->clientnum, d->loadweap);
                 conoutft(CON_SELF, "you will spawn with: %s%s", weaptype[d->loadweap].text, (d->loadweap >= WEAP_OFFSET ? weaptype[d->loadweap].name : "random weapons"));
@@ -685,7 +685,7 @@ namespace game
                     if(flags&HIT_WAVE || !hithurts(flags)) force = wavepushscale;
                     else if(d->health <= 0) force = deadpushscale;
                     else force = hitpushscale;
-                    d->vel.add(vec(dir).mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, hitpush, flags&HIT_ALT)*force));
+                    d->vel.add(vec(dir).mul((float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*WEAP2(weap, hitpush, flags&HIT_ALT)*WEAPLM(force, gamemode, mutators)));
                 }
                 if(flags&HIT_WAVE || flags&HIT_EXPLODE || weaptype[weap].melee) d->lastpush = lastmillis;
             }

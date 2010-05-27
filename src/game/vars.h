@@ -33,6 +33,7 @@ GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli de
 GSVAR(IDF_ADMIN, trialmaps, "hinder testchamber");
 GSVAR(IDF_ADMIN, campaignmaps, "alphacampain wishbone");
 
+namespace server { extern void resetgamevars(bool flush); }
 GICOMMAND(0, resetvars, "", (), server::resetgamevars(true), return);
 GICOMMAND(IDF_ADMIN, resetconfig, "", (), rehash(true), );
 
@@ -66,7 +67,7 @@ GVAR(0, regenhealth, 0, 5, INT_MAX-1);
 GVAR(0, regenextra, 0, 10, INT_MAX-1);
 GVAR(0, regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
-GVAR(0, itemsallowed, 0, 2, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
+GVAR(0, itemsallowed, 0, 2, 2); // 0 = never, 1 = all but instagib, 2 = always
 GVAR(0, itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 GVAR(0, itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 GVAR(0, itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
@@ -133,8 +134,8 @@ GFVAR(0, movespread, 0, 3.f, 1000);
 GFVAR(0, jumpspread, 0, 3.f, 1000);
 GFVAR(0, impulsespread, 0, 6.f, 1000);
 
-GFVAR(0, explodescale, 0, 1, 1000);
-GFVAR(0, limitedscale, 0, 0.5f, 1000);
+GFVAR(0, normalscale, 0, 1, 1000);
+GFVAR(0, limitedscale, 0, 0.75f, 1000);
 GFVAR(0, damagescale, 0, 1, 1000);
 GVAR(0, damagecritchance, 0, 100, INT_MAX-1);
 

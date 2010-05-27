@@ -809,7 +809,7 @@ namespace server
                 {
                     case 0: return false;
                     case 1: if(m_duke(gamemode, mutators)) return false; // fall through
-                    case 2: if(m_insta(gamemode, mutators)) return false;
+                    case 2: if(m_special(gamemode, mutators)) return false;
                     case 3: default: break;
                 }
                 if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
@@ -1070,8 +1070,7 @@ namespace server
     void sendspawn(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        int weap = m_weapon(gamemode, mutators), health = m_health(gamemode, mutators);
-        bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
+        int weap = -1, health = 0;
         if(ci->state.aitype >= AI_START)
         {
             weap = aistyle[ci->state.aitype].weap;
@@ -1087,9 +1086,8 @@ namespace server
             }
             else if(ci->state.aitype == AI_ZOMBIE) weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
-            arena = grenades = false;
         }
-        gs.spawnstate(weap, health, m_insta(gamemode, mutators), arena, grenades);
+        gs.spawnstate(gamemode, mutators, weap, health);
         int spawn = pickspawn(ci);
         sendf(ci->clientnum, 1, "ri9v", N_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.points, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
         gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -3402,7 +3400,7 @@ namespace server
                     if(!allowstate(ci, val ? 4 : 5) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
                     ci->state.dropped.reset();
                     loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
-                    ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_insta(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
+                    ci->state.editspawn(gamemode, mutators);
                     if(val)
                     {
                         if(smode) smode->leavegame(ci);
@@ -3472,7 +3470,7 @@ namespace server
                     {
                         case 0: allowed = false;
                         case 1: if(m_duke(gamemode, mutators)) allowed = false; // fall through
-                        case 2: if(m_insta(gamemode, mutators)) allowed = false;
+                        case 2: if(m_special(gamemode, mutators)) allowed = false;
                         case 3: default: break;
                     }
                     if(!allowed)

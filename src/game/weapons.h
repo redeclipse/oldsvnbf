@@ -109,7 +109,7 @@ WEAPON(pistol,
     4,      16,     10,     10,     1,      1
 );
 WEAPON(sword,
-    1,      1,      0,      0,      500,    750,    50,     60,     120,    0,      0,      0,      0,      300,    300,
+    1,      1,      0,      0,      500,    750,    50,     50,     100,    0,      0,      0,      0,      300,    300,
     100,    100,    0,      0,      40,     40,     0,      0,      1,      1,      1,      1,
     1,      1,      1,      1,
     IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,                               IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
@@ -186,8 +186,8 @@ WEAPON(grenade,
     2,      0,      10,     10,     1,      1
 );
 WEAPON(rocket,
-    1,      1,      1,      1,      1000,   1000,   2000,   350,     350,    1000,   250,    2500,   2500,  5000,   5000,
-    0,      0,      0,      0,      40,     40,      52,     64,     1,      1,      1,      1,
+    1,      1,      1,      1,      1000,   1000,   1000,   350,     350,    1000,   250,    2500,   2500,  5000,   5000,
+    0,      0,      0,      0,      40,     40,     64,     64,      1,      1,      1,      1,
     0,      0,      10,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
     0,      0,      2,      2,      0,      1,      0,      0,      1,       1,      0,      1,      0,      0,      0,
@@ -286,7 +286,8 @@ extern weaptypes weaptype[];
 #define WEAP2(weap,name,second) (*weap_stat_##name[weap][second?1:0])
 #define WEAPSTR(a,weap,attr)    defformatstring(a)("%s%s", weaptype[weap].name, #attr)
 #endif
-#define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAP2(a, explode, b)*e*(m_insta(c, d) || m_arena(c, d) ? GAME(limitedscale) : GAME(explodescale)))) : 0)
+#define WEAPLM(a,b,c)           (a*(m_special(b, c) || m_arena(b, c) ? GAME(limitedscale) : GAME(normalscale)))
+#define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAPLM(WEAP2(a, explode, b)*e, c, d))) : 0)
 #define WEAPSP(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b)+(int(min(WEAP2(a, spread, b), 1)*e)) : 0)
 
 WEAPDEF(int, add);
