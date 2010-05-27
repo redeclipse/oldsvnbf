@@ -342,7 +342,7 @@ void texgrey(ImageData &s)
             dst[1] = src[3];
         );
     }
-    else 
+    else
     {
         readwritetex(d, s, dst[0] = src[0]);
     }
@@ -1195,7 +1195,7 @@ int compactvslots(bool cull)
         compactvslotlayers();
     }
     compactmruvslots();
-    if(cull) 
+    if(cull)
     {
         loopvrev(slots)
         {
@@ -1203,7 +1203,7 @@ int compactvslots(bool cull)
             if(s->variants->index < 0) delete slots.remove(i);
         }
         loopv(slots) slots[i]->index = i;
-    }    
+    }
     loopv(vslots)
     {
         while(vslots[i]->index >= 0 && vslots[i]->index != i)
@@ -1478,7 +1478,7 @@ void texturecull(bool local)
 }
 
 ICOMMAND(0, texturecull, "", (void), {
-    if (slots.length() > 8)
+    if(slots.length() > 8)
     {
         texturecull(true);
         allchanged();
@@ -1583,7 +1583,7 @@ static void addbump(ImageData &c, ImageData &n, bool envmap, bool specmap)
     if(n.bpp < 3) return;
     if(envmap && c.bpp <= 3 && !specmap)
     {
-        writetex(n, if(dst[2] < 0xF8) goto noenvmap;); 
+        writetex(n, if(dst[2] < 0xF8) goto noenvmap;);
     }
     if(envmap)
     {
@@ -1879,7 +1879,7 @@ Texture *loadthumbnail(Slot &slot)
         texturedata(s, NULL, &slot.sts[0], false);
         if(vslot.colorscale != vec(1, 1, 1)) texmad(s, vslot.colorscale, vec(0, 0, 0));
         if(glow >= 0) texturedata(g, NULL, &slot.sts[glow], false);
-        if(layer) 
+        if(layer)
         {
             texturedata(l, NULL, &layer->slot->sts[0], false);
             if(layer->colorscale != vec(1, 1, 1)) texmad(l, layer->colorscale, vec(0, 0, 0));

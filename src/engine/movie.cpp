@@ -79,7 +79,7 @@ struct aviwriter
         f->seek(chunkoffsets[chunkdepth] - 4, SEEK_SET);
         f->putlil(size);
         f->seek(0, SEEK_END);
-        if (size & 1) f->putchar(0x00);
+        if(size & 1) f->putchar(0x00);
         --chunkdepth;
     }
 
@@ -88,12 +88,12 @@ struct aviwriter
         f->write(fcc, 4);
         f->putlil(len);
         f->write(data, len);
-        if (len & 1) f->putchar(0x00);
+        if(len & 1) f->putchar(0x00);
     }
 
     void close()
     {
-        if (!f) return;
+        if(!f) return;
         assert(chunkdepth == 1);
         endchunk(); // LIST movi
 
@@ -117,20 +117,20 @@ struct aviwriter
         loopv(index)
         {
             aviindexentry &entry = index[i];
-            if (entry.type) soundframes++;
-            else if (entry.offset != lastoffset)
+            if(entry.type) soundframes++;
+            else if(entry.offset != lastoffset)
             {
                 lastoffset = entry.offset;
                 videoframes++;
             }
         }
-        if (dbgmovie) conoutf("fileframes: sound=%d, video=%d+%d(dups)\n", soundframes, videoframes, index.length()-(soundframes+videoframes));
+        if(dbgmovie) conoutf("fileframes: sound=%d, video=%d+%d(dups)\n", soundframes, videoframes, index.length()-(soundframes+videoframes));
 
         f->seek(fileframesoffset, SEEK_SET);
         f->putlil(index.length()-soundframes); // videoframes including duplicates
         f->seek(filevideooffset, SEEK_SET);
         f->putlil(videoframes);
-        if (soundframes > 0)
+        if(soundframes > 0)
         {
             f->seek(filesoundoffset, SEEK_SET);
             f->putlil(soundframes);
@@ -144,10 +144,10 @@ struct aviwriter
     {
         copystring(filename, name);
         path(filename);
-        if (!strrchr(filename, '.')) concatstring(filename, ".avi");
+        if(!strrchr(filename, '.')) concatstring(filename, ".avi");
 
         extern bool nosound; // sound.cpp
-        if (sound && !nosound)
+        if(sound && !nosound)
         {
             Mix_QuerySpec(&soundfrequency, &soundformat, &soundchannels);
             const char *desc;
@@ -174,26 +174,26 @@ struct aviwriter
             default:
                 desc = "unkn";
             }
-            if (dbgmovie) conoutf("soundspec: %dhz %s x %d", soundfrequency, desc, soundchannels);
+            if(dbgmovie) conoutf("soundspec: %dhz %s x %d", soundfrequency, desc, soundchannels);
         }
     }
 
     ~aviwriter()
     {
         close();
-        if (yuv) delete [] yuv;
+        if(yuv) delete [] yuv;
     }
 
     bool open()
     {
         close();
         string seqfilename;
-        if (filesequence == 0) copystring(seqfilename, filename);
+        if(filesequence == 0) copystring(seqfilename, filename);
         else
         {
-            if (filesequence >= 999) return false;
+            if(filesequence >= 999) return false;
             char *ext = strrchr(filename, '.');
-            if (filesequence == 1)
+            if(filesequence == 1)
             {
                 string oldfilename;
                 copystring(oldfilename, findfile(filename, "wb"));
@@ -208,7 +208,7 @@ struct aviwriter
         }
         filesequence++;
         f = openfile(seqfilename, "wb");
-        if (!f) return false;
+        if(!f) return false;
 
         index.shrink(0);
         chunkdepth = -1;
@@ -270,7 +270,7 @@ struct aviwriter
 
         endchunk(); // LIST strl
 
-        if (soundfrequency > 0)
+        if(soundfrequency > 0)
         {
             const int bps = (soundformat==AUDIO_U8 || soundformat == AUDIO_S8) ? 1 : 2;
 
@@ -339,7 +339,7 @@ struct aviwriter
         bt = ylow*(bt + ((src[0]*xlow + end[0]*xhigh)>>12));
         gt = ylow*(gt + ((src[1]*xlow + end[1]*xhigh)>>12));
         rt = ylow*(rt + ((src[2]*xlow + end[2]*xhigh)>>12));
-        if (h)
+        if(h)
         {
             for (src += stride, end += stride; --h; src += stride, end += stride)
             {
@@ -374,10 +374,10 @@ struct aviwriter
     {
         const int flip = -1;
         const uint planesize = videow * videoh;
-        if (!yuv) yuv = new uchar[(planesize*3)/2];
+        if(!yuv) yuv = new uchar[(planesize*3)/2];
         uchar *yplane = yuv, *uplane = yuv + planesize, *vplane = yuv + planesize + planesize/4;
         const int ystride = flip*int(videow), uvstride = flip*int(videow)/2;
-        if (flip < 0)
+        if(flip < 0)
         {
             yplane -= int(videoh-1)*ystride;
             uplane -= int(videoh/2-1)*uvstride;
@@ -439,10 +439,10 @@ struct aviwriter
     {
         const int flip = -1;
         const uint planesize = videow * videoh;
-        if (!yuv) yuv = new uchar[(planesize*3)/2];
+        if(!yuv) yuv = new uchar[(planesize*3)/2];
         uchar *yplane = yuv, *uplane = yuv + planesize, *vplane = yuv + planesize + planesize/4;
         const int ystride = flip*int(videow), uvstride = flip*int(videow)/2;
-        if (flip < 0)
+        if(flip < 0)
         {
             yplane -= int(videoh-1)*ystride;
             uplane -= int(videoh/2-1)*uvstride;
@@ -491,10 +491,10 @@ struct aviwriter
     {
         const int flip = -1;
         const uint planesize = videow * videoh;
-        if (!yuv) yuv = new uchar[(planesize*3)/2];
+        if(!yuv) yuv = new uchar[(planesize*3)/2];
         uchar *yplane = yuv, *uplane = yuv + planesize, *vplane = yuv + planesize + planesize/4;
         const int ystride = flip*int(videow), uvstride = flip*int(videow)/2;
-        if (flip < 0)
+        if(flip < 0)
         {
             yplane -= int(videoh-1)*ystride;
             uplane -= int(videoh/2-1)*uvstride;
@@ -566,12 +566,12 @@ struct aviwriter
 
     bool writevideoframe(const uchar *pixels, uint srcw, uint srch, int format, uint frame)
     {
-        if (frame < videoframes) return true;
+        if(frame < videoframes) return true;
 
         switch (format)
         {
         case VID_RGB:
-            if (srcw != videow || srch != videoh) scaleyuv(pixels, srcw, srch);
+            if(srcw != videow || srch != videoh) scaleyuv(pixels, srcw, srch);
             else encodeyuv(pixels);
             break;
         case VID_YUV:
@@ -580,19 +580,19 @@ struct aviwriter
         }
 
         const uint framesize = (videow * videoh * 3) / 2;
-        if (f->tell() + framesize > 1000*1000*1000 && !open()) return false; // check for overflow of 1Gb limit
+        if(f->tell() + framesize > 1000*1000*1000 && !open()) return false; // check for overflow of 1Gb limit
 
         aviindexentry entry = makeindex(0, framesize);
         int vpos = index.length(), vnum = frame + 1 - videoframes;
         loopi(vnum) index.add(entry);
 
-        if (vnum > 1) // experimental - detect sequence of sound frames that precede this sequence of video - interleave the sound
+        if(vnum > 1) // experimental - detect sequence of sound frames that precede this sequence of video - interleave the sound
         {
             int snum = 0;
             while (vpos > snum && index[vpos-snum-1].type == 1) snum++;
-            if (snum > 1)
+            if(snum > 1)
             {
-                if (dbgmovie) conoutf("movie: interleaving sound=%d x%d video=%d x%d\n", vpos-snum, snum, vpos, vnum);
+                if(dbgmovie) conoutf("movie: interleaving sound=%d x%d video=%d x%d\n", vpos-snum, snum, vpos, vnum);
                 int frac = 0, pos = index.length();
                 loopi(snum)
                 {
@@ -710,7 +710,7 @@ namespace recorder
             for (; numvid > 0; numvid--) videobuffers.remove();
             SDL_CondSignal(shouldread);
             while (videobuffers.empty() && state == REC_OK) SDL_CondWait(shouldencode, videolock);
-            if (state != REC_OK)
+            if(state != REC_OK)
             {
                 SDL_UnlockMutex(videolock);
                 break;
@@ -719,7 +719,7 @@ namespace recorder
             numvid++;
             SDL_UnlockMutex(videolock);
 
-            if (file->soundfrequency > 0)
+            if(file->soundfrequency > 0)
             {
                 // chug data from lock protected buffer to avoid holding lock while writing to file
                 SDL_LockMutex(soundlock);
@@ -727,7 +727,7 @@ namespace recorder
                 for (; numsound < soundbuffers.length(); numsound++)
                 {
                     soundbuffer &s = soundbuffers.removing(numsound);
-                    if (s.frame > m.frame) break; // sync with video
+                    if(s.frame > m.frame) break; // sync with video
                 }
                 SDL_UnlockMutex(soundlock);
                 loopi(numsound)
@@ -738,7 +738,7 @@ namespace recorder
             }
 
             int duplicates = m.frame - (int)file->videoframes + 1;
-            if (duplicates > 0) // determine how many frames have been dropped over the sample window
+            if(duplicates > 0) // determine how many frames have been dropped over the sample window
             {
                 dps -= stats[statsindex];
                 stats[statsindex] = duplicates-1;
@@ -746,8 +746,8 @@ namespace recorder
                 statsindex = (statsindex+1)%file->videofps;
             }
             //printf("frame %d->%d (%d dps): sound = %d bytes\n", file->videoframes, nextframenum, dps, m.soundlength);
-            if (dps > file->videofps) state = REC_TOOSLOW;
-            else if (!file->writevideoframe(m.video, m.w, m.h, m.format, m.frame)) state = REC_FILERROR;
+            if(dps > file->videofps) state = REC_TOOSLOW;
+            else if(!file->writevideoframe(m.video, m.w, m.h, m.format, m.frame)) state = REC_FILERROR;
 
             m.frame = ~0U;
         }
@@ -758,8 +758,8 @@ namespace recorder
     void soundencoder(void *udata, Uint8 *stream, int len) // callback occurs on a separate thread
     {
         SDL_LockMutex(soundlock);
-        if (soundbuffers.full()) state = REC_TOOSLOW;
-        else if (state == REC_OK)
+        if(soundbuffers.full()) state = REC_TOOSLOW;
+        else if(state == REC_OK)
         {
             uint nextframe = ((totalmillis - starttime)*file->videofps)/1000;
             soundbuffer &s = soundbuffers.add();
@@ -770,17 +770,17 @@ namespace recorder
 
     void start(const char *filename, int videofps, int videow, int videoh, bool sound)
     {
-        if (file) return;
+        if(file) return;
 
         int fps, bestdiff, worstdiff;
         getfps(fps, bestdiff, worstdiff);
-        if (videofps > fps) conoutf("frame rate may be too low to capture at %d fps", videofps);
+        if(videofps > fps) conoutf("frame rate may be too low to capture at %d fps", videofps);
 
-        if (videow%2) videow += 1;
-        if (videoh%2) videoh += 1;
+        if(videow%2) videow += 1;
+        if(videoh%2) videoh += 1;
 
         file = new aviwriter(filename, videow, videoh, videofps, sound);
-        if (!file->open())
+        if(!file->open())
         {
             conoutf("unable to create file %s", filename);
             DELETEP(file);
@@ -815,7 +815,7 @@ namespace recorder
         shouldencode = SDL_CreateCond();
         shouldread = SDL_CreateCond();
         thread = SDL_CreateThread(videoencoder, NULL);
-        if (file->soundfrequency > 0) Mix_SetPostMix(soundencoder, NULL);
+        if(file->soundfrequency > 0) Mix_SetPostMix(soundencoder, NULL);
     }
 
     void cleanup()
@@ -875,40 +875,40 @@ namespace recorder
         bool accelyuv = movieaccelyuv && renderpath!=R_FIXEDFUNCTION && !(m.w%8),
                         usefbo = movieaccel && hasFBO && hasTR && file->videow <= (uint)screen->w && file->videoh <= (uint)screen->h && (accelyuv || file->videow < (uint)screen->w || file->videoh < (uint)screen->h);
         uint w = screen->w, h = screen->h;
-        if (usefbo)
+        if(usefbo)
         {
             w = file->videow;
             h = file->videoh;
         }
-        if (w != m.w || h != m.h) m.init(w, h, 4);
+        if(w != m.w || h != m.h) m.init(w, h, 4);
         m.format = aviwriter::VID_RGB;
         m.frame = nextframe;
 
         glPixelStorei(GL_PACK_ALIGNMENT, texalign(m.video, m.w, 4));
-        if (usefbo)
+        if(usefbo)
         {
             uint tw = screen->w, th = screen->h;
-            if (hasFBB && movieaccelblit)
+            if(hasFBB && movieaccelblit)
             {
                 tw = max(tw/2, m.w);
                 th = max(th/2, m.h);
             }
-            if (tw != scalew || th != scaleh)
+            if(tw != scalew || th != scaleh)
             {
-                if (!scalefb) glGenFramebuffers_(1, &scalefb);
+                if(!scalefb) glGenFramebuffers_(1, &scalefb);
                 loopi(2)
                 {
-                    if (!scaletex[i]) glGenTextures(1, &scaletex[i]);
+                    if(!scaletex[i]) glGenTextures(1, &scaletex[i]);
                     createtexture(scaletex[i], tw, th, NULL, 3, 1, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
                 }
                 scalew = tw;
                 scaleh = th;
             }
-            if (accelyuv && (!encodefb || !encoderb))
+            if(accelyuv && (!encodefb || !encoderb))
             {
-                if (!encodefb) glGenFramebuffers_(1, &encodefb);
+                if(!encodefb) glGenFramebuffers_(1, &encodefb);
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, encodefb);
-                if (!encoderb) glGenRenderbuffers_(1, &encoderb);
+                if(!encoderb) glGenRenderbuffers_(1, &encoderb);
                 glBindRenderbuffer_(GL_RENDERBUFFER_EXT, encoderb);
                 glRenderbufferStorage_(GL_RENDERBUFFER_EXT, GL_RGBA, (m.w*3)/8, m.h);
                 glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, encoderb);
@@ -916,7 +916,7 @@ namespace recorder
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
             }
 
-            if (tw < (uint)screen->w || th < (uint)screen->h)
+            if(tw < (uint)screen->w || th < (uint)screen->h)
             {
                 glBindFramebuffer_(GL_READ_FRAMEBUFFER_EXT, 0);
                 glBindFramebuffer_(GL_DRAW_FRAMEBUFFER_EXT, scalefb);
@@ -930,7 +930,7 @@ namespace recorder
                 glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
             }
 
-            if (tw > m.w || th > m.h || (!accelyuv && renderpath != R_FIXEDFUNCTION && tw >= m.w && th >= m.h))
+            if(tw > m.w || th > m.h || (!accelyuv && renderpath != R_FIXEDFUNCTION && tw >= m.w && th >= m.h))
             {
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, scalefb);
                 glViewport(0, 0, tw, th);
@@ -946,7 +946,7 @@ namespace recorder
                     glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, scaletex[1], 0);
                     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, scaletex[0]);
                     uint dw = max(tw/2, m.w), dh = max(th/2, m.h);
-                    if (dw == m.w && dh == m.h && !accelyuv && renderpath != R_FIXEDFUNCTION)
+                    if(dw == m.w && dh == m.h && !accelyuv && renderpath != R_FIXEDFUNCTION)
                     {
                         SETSHADER(movieyuv);
                         m.format = aviwriter::VID_YUV;
@@ -960,7 +960,7 @@ namespace recorder
                 while (tw > m.w || th > m.h);
                 glDisable(GL_TEXTURE_RECTANGLE_ARB);
             }
-            if (accelyuv)
+            if(accelyuv)
             {
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, encodefb);
                 glViewport(0, 0, (m.w*3)/8, m.h);
@@ -1002,16 +1002,16 @@ namespace recorder
 
     bool readbuffer()
     {
-        if (!file) return false;
-        if (state != REC_OK)
+        if(!file) return false;
+        if(state != REC_OK)
         {
             stop();
             return false;
         }
         SDL_LockMutex(videolock);
-        if (moviesync && videobuffers.full()) SDL_CondWait(shouldread, videolock);
+        if(moviesync && videobuffers.full()) SDL_CondWait(shouldread, videolock);
         uint nextframe = ((totalmillis - starttime)*file->videofps)/1000;
-        if (!videobuffers.full() && (lastframe == ~0U || nextframe > lastframe))
+        if(!videobuffers.full() && (lastframe == ~0U || nextframe > lastframe))
         {
             videobuffer &m = videobuffers.adding();
             SDL_UnlockMutex(videolock);
@@ -1046,12 +1046,12 @@ namespace recorder
 
         double totalsize = file->filespaceguess();
         const char *unit = "KB";
-        if (totalsize >= 1e9)
+        if(totalsize >= 1e9)
         {
             totalsize /= 1e9;
             unit = "GB";
         }
-        else if (totalsize >= 1e6)
+        else if(totalsize >= 1e6)
         {
             totalsize /= 1e6;
             unit = "MB";
@@ -1069,7 +1069,7 @@ namespace recorder
 
     void capture()
     {
-        if (readbuffer()) drawhud();
+        if(readbuffer()) drawhud();
     }
 }
 
@@ -1080,8 +1080,8 @@ VAR(IDF_PERSIST, moviesound, 0, 1, 1);
 
 void movie(char *name)
 {
-    if (name[0] == '\0') recorder::stop();
-    else if (!recorder::isrecording()) recorder::start(name, moviefps, moview ? moview : screen->w, movieh ? movieh : screen->h, moviesound!=0);
+    if(name[0] == '\0') recorder::stop();
+    else if(!recorder::isrecording()) recorder::start(name, moviefps, moview ? moview : screen->w, movieh ? movieh : screen->h, moviesound!=0);
 }
 
 COMMAND(0, movie, "s");

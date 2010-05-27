@@ -327,7 +327,7 @@ bool popfont(int num)
 {
     loopi(num)
     {
-        if (!fontstack.length()) break;
+        if(!fontstack.length()) break;
         fontstack.pop();
     }
     return setfont(fontstack.length() ? fontstack.last() : "default");

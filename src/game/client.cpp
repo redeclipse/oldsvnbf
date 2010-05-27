@@ -233,7 +233,7 @@ namespace client
     bool allowedittoggle(bool edit)
     {
         bool allow = edit || m_edit(game::gamemode); // && game::player1->state == CS_ALIVE);
-        if(!allow) conoutft(CON_MESG, "\fryou must be in edit mode to start editing");
+        if(!allow) conoutft(CON_MESG, "\fryou must start an editing game to edit the map");
         return allow;
     }
 

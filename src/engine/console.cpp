@@ -756,7 +756,7 @@ void complete(char *s)
 void setcompletion(const char *s, bool on)
 {
     ident *id = idents->access(s);
-    if(!s) conoutf("\frcompletion of %s failed as it does not exist", s);
+    if(!id) conoutf("\frcompletion of %s failed as it does not exist", s);
     else
     {
         if(on && !(id->flags&IDF_COMPLETE)) id->flags |= IDF_COMPLETE;
@@ -766,11 +766,11 @@ void setcompletion(const char *s, bool on)
 
 ICOMMAND(0, setcomplete, "ss", (char *s, char *t), {
     bool on = false;
-    if (isnumeric(*t)) on = atoi(t) ? true : false;
-    else if (!strcasecmp("false", t)) on = false;
-    else if (!strcasecmp("true", t)) on = true;
-    else if (!strcasecmp("on", t)) on = true;
-    else if (!strcasecmp("off", t)) on = false;
+    if(isnumeric(*t)) on = atoi(t) != 0;
+    else if(!strcasecmp("false", t)) on = false;
+    else if(!strcasecmp("true", t)) on = true;
+    else if(!strcasecmp("on", t)) on = true;
+    else if(!strcasecmp("off", t)) on = false;
     setcompletion(s, on);
 });
 

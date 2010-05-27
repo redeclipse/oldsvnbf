@@ -925,7 +925,7 @@ void mppaste(editinfo *&e, selinfo &sel, bool local)
         int o = sel.orient;
         sel.orient = e->copy->orient;
         cube *s = e->copy->c();
-        loopselxyz(if (!isempty(*s) || s->children) pastecube(*s, c); s++); // 'transparent'. old opaque by 'delcube; paste'
+        loopselxyz(if(!isempty(*s) || s->children) pastecube(*s, c); s++); // 'transparent'. old opaque by 'delcube; paste'
         sel.orient = o;
     }
 }
@@ -1498,7 +1498,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
             }
         }
     );
-    if (mode==1 && dir>0)
+    if(mode==1 && dir>0)
         sel.o[d] += sel.grid * seldir;
 }
 
@@ -1932,7 +1932,7 @@ void flipcube(cube &c, int d)
     c.faces[D[d]] = dflip(c.faces[D[d]]);
     c.faces[C[d]] = cflip(c.faces[C[d]]);
     c.faces[R[d]] = rflip(c.faces[R[d]]);
-    if (c.children)
+    if(c.children)
     {
         loopi(8) if(i&octadim(d)) swap(c.children[i], c.children[i-octadim(d)]);
         loopi(8) flipcube(c.children[i], d);

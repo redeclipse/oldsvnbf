@@ -11,7 +11,7 @@ bool multiplayer(bool msg)
 {
     // check if we're playing alone
     int n = client::otherclients();
-    if (n && msg) conoutft(CON_MESG, "\froperation not available with other clients");
+    if(n && msg) conoutft(CON_MESG, "\froperation not available with other clients");
     return n > 0;
 }
 
@@ -102,7 +102,7 @@ void connectserv(const char *name, int port, const char *password)
         address.host = ENET_HOST_BROADCAST;
     }
 
-    if(!clienthost) 
+    if(!clienthost)
         clienthost = enet_host_create(NULL, 2, server::numchannels(), rate, rate);
 
     if(clienthost)
@@ -207,8 +207,8 @@ void localservertoclient(int chan, ENetPacket *packet)  // processes any updates
 
 void clientkeepalive()
 {
-    if (clienthost) enet_host_service(clienthost, NULL, 0);
-    if (serverhost) enet_host_service(serverhost, NULL, 0);
+    if(clienthost) enet_host_service(clienthost, NULL, 0);
+    if(serverhost) enet_host_service(serverhost, NULL, 0);
 
 }
 
