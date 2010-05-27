@@ -357,11 +357,11 @@ COMMAND(0, mmodel, "s");
 COMMANDN(0, mapmodel, mapmodelcompat, "iiiss");
 ICOMMAND(0, mapmodelreset, "", (void), if(editmode || worldidents) resetmapmodels(););
 ICOMMAND(0, mapmodelindex, "s", (char *a), {
-    if (!*a) intret(mapmodels.length());
+    if(!*a) intret(mapmodels.length());
     else
     {
         int num = atoi(a);
-        if (mapmodels.inrange(num)) result(mapmodels[num].name);
+        if(mapmodels.inrange(num)) result(mapmodels[num].name);
     }
 });
 

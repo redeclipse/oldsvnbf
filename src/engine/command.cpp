@@ -85,7 +85,7 @@ ident *newident(const char *name)
     ident *id = idents->access(name);
     if(!id)
     {
-        int flags = IDF_COMPLETE;
+        int flags = 0;
         if(worldidents) flags |= IDF_WORLD;
         ident init(ID_ALIAS, newstring(name), newstring(""), flags);
         id = &idents->access(init.name, init);
@@ -127,7 +127,7 @@ void aliasa(const char *name, char *action)
     ident *b = idents->access(name);
     if(!b)
     {
-        int flags = IDF_COMPLETE;
+        int flags = 0;
         if(worldidents) flags |= IDF_WORLD;
         ident d(ID_ALIAS, newstring(name), action, flags);
         if(overrideidents && d.flags&IDF_OVERRIDE) d.override = OVERRIDDEN;
@@ -292,7 +292,7 @@ const char *getalias(const char *name)
 
 #ifndef STANDALONE
 #define WORLDVAR \
-    if (!worldidents && !editmode && id->flags&IDF_WORLD) \
+    if(!worldidents && !editmode && id->flags&IDF_WORLD) \
     { \
         conoutft(CON_MESG, "\frcannot set world variable %s outside editmode", id->name); \
         return; \
@@ -820,7 +820,7 @@ bool execfile(const char *cfgfile, bool msg)
     }
     execute(buf);
     delete[] buf;
-    if (verbose >= 3) conoutf("\faloaded script %s", cfgfile);
+    if(verbose >= 3) conoutf("\faloaded script %s", cfgfile);
     return true;
 }
 

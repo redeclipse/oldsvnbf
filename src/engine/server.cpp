@@ -1035,7 +1035,7 @@ void writecfg()
         }
         if(saved)
         {
-            if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
+            if(id.flags&IDF_COMPLETE) f->printf("; setcomplete \"%s\" 1\n", id.name);
             else f->printf("\n");
         }
     }

@@ -697,7 +697,7 @@ int faceconvexity(cube &c, int orient)
     int d = dimension(orient);
     loopi(4) vertrepl(c, *(ivec *)cubecoords[fv[orient][i]], v[i], d, dimcoord(orient));
     int n = (int)(v[0][d] - v[1][d] + v[2][d] - v[3][d]);
-    if (!dimcoord(orient)) n *= -1;
+    if(!dimcoord(orient)) n *= -1;
     return n; // returns +ve if convex when tris are verts 012, 023. -ve for concave.
     */
     // slow perfect
@@ -1093,7 +1093,7 @@ int genclipplane(cube &c, int orient, vec *v, plane *clip)
     if(v0!=v3 && v2!=v3 && (!planes || convex)) clip[planes++].toplane(v0, v2, v3);
     return planes;
 }
-     
+
 void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p)
 {
     int usefaces[6];
@@ -1125,9 +1125,9 @@ void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p)
             int convex = faceconvexity(c, i), order = convex < 0 ? 1 : 0;
             const vec &v0 = p.v[fv[i][order]], &v1 = p.v[fv[i][order+1]], &v2 = p.v[fv[i][order+2]], &v3 = p.v[fv[i][(order+3)&3]];
             if(v0==v2) continue;
-            if(usefaces[i]&1 && v0!=v1 && v1!=v2) 
-            { 
-                p.side[p.size] = i; p.p[p.size++].toplane(v0, v1, v2); 
+            if(usefaces[i]&1 && v0!=v1 && v1!=v2)
+            {
+                p.side[p.size] = i; p.p[p.size++].toplane(v0, v1, v2);
                 if(usefaces[i]&2 && v0!=v3 && v2!=v3 && convex) { p.side[p.size] = i; p.p[p.size++].toplane(v0, v2, v3); }
             }
             else if(usefaces[i]&2 && v0!=v3 && v2!=v3) { p.side[p.size] = i; p.p[p.size++].toplane(v0, v2, v3); }

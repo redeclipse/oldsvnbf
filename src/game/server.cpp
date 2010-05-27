@@ -2930,7 +2930,7 @@ namespace server
                 if(delay && ci->state.respawnwait(gamemillis, delay)) continue;
                 int nospawn = 0;
                 if(smode && !smode->canspawn(ci, false)) { nospawn++; }
-                mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
+                mutate(smuts, if(!mut->canspawn(ci, false)) { nospawn++; });
                 if(!nospawn)
                 {
                     if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
