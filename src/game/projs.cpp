@@ -663,9 +663,10 @@ namespace projs
             {
                 case WEAP_SWORD:
                 {
+                    part_flare(proj.from, proj.to, 1, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.75f, 0.75f);
                     if(lastmillis-proj.lasteffect >= 25)
                     {
-                        part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.5f);
+                        part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.75f);
                         proj.lasteffect = lastmillis - (lastmillis%25);
                     }
                     break;
@@ -1449,7 +1450,7 @@ namespace projs
             projent &proj = *projs[i];
             switch(proj.weap)
             {
-                case WEAP_SWORD: adddynlight(proj.o, 12, vec(0.1f, 0.1f, 0.95f)); break;
+                case WEAP_SWORD: adddynlight(proj.o, 16, vec(0.1f, 0.1f, 0.95f)); break;
                 case WEAP_SHOTGUN: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
                 case WEAP_SMG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
                 case WEAP_FLAMER:
