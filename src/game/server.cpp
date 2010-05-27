@@ -809,7 +809,7 @@ namespace server
                 {
                     case 0: return false;
                     case 1: if(m_duke(gamemode, mutators)) return false; // fall through
-                    case 2: if(m_special(gamemode, mutators)) return false;
+                    case 2: if(m_limited(gamemode, mutators)) return false;
                     case 3: default: break;
                 }
                 if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
@@ -3470,7 +3470,7 @@ namespace server
                     {
                         case 0: allowed = false;
                         case 1: if(m_duke(gamemode, mutators)) allowed = false; // fall through
-                        case 2: if(m_special(gamemode, mutators)) allowed = false;
+                        case 2: if(m_limited(gamemode, mutators)) allowed = false;
                         case 3: default: break;
                     }
                     if(!allowed)

@@ -263,7 +263,7 @@ extern gametypes gametype[], mutstype[];
 #define m_survivor(a,b)     ((b & G_M_SURVIVOR) || (gametype[a].implied & G_M_SURVIVOR))
 #define m_arena(a,b)        ((b & G_M_ARENA) || (gametype[a].implied & G_M_ARENA))
 
-#define m_special(a,b)      (m_insta(a, b) || m_medieval(a, b) || m_demolition(a, b))
+#define m_limited(a,b)      (m_insta(a, b) || m_medieval(a, b) || m_demolition(a, b))
 #define m_duke(a,b)         (m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)        (!m_duke(a, b) && !m_insta(a, b))
 
