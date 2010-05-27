@@ -207,30 +207,34 @@ enum
 };
 enum
 {
-    G_M_NONE = 0, G_M_TEAM = 1<<0, G_M_INSTA = 1<<1, G_M_DUEL = 1<<2, G_M_SURVIVOR = 1<<3, G_M_ARENA = 1<<4,
-    G_M_ALL = G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_SOME = G_M_INSTA|G_M_ARENA,
-    G_M_NUM = 5
+    G_M_NONE = 0,
+    G_M_TEAM = 1<<0, G_M_INSTA = 1<<1, G_M_MEDIEVAL = 1<<2, G_M_DEMOLITION = 1<<3,
+    G_M_DUEL = 1<<4, G_M_SURVIVOR = 1<<5, G_M_ARENA = 1<<6,
+    G_M_ALL = G_M_TEAM|G_M_INSTA|G_M_MEDIEVAL|G_M_DEMOLITION|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,
+    G_M_NUM = 7
 };
 
 struct gametypes
 {
-    int type,           mutators,                                                           implied;        const char *name;
+    int type,           mutators,                                                                           implied;        const char *name;
 };
 #ifdef GAMESERVER
 gametypes gametype[] = {
-    { G_DEMO,           G_M_NONE,                                                           G_M_NONE,               "demo" },
-    { G_EDITMODE,       G_M_SOME,                                                           G_M_NONE,               "editing" },
-    { G_CAMPAIGN,       G_M_TEAM|G_M_SOME,                                                  G_M_TEAM,               "campaign" },
-    { G_DEATHMATCH,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_NONE,               "deathmatch" },
-    { G_STF,            G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_TEAM,               "secure-the-flag" },
-    { G_CTF,            G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_TEAM,               "capture-the-flag" },
-    { G_TRIAL,          G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_NONE,               "time-trial" },
+    { G_DEMO,           G_M_NONE,                                                                           G_M_NONE,       "demo" },
+    { G_EDITMODE,       G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                                    G_M_NONE,       "editing" },
+    { G_CAMPAIGN,       G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_TEAM,       "campaign" },
+    { G_DEATHMATCH,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_NONE,       "deathmatch" },
+    { G_STF,            G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_TEAM,       "secure-the-flag" },
+    { G_CTF,            G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_TEAM,       "capture-the-flag" },
+    { G_TRIAL,          G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_NONE,       "time-trial" },
 }, mutstype[] = {
-    { G_M_TEAM,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_TEAM,               "team" },
-    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_INSTA,              "insta" },
-    { G_M_DUEL,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA,                              G_M_DUEL,               "duel" },
-    { G_M_SURVIVOR,     G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA,                          G_M_SURVIVOR,           "survivor" },
-    { G_M_ARENA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_ARENA,              "arena" },
+    { G_M_TEAM,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_TEAM,       "team" },
+    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_INSTA,      "insta" },
+    { G_M_MEDIEVAL,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_MEDIEVAL,                              G_M_MEDIEVAL,   "medieval" },
+    { G_M_DEMOLITION,   G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_DEMOLITION,                            G_M_DEMOLITION, "demolition" },
+    { G_M_DUEL,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                  G_M_DUEL,       "duel" },
+    { G_M_SURVIVOR,     G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,              G_M_SURVIVOR,   "survivor" },
+    { G_M_ARENA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                                 G_M_ARENA,      "arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -253,17 +257,20 @@ extern gametypes gametype[], mutstype[];
 
 #define m_team(a,b)         ((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)        ((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
+#define m_medieval(a,b)     ((b & G_M_MEDIEVAL) || (gametype[a].implied & G_M_MEDIEVAL))
+#define m_demolition(a,b)   ((b & G_M_DEMOLITION) || (gametype[a].implied & G_M_DEMOLITION))
 #define m_duel(a,b)         ((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_survivor(a,b)     ((b & G_M_SURVIVOR) || (gametype[a].implied & G_M_SURVIVOR))
 #define m_arena(a,b)        ((b & G_M_ARENA) || (gametype[a].implied & G_M_ARENA))
 
+#define m_special(a,b)      (m_insta(a, b) || m_medieval(a, b) || m_demolition(a, b))
 #define m_duke(a,b)         (m_duel(a, b) || m_survivor(a, b))
-#define m_regen(a,b)        (!m_duke(a,b) && !m_insta(a,b))
+#define m_regen(a,b)        (!m_duke(a, b) && !m_insta(a, b))
 
-#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
+#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_medieval(a,b) ? WEAP_SWORD : (m_demolition(a,b) ? WEAP_ROCKET : (m_edit(a) || m_trial(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))))
 #define m_delay(a,b)        (m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GAME(trialdelay) : ((m_insta(a, b) ? GAME(instadelay) : GAME(spawndelay)))) : 0)
 #define m_protect(a,b)      (m_duke(a,b) ? GAME(duelprotect) : (m_insta(a, b) ? GAME(instaprotect) : GAME(spawnprotect)))
-#define m_noitems(a,b)      (GAME(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
+#define m_noitems(a,b)      (!m_trial(a) && GAME(itemsallowed) < (m_insta(a,b) ? 2 : 1))
 #define m_health(a,b)       (m_insta(a,b) ? 1 : GAME(maxhealth))
 
 #define w_reload(w1,w2)     (w1 != WEAP_MELEE && (w1 == (isweap(w2) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads))))
@@ -414,6 +421,7 @@ enum { IM_T_NONE = 0, IM_T_BOOST, IM_T_DASH, IM_T_KICK, IM_T_SKATE, IM_T_MAX, IM
 #define PHYSMILLIS 250
 
 #include "ai.h"
+#include "vars.h"
 
 // inherited by gameent and server clients
 struct gamestate
@@ -593,14 +601,16 @@ struct gamestate
         weapreset(true);
     }
 
-    void spawnstate(int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
+    void spawnstate(int gamemode, int mutators, int sweap = -1, int heal = 0)
     {
-        health = heal;
+        health = heal ? heal : m_health(gamemode, mutators);
         weapreset(true);
-        ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+        if(aitype < AI_START) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+        if(!isweap(sweap)) sweap = aitype >= AI_START ? WEAP_MELEE : m_weapon(gamemode, mutators);
         if(isweap(sweap) && sweap != WEAP_MELEE) ammo[sweap] = max(WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max), 1);
-        if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = max(WEAP(WEAP_GRENADE, max), 1);
-        if(arena)
+        if(GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1) && sweap != WEAP_GRENADE)
+            ammo[WEAP_GRENADE] = max(WEAP(WEAP_GRENADE, max), 1);
+        if(m_arena(gamemode, mutators))
         {
             int aweap = loadweap;
             while(aweap < WEAP_OFFSET || aweap >= WEAP_ITEM) aweap = rnd(WEAP_ITEM-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
@@ -615,10 +625,10 @@ struct gamestate
         }
     }
 
-    void editspawn(int millis, int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
+    void editspawn(int gamemode, int mutators, int sweap = -1, int heal = 0)
     {
         clearstate();
-        spawnstate(sweap, heal, insta, arena, grenades);
+        spawnstate(gamemode, mutators, sweap, heal);
     }
 
     int respawnwait(int millis, int delay)
@@ -645,7 +655,6 @@ struct gamestate
 
 namespace server
 {
-    extern void resetgamevars(bool flush);
     extern void stopdemo();
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
 }
@@ -784,7 +793,7 @@ struct gameent : dynent, gamestate
         airnodes.setsize(0);
     }
 
-    void editspawn(int millis, int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
+    void editspawn(int gamemode, int mutators, int sweap = -1, int heal = 0)
     {
         stopmoving(true);
         clearstate();
@@ -795,7 +804,7 @@ struct gameent : dynent, gamestate
         vel = falling = vec(0, 0, 0);
         floor = vec(0, 0, 1);
         resetinterp();
-        gamestate::editspawn(millis, sweap, heal, insta, arena, grenades);
+        gamestate::editspawn(gamemode, mutators, sweap, heal);
         airnodes.setsize(0);
     }
 
@@ -1330,7 +1339,6 @@ namespace client
 #endif
 #include "ctf.h"
 #include "stf.h"
-#include "vars.h"
 #ifndef GAMESERVER
 #include "scoreboard.h"
 #endif
