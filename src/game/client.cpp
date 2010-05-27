@@ -108,7 +108,15 @@ namespace client
 
     VAR(IDF_PERSIST, colourchat, 0, 1, 1);
     VAR(IDF_PERSIST, showlaptimes, 0, 2, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
-    SVAR(IDF_PERSIST, serversort, "");
+    vector<int> serversortstyles;
+    SVARF(IDF_PERSIST, serversort, "",
+    {
+        vector<char *> styles;
+        explodelist(serversort, styles);
+        serversortstyles.setsize(0);
+        loopi(min(styles.length(), int(SINFO_MAX))) serversortstyles.add(atoi(styles[i]));
+        styles.deletearrays();
+    });
 
     ICOMMAND(0, mastermode, "i", (int *val), addmsg(N_MASTERMODE, "ri", *val));
     ICOMMAND(0, getname, "", (), result(escapetext(game::player1->name)));
@@ -2049,8 +2057,9 @@ namespace client
 
     void resetserversort()
     {
-        defformatstring(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING);
-        execute(u);
+        static const int defaults[] = { SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING };
+        serversortstyles.setsize(0);
+        serversortstyles.put(defaults, sizeof(defaults)/sizeof(defaults[0]));
     }
     ICOMMAND(0, serversortreset, "", (), resetserversort());
 
@@ -2083,13 +2092,9 @@ namespace client
                 else { return c < d ? 1 : -1; } \
             }
 
-        int len = execute("listlen $serversort");
-
-        loopi(len)
+        loopv(serversortstyles)
         {
-            defformatstring(s)("at $serversort %d", i);
-
-            int style = execute(s);
+            int style = serversortstyles[i];
             serverinfo *aa = a, *ab = b;
 
             if(style < 0)
