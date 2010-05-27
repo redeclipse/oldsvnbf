@@ -663,7 +663,11 @@ namespace projs
             {
                 case WEAP_SWORD:
                 {
-                    part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.5f);
+                    if(lastmillis-proj.lasteffect >= 25)
+                    {
+                        part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.5f);
+                        proj.lasteffect = lastmillis - (lastmillis%25);
+                    }
                     break;
                 }
                 case WEAP_PISTOL:
@@ -1247,7 +1251,7 @@ namespace projs
 
     bool raymove(projent &proj)
     {
-        if((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis)
+        if((proj.lifetime -= curtime) <= 0 && proj.lifemillis)
         {
             if(proj.lifetime < 0) proj.lifetime = 0;
             return false;
