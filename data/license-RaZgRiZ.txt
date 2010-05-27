@@ -1,5 +1,0 @@
-Textures "explosion.png" and "smoke.png" made with Filter Forge II Beta 3
-Used as "textures/lava.jpg", "particles/smoke.png" and "particles/explosion.png"
-Author: RaZgRiZ 14/5/2010
-
-This content is licensed publicly for everyone to use and modify as long as the author is credited for the original work.
