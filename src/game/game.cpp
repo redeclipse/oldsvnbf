@@ -517,13 +517,13 @@ namespace game
                 } powerfx[WEAP_MAX] = {
                     { 0, 0, 0, 0 },
                     { 2, PART_SPARK, 0xFFCC22, 0.1f, 1.5f },
-                    { 4, PART_LIGHTNING, 0x1111CC, 1, 1 },
+                    { 4, PART_LIGHTNING_FLARE, 0x1111CC, 1, 1 },
                     { 2, PART_SPARK, 0xFFAA00, 0.15f, 2 },
                     { 2, PART_SPARK, 0xFF8800, 0.1f, 2 },
                     { 2, PART_FIREBALL_SOFT, 0, 0.25f, 3 },
-                    { 1, PART_PLASMA_SOFT, 0x226688, 0.2f, 2 },
-                    { 2, PART_PLASMA_SOFT, 0x6611FF, 0.2f, 2.5f },
-                    { 3, PART_PLASMA_SOFT, 0, 1, 5 },
+                    { 1, PART_PLASMA_SOFT, 0x226688, 0.15f, 2 },
+                    { 2, PART_PLASMA_SOFT, 0x6611FF, 0.1f, 2.5f },
+                    { 3, PART_PLASMA_SOFT, 0, 1, 3 },
                     { 0, 0, 0, 0 },
                 };
                 float amt = (lastmillis-d->weaplast[i])/float(d->weapwait[i]);

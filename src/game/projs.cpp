@@ -664,10 +664,10 @@ namespace projs
             {
                 case WEAP_SWORD:
                 {
-                    part_flare(proj.from, proj.to, 1, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.75f, 0.75f);
+                    part_flare(proj.from, proj.to, 1, PART_LIGHTNING_FLARE, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 1);
                     if(lastmillis-proj.lasteffect >= 25)
                     {
-                        part_flare(proj.from, proj.to, 75, PART_LIGHTNING, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.75f);
+                        part_flare(proj.from, proj.to, 150, PART_LIGHTNING_FLARE, 0x1111CC, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), 0.75f);
                         proj.lasteffect = lastmillis - (lastmillis%25);
                     }
                     break;
@@ -693,7 +693,7 @@ namespace projs
                     {
                         bool effect = false;
                         float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f))*proj.scale;
-                        if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis; }
+                        if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis - (lastmillis%firedelay); }
                         int len = effect ? max(int(firelength*max(1.f-proj.lifespan, 0.1f)), 1) : 1;
                         if(firehint && effect && notrayspam(proj.weap, proj.flags&HIT_ALT, 1)) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
                         part_create(PART_FIREBALL_SOFT, len, proj.o, firecols[rnd(FIRECOLOURS)], size, blend, -15);
@@ -709,7 +709,7 @@ namespace projs
                     if(lastmillis-proj.lasteffect >= (moving ? 50 : 100))
                     {
                         part_create(PART_SMOKE_LERP, 250, proj.o, 0x222222, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*(moving ? 0.5f : 1.f), 0.5f, -20);
-                        proj.lasteffect = lastmillis;
+                        proj.lasteffect = lastmillis - (lastmillis%(moving ? 50 : 100));
                     }
                     break;
                 }
@@ -722,7 +722,7 @@ namespace projs
                     if(lastmillis-proj.lasteffect >= (moving ? 50 : 100))
                     {
                         part_create(PART_SMOKE_LERP, 150, proj.o, 0x666666, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*(moving ? 0.5f : 1.f), 0.5f, -10);
-                        proj.lasteffect = lastmillis;
+                        proj.lasteffect = lastmillis - (lastmillis%(moving ? 50 : 100));
                     }
                     break;
                 }
@@ -781,14 +781,14 @@ namespace projs
                 {
                     float size = ((rnd(game::bloodsize)+1)/10.f)*proj.radius;
                     part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, size, 1, 100, DECAL_BLOOD);
-                    proj.lasteffect = lastmillis;
+                    proj.lasteffect = lastmillis - (lastmillis%1000);
                 }
             }
             else if(!proj.limited)
             {
                 bool effect = false;
                 float radius = (proj.radius+0.5f)*(clamp(1.f-proj.lifespan, 0.1f, 1.f)+0.25f), blend = clamp(1.25f-proj.lifespan, 0.25f, 1.f)*(0.75f+(rnd(25)/100.f)); // gets smaller as it gets older
-                if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis; }
+                if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis - (lastmillis%firedelay); }
                 int len = effect ? max(int(firelength*max(1.f-proj.lifespan, 0.1f)), 1) : 1;
                 part_create(PART_FIREBALL_SOFT, len, proj.o, firecols[rnd(FIRECOLOURS)], radius, blend, -10);
             }
@@ -803,7 +803,7 @@ namespace projs
                 if(moving && lastmillis-proj.lasteffect >= 100)
                 {
                     part_create(PART_SMOKE, 150, proj.o, 0x222222, max(proj.xradius, proj.yradius)*1.75f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.5f, -3);
-                    proj.lasteffect = lastmillis;
+                    proj.lasteffect = lastmillis - (lastmillis%100);
                 }
             }
             default: break;
