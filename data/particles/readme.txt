@@ -6,7 +6,7 @@ smoke.png, and explosion.png
     Created by RaZgRiZ Made with Filter Forge II Beta 3
     Licensed publicly for everyone to use and modify as long as the author is credited for the original work.
 
-fire.png, lightning.png, hint.png, mflare.png, sflare.png, smoke.png, spark.png
+fire.png, lightning.png, hint.png, mflare.png, sflare.png, spark.png
     Created by Quinton Reeves, released into the public domain
     
  All other content is, unless accompanied by a specific license, licensed:
