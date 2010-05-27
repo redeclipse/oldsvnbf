@@ -265,7 +265,7 @@ namespace game
         if(!m_edit(gamemode)) switch(player1->state)
         {
             case CS_SPECTATOR: if(specmode) return true; break;
-            case CS_WAITING: if(waitmode >= (m_duke(game::gamemode, game::mutators) ? 1 : 2) && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500))
+            case CS_WAITING: if(waitmode >= (m_duke(gamemode, mutators) ? 1 : 2) && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500))
                 return true; break;
             default: break;
         }
@@ -273,7 +273,7 @@ namespace game
     }
 
     ICOMMAND(0, specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false); follow = 0);
-    ICOMMAND(0, waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false); follow = 0);
+    ICOMMAND(0, waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(gamemode, mutators) ? 1 : 2); hud::sb.showscores(false); follow = 0);
 
     void followswitch(int n)
     {
@@ -523,7 +523,7 @@ namespace game
                     { 2, PART_FIREBALL_SOFT, 0, 0.25f, 3 },
                     { 1, PART_PLASMA_SOFT, 0x226688, 0.15f, 2 },
                     { 2, PART_PLASMA_SOFT, 0x6611FF, 0.1f, 2.5f },
-                    { 3, PART_PLASMA_SOFT, 0, 1, 3 },
+                    { 3, PART_PLASMA_SOFT, 0, 1, 1 },
                     { 0, 0, 0, 0 },
                 };
                 float amt = (lastmillis-d->weaplast[i])/float(d->weapwait[i]);
@@ -943,7 +943,7 @@ namespace game
         }
         if(showobituaries && d->aitype < AI_START)
         {
-            bool isme = (d == focus || actor == focus), show = false;
+            bool isme = (d == player1 || actor == player1), show = false;
             if(((!m_fight(gamemode) && !isme) || actor->aitype >= AI_START) && anc >= 0) anc = -1;
             if(flags&HIT_LOST) show = true;
             else switch(showobituaries)
@@ -1542,7 +1542,7 @@ namespace game
     {
         lastcamera = 0;
         zoomset(false, 0);
-        if(focus == game::player1) resetcursor();
+        if(focus == player1) resetcursor();
         checkcamera();
         camera1->o = focus->o;
         camera1->yaw = focus->yaw;
@@ -2022,8 +2022,8 @@ namespace game
                     if(d->conopen) t = textureload(hud::conopentex, 3);
                     else if(m_team(gamemode, mutators) && showteamabovehead > (d != focus ? (d->team != focus->team ? 1 : 0) : 2))
                         t = textureload(hud::teamtex(d->team), 3);
-                    else if(d->dominating.find(game::focus) >= 0) t = textureload(hud::dominatingtex, 3);
-                    else if(d->dominated.find(game::focus) >= 0) t = textureload(hud::dominatedtex, 3);
+                    else if(d->dominating.find(focus) >= 0) t = textureload(hud::dominatingtex, 3);
+                    else if(d->dominated.find(focus) >= 0) t = textureload(hud::dominatedtex, 3);
                 }
                 if(t)
                 {
