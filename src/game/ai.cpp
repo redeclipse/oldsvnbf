@@ -455,7 +455,7 @@ namespace ai
         if(d->aitype == AI_BOT)
         {
             int sweap = m_weapon(game::gamemode, game::mutators);
-            items(d, b, interests, !d->hasweap(d->loadweap, sweap) && d->carry(sweap) == 0);
+            if(!d->hasweap(d->loadweap, sweap)) items(d, b, interests, d->carry(sweap) == 0);
             if(m_fight(game::gamemode))
             {
                 if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
