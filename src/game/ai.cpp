@@ -57,7 +57,10 @@ namespace ai
         return false;
     }
 
-    bool cansee(gameent *d, vec &x, vec &y, vec &targ) { return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]); }
+    bool cansee(gameent *d, vec &x, vec &y, vec &targ)
+    {
+        return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
+    }
 
     bool badhealth(gameent *d)
     {
@@ -67,7 +70,7 @@ namespace ai
 
     bool canshoot(gameent *d, gameent *e, bool alt = true)
     {
-        if(isweap(d->weapselect) && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)))
+        if(isweap(d->weapselect) && weaprange(d, d->weapselect, alt, e->o.squaredist(d->o)))
         {
             int prot = m_protect(game::gamemode, game::mutators);
             if((d->aitype >= AI_START || !d->protect(lastmillis, prot)) && targetable(d, e, true))
@@ -97,7 +100,7 @@ namespace ai
         if(weaprange(d, d->weapselect, alt, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
             if(weaptype[d->weapselect].melee) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/5000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/500.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f),
+            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*WEAP(d->weapselect, rdelay)/5000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/500.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f),
                 offy = yaw-d->yaw, offp = pitch-d->pitch;
             if(offy > 180) offy -= 360;
             else if(offy < -180) offy += 360;
@@ -348,11 +351,12 @@ namespace ai
         if(e && targetable(d, e, true))
         {
             if(pursue && b.type != AI_S_PURSUE && b.type != AI_S_DEFEND) d->ai->addstate(AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
-            if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
-            d->ai->enemy = e->clientnum;
-            d->ai->enemyseen = lastmillis;
-            vec dp = d->headpos(), ep = getaimpos(d, e, altfire(d, e));
-            if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
+            if(d->ai->enemy != e->clientnum)
+            {
+                d->ai->enemymillis = lastmillis;
+                d->ai->enemy = e->clientnum;
+                d->ai->enemyseen = 0;
+            }
             return true;
         }
         return false;
@@ -412,7 +416,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
                             n.target = j;
                             n.targtype = AI_T_ENTITY;
-                            n.score = (force || attr == d->loadweap ? -1 : pos.squaredist(e.o)/(d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = attr == d->loadweap ? -2 : (force ? -1 : pos.squaredist(e.o));
                         }
                         break;
                     }
@@ -439,7 +443,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
                             n.target = proj.id;
                             n.targtype = AI_T_DROP;
-                            n.score = (force || attr == d->loadweap ? -1 : pos.squaredist(proj.o)/(d->carry(sweap, 1) <= 0 ? 1000.f : 10.f));
+                            n.score = attr == d->loadweap ? -2 : (force ? -1 : pos.squaredist(proj.o));
                         }
                         break;
                     }
@@ -455,7 +459,8 @@ namespace ai
         if(d->aitype == AI_BOT)
         {
             int sweap = m_weapon(game::gamemode, game::mutators);
-            if(!d->hasweap(d->loadweap, sweap)) items(d, b, interests, d->carry(sweap) == 0);
+            if(!d->hasweap(d->loadweap, sweap) || d->carry(sweap) == 0)
+                items(d, b, interests, d->carry(sweap) == 0);
             if(m_fight(game::gamemode))
             {
                 if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
@@ -778,7 +783,7 @@ namespace ai
                         else
                         {
                             vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-                            if(cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000))
+                            if(cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*10)+1000))
                             {
                                 b.idle = -1;
                                 return 1;
@@ -939,8 +944,8 @@ namespace ai
     int process(gameent *d, aistate &b)
     {
         int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
-        float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aistyle[d->aitype].frame);
-        if(!aistyle[d->aitype].canstrafe) frame *= 10;
+        float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod,1));
+        if(!aistyle[d->aitype].canstrafe) frame *= 2;
         vec dp = d->headpos();
 
         bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aistyle[d->aitype].canmove || d->ai->suspended;
@@ -978,15 +983,12 @@ namespace ai
             gameent *f = game::intersectclosest(dp, d->ai->target, d);
             if(f && targetable(d, f, true))
             {
+                if(!enemyok) violence(d, b, f, false);
                 enemyok = true;
                 e = f;
             }
             else if(!enemyok && target(d, b, false, false, SIGHTMIN))
-            {
-                e = game::getclient(d->ai->enemy);
-                enemyok = e && targetable(d, e, true);
-            }
-            else enemyok = false;
+                enemyok = (e = game::getclient(d->ai->enemy)) != NULL;
         }
         if(enemyok)
         {
@@ -995,45 +997,41 @@ namespace ai
             float yaw, pitch;
             game::getyawpitch(dp, ep, yaw, pitch);
             game::fixrange(yaw, pitch);
-            bool targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)), insight = cansee(d, dp, ep) && targeting,
-                hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000,
-                quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (WEAP2(d->weapselect, fullauto, alt) ? skmod*10 : skmod);
-            if(insight) d->ai->enemyseen = lastmillis;
+            bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*10)+1000,
+                quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (WEAP2(d->weapselect, fullauto, alt) ? skmod : skmod/10);
+            if(insight) d->ai->enemyseen = d->ai->enemymillis = lastmillis;
             if(idle || insight || hasseen || quick)
             {
-                float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-                if(idle || (insight && lockon(d, e, 16)))
+                float sskew = insight ? 1.5f : (hasseen ? 1.f : 0.5f);
+                if(insight && lockon(d, e, 16))
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
                     if(!idle) frame *= 2;
                     d->ai->becareful = false;
                 }
-                else if(!insight) frame *= 0.5f;
                 game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
                 if(insight || quick)
                 {
-                    if(canshoot(d, e, alt))
+                    if(canshoot(d, e, alt) && hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)))
                     {
                         d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
                         d->ai->lastaction = d->actiontime[alt ? AC_ALTERNATE : AC_ATTACK] = lastmillis;
-                        result = 4;
+                        result = 3;
                     }
-                    else result = insight ? 3 : 2;
+                    else result = 2;
                 }
-                else
-                {
-                    enemyok = false;
-                    result = hasseen ? 2 : 1;
-                }
+                else result = 1;
             }
             else
             {
                 enemyok = false;
-                d->ai->enemy = -1;
-                d->ai->enemyseen = d->ai->enemymillis = 0;
+                if(!d->ai->enemymillis || lastmillis-d->ai->enemymillis > (d->skill*50)+3000)
+                {
+                    d->ai->enemy = -1;
+                    d->ai->enemyseen = d->ai->enemymillis = 0;
+                }
                 result = 0;
-                frame *= 0.5f;
             }
         }
         else
@@ -1045,33 +1043,35 @@ namespace ai
                 d->ai->enemyseen = d->ai->enemymillis = 0;
             }
             result = 0;
-            frame *= 0.5f;
         }
 
         game::fixrange(d->ai->targyaw, d->ai->targpitch);
-        d->aimyaw = d->ai->targyaw;
-        d->aimpitch = d->ai->targpitch;
+        d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
         if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
         if(d->aitype == AI_BOT && physics::allowimpulse())
         {
             bool wantsimpulse = false;
-            if(b.idle == -1 && !d->ai->dontmove)
-                wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
-            if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
+            if(!impulsemeter) wantsimpulse = true;
+            else
             {
-                float offyaw, offpitch;
-                vec v = vec(d->vel).normalize();
-                vectoyawpitch(v, offyaw, offpitch);
-                offyaw -= d->aimyaw; offpitch -= d->aimpitch;
-                if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
-                else if(d->ai->becareful)
+                if(b.idle == -1 && !d->ai->dontmove)
+                    wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
+                if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
                 {
-                    d->ai->dontmove = true;
-                    wantsimpulse = false;
+                    float offyaw, offpitch;
+                    vec v = vec(d->vel).normalize();
+                    vectoyawpitch(v, offyaw, offpitch);
+                    offyaw -= d->aimyaw; offpitch -= d->aimpitch;
+                    if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
+                    else if(d->ai->becareful)
+                    {
+                        d->ai->dontmove = true;
+                        wantsimpulse = false;
+                    }
                 }
+                else d->ai->becareful = false;
             }
-            else d->ai->becareful = false;
             if(d->action[AC_SPRINT] != wantsimpulse)
                 if((d->action[AC_SPRINT] = !d->action[AC_SPRINT]) == true) d->actiontime[AC_SPRINT] = lastmillis;
         }
@@ -1105,7 +1105,7 @@ namespace ai
             d->strafe = ad.strafe;
             d->aimyaw -= ad.offset;
         }
-        if(d->move && enemyok && lockon(d, e, 2)) d->move = 0;
+        if(d->move && enemyok && lockon(d, e, 8)) d->move = 0;
         game::fixrange(d->aimyaw, d->aimpitch);
         return result;
     }
@@ -1118,7 +1118,7 @@ namespace ai
         {
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_MAX) if(i >= WEAP_OFFSET && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_MAX) if(i >= WEAP_OFFSET && i < WEAP_ITEM && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -1197,7 +1197,7 @@ namespace ai
             }
         }
 
-        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 0) && d->weapstate[d->weapselect] == WEAP_S_IDLE && (!d->ammo[d->weapselect] || lastmillis-d->weaplast[d->weapselect] >= 6000-(d->skill*50)))
+        if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 2 : 0) && d->weapstate[d->weapselect] == WEAP_S_IDLE && (!d->ammo[d->weapselect] || lastmillis-d->weaplast[d->weapselect] >= 6000-(d->skill*50)))
         {
             if(weapons::weapreload(d, d->weapselect))
             {
@@ -1502,8 +1502,13 @@ namespace ai
                         else break;
                     }
                 }
-                if(aidebug > 2 && isweap(d->loadweap))
-                    part_textcopy(vec(d->abovehead()).add(vec(0, 0, above += 2)), weaptype[d->loadweap].name);
+                if(aidebug > 2)
+                {
+                    if(isweap(d->loadweap))
+                        part_textcopy(vec(d->abovehead()).add(vec(0, 0, above += 2)), weaptype[d->loadweap].name);
+                    gameent *e = game::getclient(d->ai->enemy);
+                    if(e) part_textcopy(vec(d->abovehead()).add(vec(0, 0, above += 2)), game::colorname(e, NULL, "<default>"));
+                }
             }
             if(aidebug >= 4 && !m_edit(game::gamemode))
             {
