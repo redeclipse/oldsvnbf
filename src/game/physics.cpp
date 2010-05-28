@@ -718,8 +718,11 @@ namespace physics
                     if(collided || (hitplayer ? !d->action[AC_SPECIAL] && !d->turnside : wall.iszero())) continue;
                     if(d->action[AC_SPECIAL] && hitplayer && !d->turnside)
                     {
-                        if(weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, !onfloor)) d->action[AC_SPECIAL] = false;
-                        if(!onfloor) d->vel.z += (impulsespeed*1.5f)+max(d->vel.magnitude(), 1.f);
+                        if(weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, !onfloor))
+                        {
+                            d->action[AC_SPECIAL] = false;
+                            if(!onfloor) d->vel.z += (impulsespeed*1.5f)+max(d->vel.magnitude(), 1.f);
+                        }
                         break;
                     }
                     wall.normalize();

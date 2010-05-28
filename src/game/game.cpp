@@ -539,13 +539,13 @@ namespace game
                     {
                         int colour = powerfx[i].colour > 0 ? powerfx[i].colour : ((int(254*max(1.f-amt,0.5f))<<16)+1)|((int(98*max(1.f-amt,0.f))+1)<<8), interval = lastmillis%1000;
                         float fluc = powerfx[i].size+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
-                        part_create(powerfx[i].parttype, 1, d->handpos(), colour, (powerfx[i].radius*max(amt, 0.25f))+fluc);
+                        part_create(powerfx[i].parttype, 1, d->originpos(), colour, (powerfx[i].radius*max(amt, 0.25f))+fluc);
                         break;
                     }
                     case 4:
                     {
                         int colour = powerfx[i].colour > 0 ? powerfx[i].colour : firecols[rnd(FIRECOLOURS)];
-                        part_flare(d->handpos(), d->muzzlepos(i), 1, PART_LIGHTNING, colour, powerfx[i].size, max(amt, 0.1f));
+                        part_flare(d->originpos(), d->muzzlepos(i), 1, PART_LIGHTNING, colour, powerfx[i].size, max(amt, 0.1f));
                         break;
                     }
                     case 0: default: break;
@@ -2044,7 +2044,7 @@ namespace game
                 if(weaptype[weap].eject) a[ai++] = modelattach("tag_eject", &d->eject);
             }
             a[ai++] = modelattach(muzzle, &d->muzzle);
-            a[ai++] = modelattach("tag_weapon", &d->hand);
+            a[ai++] = modelattach("tag_weapon", &d->origin);
             if(third && d->wantshitbox())
             {
                 a[ai++] = modelattach("tag_head", &d->head);
