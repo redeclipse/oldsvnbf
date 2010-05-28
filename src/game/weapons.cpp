@@ -326,13 +326,12 @@ namespace weapons
         }
     }
 
-    void preload(int weap)
+    void preload()
     {
-        int g = weap < 0 ? m_weapon(game::gamemode, game::mutators) : weap;
-        if(g > WEAP_MELEE && isweap(g))
+        loopi(WEAP_MAX)
         {
-            if(*weaptype[g].item) loadmodel(weaptype[g].item, -1, true);
-            if(*weaptype[g].vwep) loadmodel(weaptype[g].vwep, -1, true);
+            if(*weaptype[i].item) loadmodel(weaptype[i].item, -1, true);
+            if(*weaptype[i].vwep) loadmodel(weaptype[i].vwep, -1, true);
         }
     }
 }

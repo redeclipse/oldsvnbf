@@ -2238,27 +2238,6 @@ namespace entities
         }
     }
 
-    void preload()
-    {
-        static bool weapf[WEAP_MAX];
-        int sweap = m_weapon(game::gamemode, game::mutators);
-        loopi(WEAP_MAX) weapf[i] = (i == sweap ? true : false);
-        loopv(ents)
-        {
-            extentity &e = *ents[i];
-            if(e.type == MAPMODEL || e.type == FLAG) continue;
-            else if(e.type == WEAPON)
-            {
-                int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-                if(isweap(attr) && !weapf[attr])
-                {
-                    weapons::preload(attr);
-                    weapf[attr] = true;
-                }
-            }
-        }
-    }
-
     void update()
     {
         entitycheck(game::player1);

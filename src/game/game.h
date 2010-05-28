@@ -1067,7 +1067,7 @@ namespace weapons
     extern void reload(gameent *d);
     extern bool doshot(gameent *d, vec &targ, int weap, bool pressed = false, bool secondary = false, int force = 0);
     extern void shoot(gameent *d, vec &targ, int force = 0);
-    extern void preload(int weap = -1);
+    extern void preload();
 }
 
 namespace hud
@@ -1197,7 +1197,6 @@ namespace entities
     extern void useeffects(gameent *d, int n, bool s, int g, int r);
     extern const char *entmdlname(int type, vector<int> &attr);
     extern bool clipped(const vec &o, bool aiclip = false);
-    extern void preload();
     extern void edittoggled(bool edit);
     extern const char *findname(int type);
     extern void adddynlights();

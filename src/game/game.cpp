@@ -1056,7 +1056,6 @@ namespace game
         }
         weapons::preload();
         projs::preload();
-        entities::preload();
         if(m_edit(gamemode) || m_stf(gamemode)) stf::preload();
         if(m_edit(gamemode) || m_ctf(gamemode)) ctf::preload();
         maskpackagedirs(~0);
