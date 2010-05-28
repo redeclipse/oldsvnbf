@@ -13,31 +13,31 @@ struct aistyles
 aistyles aistyle[] = {
     {
         AI_BOT,         -1,             0,      50,         1,              0,          0,          0,          200,
-            true,       true,       true,       true,       true,                  "bot",      "actors/player",             "actors/player/vwep"
+            true,       true,       true,       true,       true,                  "bot",      "actors/player",             "actors/player/hwep"
     },
     {
         AI_TURRET,      WEAP_SMG,       100,    0,          2,              3,          3,          4,          0,
-            false,      false,      false,      true,       false,                 "turret",   "weapons/smg/vwep",          "actors/player/gamma/vwep"
+            false,      false,      false,      true,       false,                 "turret",   "weapons/smg/hwep",          "actors/player/gamma/hwep"
     },
     {
         AI_ZOMBIE,      WEAP_MELEE,     50,     30,         3,              3,          3,          14,         150,
-            true,       false,      true,       true,       true,                  "zombie",   "actors/z1",                 "actors/player/gamma/vwep"
+            true,       false,      true,       true,       true,                  "zombie",   "actors/z1",                 "actors/player/gamma/hwep"
     },
     {
         AI_GUARD,       WEAP_PISTOL,    50,     40,         2,              3,          3,          14,         165,
-            true,       true,       true,       true,       true,                  "guard",    "actors/player/gamma",       "actors/player/gamma/vwep"
+            true,       true,       true,       true,       true,                  "guard",    "actors/player/gamma",       "actors/player/gamma/hwep"
     },
     {
         AI_HEAVY,       WEAP_SHOTGUN,   200,    20,         2,              3,          3,          14,         200,
-            true,       true,       true,       true,       true,                  "heavy",    "actors/player/gamma",       "actors/player/gamma/vwep"
+            true,       true,       true,       true,       true,                  "heavy",    "actors/player/gamma",       "actors/player/gamma/hwep"
     },
     {
         AI_PYRO,        WEAP_FLAMER,    150,    40,         2,              3,          3,          14,         175,
-            true,       true,       true,       true,       true,                  "pyro",     "actors/player/gamma",       "actors/player/gamma/vwep"
+            true,       true,       true,       true,       true,                  "pyro",     "actors/player/gamma",       "actors/player/gamma/hwep"
     },
     {
         AI_SNIPER,      WEAP_RIFLE,     100,    40,         2,              3,          3,          14,         175,
-            true,       true,       true,       true,       true,                  "sniper",   "actors/player/gamma",       "actors/player/gamma/vwep"
+            true,       true,       true,       true,       true,                  "sniper",   "actors/player/gamma",       "actors/player/gamma/hwep"
     },
 };
 #else

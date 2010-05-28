@@ -202,7 +202,7 @@ struct weaptypes
     int     anim,               colour,         sound,      esound,     fsound,     rsound,         espeed;
     bool    melee,      traced,     muzzle,     eject;
     float   thrown[2],              halo,       esize;
-    const char *name,       *text,  *item,                      *vwep,                      *proj,                  *eprj;
+    const char *name,       *text,  *item,                      *vwep, *hwep,                     *proj,                  *eprj;
 };
 #ifdef GAMESERVER
 weaptypes weaptype[] =
@@ -211,61 +211,61 @@ weaptypes weaptype[] =
             ANIM_MELEE,         0x444444,       S_MELEE,    -1,          -1,         -1,             1,
             true,       true,       false,      false,
             { 0, 0 },               1,          0,
-            "melee",        "\fd",  "",                         "",                         "",                     ""
+            "melee",        "\fd",  "",                         "", "",                        "",                     ""
     },
     {
             ANIM_LIGHT,         0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
             false,      false,      true,       true,
             { 0, 0 },               4,          0.35f,
-            "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep",      "",                     "projs/cartridge"
+            "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep", "weapons/pistol/hwep",     "",                     "projs/cartridge"
     },
     {
             ANIM_WIELD,          0x2222FF,      S_SWORD,    -1,          -1,         -1,             1,
             true,       true,       true,       false,
             { 0, 0 },               14,         0,
-            "sword",     "\fb",     "weapons/sword/item",       "weapons/sword/vwep",     "",                     ""
+            "sword",     "\fb",     "weapons/sword/item",       "weapons/sword/vwep", "weapons/sword/hwep",    "",                     ""
     },
     {
             ANIM_HEAVY,         0xFFFF22,       S_SHOTGUN,  S_BZAP,     S_WHIZZ,    S_RICOCHET,     10,
             false,      false,      true,       true,
             { 0, 0 },               6,          0.45f,
-            "shotgun",      "\fy",  "weapons/shotgun/item",     "weapons/shotgun/vwep",     "",                     "projs/shell"
+            "shotgun",      "\fy",  "weapons/shotgun/item",     "weapons/shotgun/vwep", "weapons/shotgun/hwep",    "",                     "projs/shell"
     },
     {
             ANIM_LIGHT,         0xFF8822,       S_SMG,      S_BZAP,     S_WHIZZ,    S_RICOCHET,     20,
             false,      false,      true,       true,
             { 0, 0 },               5.5f,       0.35f,
-            "smg",          "\fo",  "weapons/smg/item",         "weapons/smg/vwep",         "",                     "projs/cartridge"
+            "smg",          "\fo",  "weapons/smg/item",         "weapons/smg/vwep", "weapons/smg/hwep",        "",                     "projs/cartridge"
     },
     {
             ANIM_HEAVY,         0xFF2222,       S_FLAMER,   S_BURN,     S_BURNING,  -1,             1,
             false,      false,      true,       false,
             { 0, 0 },               7,          0,
-            "flamer",       "\fr",  "weapons/flamer/item",      "weapons/flamer/vwep",      "",                     ""
+            "flamer",       "\fr",  "weapons/flamer/item",      "weapons/flamer/vwep", "weapons/flamer/hwep",     "",                     ""
     },
     {
             ANIM_LIGHT,         0x22FFFF,       S_PLASMA,   S_ENERGY,   S_HUM,      -1,             1,
             false,      false,      true,       false,
             { 0, 0 },               5,          0,
-            "plasma",       "\fc",  "weapons/plasma/item",      "weapons/plasma/vwep",      "",                     ""
+            "plasma",       "\fc",  "weapons/plasma/item",      "weapons/plasma/vwep", "weapons/plasma/hwep",     "",                     ""
     },
     {
             ANIM_HEAVY,         0xAA66FF,       S_RIFLE,    S_ENERGY,   S_BZZT,     -1,             1,
             false,      false,      true,       false,
             { 0, 0 },               7,          0,
-            "rifle",        "\fv",  "weapons/rifle/item",       "weapons/rifle/vwep",       "",                     ""
+            "rifle",        "\fv",  "weapons/rifle/item",       "weapons/rifle/vwep", "weapons/rifle/hwep",      "",                     ""
     },
     {
             ANIM_GRASP,         0x22FF22,       S_GRENADE,  S_EXPLODE,  S_BEEP, S_TINK,             1,
             false,      false,      false,      false,
             { 0.0625f, 0.0625f },   3,          0,
-            "grenade",      "\fg",  "weapons/grenade/item",     "weapons/grenade/vwep",     "weapons/grenade/proj", ""
+            "grenade",      "\fg",  "weapons/grenade/item",     "weapons/grenade/vwep", "weapons/grenade/hwep",    "weapons/grenade/proj", ""
     },
     {
             ANIM_HEAVY,         0x993311,       S_ROCKET,   S_EXPLODE,  S_WHIZZ,    -1,             1,
             false,      false,      true,      false,
             { 0, 0 },               8,          0,
-            "rocket",      "\fn",  "weapons/rocket/item",       "weapons/rocket/vwep",      "weapons/rocket/proj",  ""
+            "rocket",      "\fn",  "weapons/rocket/item",       "weapons/rocket/vwep", "weapons/rocket/hwep",     "weapons/rocket/proj",  ""
     }
 };
 #define WEAPDEF(proto,name)     proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_sword##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_rocket##name };

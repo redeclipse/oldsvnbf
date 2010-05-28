@@ -365,22 +365,22 @@ struct teamtypes
 teamtypes teamtype[] = {
     {
         TEAM_NEUTRAL,   0x666666,           "neutral",
-        "actors/player",                    "actors/player/vwep",
+        "actors/player",                    "actors/player/hwep",
         "flag",         "team",             "\fa",      "grey"
     },
     {
         TEAM_ALPHA,     0x2222AA,           "alpha",
-        "actors/player/alpha",              "actors/player/alpha/vwep",
+        "actors/player/alpha",              "actors/player/alpha/hwep",
         "flag/alpha",   "teamalpha",        "\fb",      "blue"
     },
     {
         TEAM_BETA,      0xAA2222,           "beta",
-        "actors/player/beta",               "actors/player/beta/vwep",
+        "actors/player/beta",               "actors/player/beta/hwep",
         "flag/beta",    "teambeta",         "\fr",      "red"
     },
     {
         TEAM_ENEMY,     0x222222,           "enemy",
-        "actors/player",                    "actors/player/vwep",
+        "actors/player",                    "actors/player/hwep",
         "flag",         "team",             "\fd",      "dark grey"
     }
 };
