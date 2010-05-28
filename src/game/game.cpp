@@ -523,7 +523,7 @@ namespace game
                     { 2, PART_FIREBALL_SOFT, 0, 0.25f, 3 },
                     { 1, PART_PLASMA_SOFT, 0x226688, 0.15f, 2 },
                     { 2, PART_PLASMA_SOFT, 0x6611FF, 0.1f, 2.5f },
-                    { 3, PART_PLASMA_SOFT, 0, 1, 1 },
+                    { 3, PART_PLASMA_SOFT, 0, 0.5f, 0.5f },
                     { 0, 0, 0, 0 },
                 };
                 float amt = (lastmillis-d->weaplast[i])/float(d->weapwait[i]);
@@ -537,7 +537,7 @@ namespace game
                     }
                     case 3:
                     {
-                        int colour = powerfx[i].colour > 0 ? powerfx[i].colour : ((int(254*max(1.f-amt,0.5f))<<16)+1)|((int(98*max(1.f-amt,0.f))+1)<<8), interval = lastmillis%1000;
+                        int colour = powerfx[i].colour > 0 ? powerfx[i].colour : ((int(254*max(1.f-amt,0.5f))<<16)+1)|((int(128*max(1.f-amt,0.f))+1)<<8), interval = lastmillis%1000;
                         float fluc = powerfx[i].size+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
                         part_create(powerfx[i].parttype, 1, d->originpos(), colour, (powerfx[i].radius*max(amt, 0.25f))+fluc);
                         break;
