@@ -169,7 +169,7 @@ namespace hud
     TVAR(IDF_PERSIST, healthtex, "textures/health", 3);
     TVAR(IDF_PERSIST, progresstex, "textures/progress", 3);
     TVAR(IDF_PERSIST, inventoryenttex, "textures/progress", 3);
-    TVAR(IDF_PERSIST, inventoryedittex, "textures/arrow", 3);
+    TVAR(IDF_PERSIST, inventoryedittex, "particles/hint", 3);
     TVAR(IDF_PERSIST, inventorywaittex, "textures/wait", 3);
     TVAR(IDF_PERSIST, inventorydeadtex, "textures/dead", 3);
     TVAR(IDF_PERSIST, inventorychattex, "textures/conopen", 3);
