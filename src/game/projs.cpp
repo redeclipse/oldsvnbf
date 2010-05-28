@@ -177,7 +177,11 @@ namespace projs
 
     void preload()
     {
-        loopi(WEAP_MAX) if(*weaptype[i].proj) loadmodel(weaptype[i].proj, -1, true);
+        loopi(WEAP_MAX)
+        {
+            if(*weaptype[i].proj) loadmodel(weaptype[i].proj, -1, true);
+            if(*weaptype[i].eprj) loadmodel(weaptype[i].eprj, -1, true);
+        }
         const char *mdls[] = { "projs/gibs/gibc", "projs/gibs/gibh", "projs/debris/debris01", "projs/debris/debris02", "projs/debris/debris03", "projs/debris/debris04", "" };
         for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
     }
