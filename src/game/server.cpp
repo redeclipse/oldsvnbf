@@ -803,9 +803,11 @@ namespace server
         switch(sents[i].type)
         {
             case WEAPON:
-                if(!isweap(sents[i].attrs[0])) return false;
-                if(m_arena(gamemode, mutators) && sents[i].attrs[0] < WEAP_ITEM) return false;
-                switch(WEAP(sents[i].attrs[0], allowed))
+            {
+                int attr = w_attr(gamemode, sents[i].attrs[0], m_weapon(gamemode, mutators));
+                if(!isweap(attr)) return false;
+                if(m_arena(gamemode, mutators) && attr < WEAP_ITEM) return false;
+                switch(WEAP(attr, allowed))
                 {
                     case 0: return false;
                     case 1: if(m_duke(gamemode, mutators)) return false; // fall through
@@ -814,6 +816,7 @@ namespace server
                 }
                 if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
                 break;
+            }
             default: break;
         }
         return true;
@@ -863,7 +866,7 @@ namespace server
                     case 1: items.add(i); break;
                     case 2:
                     {
-                        int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                        int delay = sents[i].type == WEAPON ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
                         if(delay > 1) sents[i].millis += (delay+rnd(delay))/2;
                         break;
                     }
