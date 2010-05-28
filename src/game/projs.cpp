@@ -315,6 +315,24 @@ namespace projs
         }
     }
 
+    void updatetargets(projent &proj, int style = 0)
+    {
+        if(proj.projtype == PRJ_SHOT && proj.weap != WEAP_MELEE && proj.owner && proj.owner->state == CS_ALIVE)
+        {
+            if(weaptype[proj.weap].traced)
+            {
+                proj.from = proj.owner->originpos();
+                proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
+                if(style != 2) proj.o = proj.from;
+            }
+            else
+            {
+                proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
+                if(style == 1) proj.o = proj.from;
+            }
+        }
+    }
+
     void init(projent &proj, bool waited)
     {
         switch(proj.projtype)
@@ -332,19 +350,7 @@ namespace projs
                 proj.lifesize = 1;
                 proj.mdl = weaptype[proj.weap].proj;
                 proj.escaped = !proj.owner || weaptype[proj.weap].traced;
-                if(proj.owner && proj.owner->state == CS_ALIVE)
-                {
-                    if(weaptype[proj.weap].traced)
-                    {
-                        proj.o = proj.from = proj.owner->handpos();
-                        proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-                    }
-                    else
-                    {
-                        proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-                        if(waited) proj.o = proj.from;
-                    }
-                }
+                updatetargets(proj, waited ? 1 : 0);
                 break;
             }
             case PRJ_GIBS:
@@ -621,15 +627,7 @@ namespace projs
         proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
         if(proj.projtype == PRJ_SHOT)
         {
-            if(proj.owner)
-            {
-                if(weaptype[proj.weap].traced)
-                {
-                    proj.o = proj.from = proj.owner->handpos();
-                    proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-                }
-                else proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-            }
+            updatetargets(proj);
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
@@ -829,15 +827,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner)
-                {
-                    if(weaptype[proj.weap].traced)
-                    {
-                        proj.o = proj.from = proj.owner->handpos();
-                        proj.to = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-                    }
-                    else proj.from = proj.owner->muzzlepos(proj.weap, proj.flags&HIT_ALT);
-                }
+                updatetargets(proj, 2);
                 int vol = 255;
                 switch(proj.weap)
                 {

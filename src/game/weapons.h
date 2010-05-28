@@ -87,15 +87,15 @@ enum
 //  kpsh1   kpsh2   hpsh1   hpsh2   slow1   slow2   aidst1  aidst2  psz1    psz2    plen1   plen2   freq    push
 //  cmult   cdist   dlta1   dlta2   tmult1  tmult2
 WEAPON(melee,
-    1,      1,      0,      0,      500,    500,    0,      25,     30,     150,    150,    0,      0,      100,    100,
-    0,      0,      0,      0,      40,     40,     0,      0,      1,      1,      1,      1,
+    1,      1,      0,      0,      500,    750,    0,      20,     40,     0,      0,      0,      0,      100,    80,
+    20,     0,      0,      0,      40,     40,     0,      0,      1,      1,      1,      1,
     1,      1,      1,      1,
-    IMPACT_PLAYER,                                                          IMPACT_PLAYER,
+    IMPACT_PLAYER|COLLIDE_TRACE,                                            IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,
     2,      500,    500,
-    0.8f,   0.8f,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,
+    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,
     -1,     -1,     250,    250,    0.15f,  0.15f,  24,     24,     1,      2,      0,      0,      0,      1,
-    2,      0,      10,     10,     1,      1
+    2,      0,      10,     10,     2,      4
 );
 WEAPON(pistol,
     10,     10,     1,      1,      100,    150,    1000,   40,     40,     2000,   2000,   0,      0,      2000,   2000,
@@ -138,7 +138,7 @@ WEAPON(smg,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      1,      1,
     2,      0,      0,
     0.35f,  0.35f,  0,      0,      0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,
-    0.5f,   3,      50,     60,     0.125f, 0.125f, 300,    300,    1,      1,      40,     40,     1,      2,
+    0.5f,   3,      50,     60,     0.15f,  0.15f,  300,    300,    1,      1,      40,     40,     1,      2,
     3,      12,     10,     10,     1,      1
 );
 WEAPON(flamer,
@@ -209,7 +209,7 @@ weaptypes weaptype[] =
 {
     {
             ANIM_MELEE,         0x444444,       S_MELEE,    -1,          -1,         -1,             1,
-            true,       false,      false,      false,
+            true,       true,       false,      false,
             { 0, 0 },               1,          0,
             "melee",        "\fd",  "",                         "",                         "",                     ""
     },
@@ -220,7 +220,7 @@ weaptypes weaptype[] =
             "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep",      "",                     "projs/cartridge"
     },
     {
-            ANIM_WIELD,          0x2222FF,       S_SWORD,    -1,          -1,         -1,             1,
+            ANIM_WIELD,          0x2222FF,      S_SWORD,    -1,          -1,         -1,             1,
             true,       true,       true,       false,
             { 0, 0 },               14,         0,
             "sword",     "\fb",     "weapons/sword/item",       "weapons/sword/vwep",     "",                     ""

@@ -615,7 +615,6 @@ struct gamestate
             int aweap = loadweap;
             while(aweap < WEAP_OFFSET || aweap >= WEAP_ITEM) aweap = rnd(WEAP_ITEM-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
             ammo[aweap] = max(WEAP(aweap, reloads) ? WEAP(aweap, add) : WEAP(aweap, max), 1);
-            ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
             lastweap = weapselect = aweap;
         }
         else
@@ -724,7 +723,7 @@ struct gameent : dynent, gamestate
         actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake,
         lastpush, lastjump;
     float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
-    vec head, torso, muzzle, hand, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
+    vec head, torso, muzzle, origin, eject, waist, lfoot, rfoot, legs, hrad, trad, lrad;
     bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right, obliterated;
     string name, info, obit;
     vector<int> airnodes;
@@ -733,7 +732,7 @@ struct gameent : dynent, gamestate
     gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
         totaldamage(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
         lastattacker(-1), lastpoints(0), quake(0), lastpush(0), lastjump(0),
-        head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), hand(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
+        head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), origin(-1, -1, -1), eject(-1, -1, -1), waist(-1, -1, -1),
         lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
         conopen(false), k_up(false), k_down(false), k_left(false), k_right(false), obliterated(false)
     {
@@ -823,19 +822,26 @@ struct gameent : dynent, gamestate
         gamestate::mapchange();
     }
 
-    void cleartags() { head = torso = muzzle = hand = eject = melee = waist = lfoot = rfoot = vec(-1, -1, -1); }
+    void cleartags() { head = torso = muzzle = origin = eject = waist = lfoot = rfoot = vec(-1, -1, -1); }
 
-    void checkmeleepos()
+    vec checkoriginpos()
     {
-        if(melee == vec(-1, -1, -1))
+        if(origin == vec(-1, -1, -1))
         {
-            vec dir; vecfromyawpitch(yaw, pitch, 1, 0, dir);
-            dir.mul(radius); dir.z -= height*0.0625f;
-            melee = vec(o).add(dir);
+            vec dir, right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
+            dir.mul(radius*0.5f); right.mul(radius); dir.z -= height*0.0625f;
+            origin = vec(o).add(dir).add(right);
         }
+        return origin;
     }
 
-    void checkmuzzlepos()
+    vec originpos(bool melee = false, bool secondary = false)
+    {
+        if(melee) return secondary ? feetpos() : headpos(height*0.0625f);
+        return checkoriginpos();
+    }
+
+    vec checkmuzzlepos()
     {
         if(muzzle == vec(-1, -1, -1))
         {
@@ -843,55 +849,24 @@ struct gameent : dynent, gamestate
             dir.mul(radius); right.mul(radius); dir.z -= height*0.0625f;
             muzzle = vec(o).add(dir).add(right);
         }
+        return muzzle;
     }
 
     vec muzzlepos(int weap, bool secondary = false)
     {
-        if(isweap(weap))
-        {
-            if(weap == WEAP_MELEE && secondary) return feetpos(1);
-            if(weaptype[weap].muzzle)
-            {
-                checkmuzzlepos();
-                return muzzle;
-            }
-        }
-        checkmeleepos();
-        return melee;
+        if(isweap(weap) && weaptype[weap].muzzle) return checkmuzzlepos();
+        return originpos(weap == WEAP_MELEE, secondary);
     }
 
-    void checkhandpos()
+    vec checkejectpos()
     {
-        if(hand == vec(-1, -1, -1))
-        {
-            vec dir, right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
-            dir.mul(radius*0.5f); right.mul(radius); dir.z -= height*0.0625f;
-            hand = vec(o).add(dir).add(right);
-        }
-    }
-
-    vec handpos()
-    {
-        checkhandpos();
-        return hand;
-    }
-
-    void checkejectpos()
-    {
-        if(eject == vec(-1, -1, -1))
-        {
-            checkmuzzlepos();
-            eject = muzzle;
-        }
+        if(eject == vec(-1, -1, -1)) eject = checkmuzzlepos();
+        return eject;
     }
 
     vec ejectpos(int weap)
     {
-        if(isweap(weap) && weaptype[weap].eject)
-        {
-            checkejectpos();
-            return eject;
-        }
+        if(isweap(weap) && weaptype[weap].eject) return checkejectpos();
         return muzzlepos(weap);
     }
 
@@ -923,9 +898,8 @@ struct gameent : dynent, gamestate
 
     void checktags()
     {
-        checkmeleepos();
+        checkoriginpos();
         checkmuzzlepos();
-        checkhandpos();
         checkejectpos();
         if(wantshitbox()) checkhitboxes();
     }
