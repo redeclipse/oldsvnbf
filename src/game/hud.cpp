@@ -109,9 +109,9 @@ namespace hud
     TVAR(IDF_PERSIST, zoomtex, "textures/zoom", 3);
 
     VAR(IDF_PERSIST, showcrosshair, 0, 1, 1);
-    FVAR(IDF_PERSIST, crosshairsize, 0, 0.03f, 1000);
+    FVAR(IDF_PERSIST, crosshairsize, 0, 0.04f, 1000);
     VAR(IDF_PERSIST, crosshairhitspeed, 0, 500, INT_MAX-1);
-    FVAR(IDF_PERSIST, crosshairblend, 0, 0.95f, 1);
+    FVAR(IDF_PERSIST, crosshairblend, 0, 0.9f, 1);
     VAR(IDF_PERSIST, crosshairhealth, 0, 2, 2);
     FVAR(IDF_PERSIST, crosshairskew, 1e-3f, 0.3f, 1000);
     TVAR(IDF_PERSIST, relativecursortex, "textures/crosshair", 3);
@@ -138,20 +138,20 @@ namespace hud
     VAR(IDF_PERSIST, inventoryscore, 0, 0, 1);
     VAR(IDF_PERSIST, inventoryweapids, 0, 1, 2);
     VAR(IDF_PERSIST, inventorycolour, 0, 2, 2);
+    VAR(IDF_PERSIST, inventoryflash, 0, 2, 2);
+    VAR(IDF_PERSIST, inventorythrob, 0, 2, 2);
     FVAR(IDF_PERSIST, inventorysize, 0, 0.07f, 1000);
     FVAR(IDF_PERSIST, inventoryskew, 1e-3f, 0.6f, 1000);
     FVAR(IDF_PERSIST, inventorygrow, 1e-3f, 0.75f, 1);
     FVAR(IDF_PERSIST, inventoryblend, 0, 0.6f, 1);
+    FVAR(IDF_PERSIST, inventoryglow, 0, 0.125f, 1);
+    FVAR(IDF_PERSIST, inventoryglowblend, 0, 0.95f, 1);
 
     VAR(IDF_PERSIST, inventoryedit, 0, 1, 1);
     FVAR(IDF_PERSIST, inventoryeditblend, 0, 1, 1);
     FVAR(IDF_PERSIST, inventoryeditskew, 1e-3f, 0.65f, 1000);
 
     VAR(IDF_PERSIST, inventoryhealth, 0, 3, 3);
-    FVAR(IDF_PERSIST, inventoryhealththrob, 0, 1, 1);
-    FVAR(IDF_PERSIST, inventoryhealthblend, 0, 0.95f, 1);
-    FVAR(IDF_PERSIST, inventoryhealthglow, 0, 0.125f, 1);
-    FVAR(IDF_PERSIST, inventoryhealthflash, 0, 1, 1);
     VAR(IDF_PERSIST, inventoryimpulse, 0, 2, 2);
     FVAR(IDF_PERSIST, inventoryimpulseskew, 1e-3f, 0.8f, 1000);
     VAR(IDF_PERSIST, inventorytrial, 0, 2, 2);
@@ -1343,6 +1343,28 @@ namespace hud
         if(skew <= 0.f) return 0;
         float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew;
         settexture(tex, 3);
+        if(game::focus->state == CS_ALIVE)
+        {
+            int glow = int(s*inventoryglow), heal = m_health(game::gamemode, game::mutators);
+            bool pulse = inventoryflash > 1 && game::focus->health < heal;
+            if(glow || pulse)
+            {
+                float gr = 1.f, gg = 1.f, gb = 1.f, bgfade = game::focus->lastspawn && lastmillis-game::focus->lastspawn <= 1000 ? (lastmillis-game::focus->lastspawn)/2000.f : 0.5f;
+                if(teamwidgets) skewcolour(gr, gg, gb);
+                if(pulse)
+                {
+                    int timestep = totalmillis%1000;
+                    float amt = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal)), 0.f, 1.f);
+                    gr += (1.f-r)*amt;
+                    gg -= g*amt;
+                    gb -= b*amt;
+                    bgfade += (1.f-bgfade)*amt;
+                    glow += int(glow*amt);
+                }
+                glColor4f(gr, gg, gb, inventoryglowblend*f*bgfade);
+                drawsized(left ? x-glow : x-int(s)-glow, y-int(s)-glow, int(s)+glow*2);
+            }
+        }
         glColor4f(cr, cg, cb, f);
         drawsized(left ? x : x-int(s), y-int(s), int(s));
         if(text && *text)
@@ -1492,12 +1514,12 @@ namespace hud
 
     int drawhealth(int x, int y, int s, float blend)
     {
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16, heal = m_health(game::gamemode, game::mutators);
-        float fade = inventoryhealthblend*blend;
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow), sy = 0, sw = width+s/16, heal = m_health(game::gamemode, game::mutators);
+        float fade = inventoryglowblend*blend;
         settexture(healthtex, 3);
         if(game::focus->state == CS_ALIVE)
         {
-            bool pulse = inventoryhealthflash > 0 && game::focus->health < heal;
+            bool pulse = inventoryflash > 0 && game::focus->health < heal;
             if(inventoryhealth && (glow || pulse))
             {
                 int gap = 0;
@@ -1506,7 +1528,7 @@ namespace hud
                 if(pulse)
                 {
                     int timestep = totalmillis%1000;
-                    float skew = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal))*inventoryhealthflash, 0.f, 1.f);
+                    float skew = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal)), 0.f, 1.f);
                     r += (1.f-r)*skew;
                     g -= g*skew;
                     b -= b*skew;
@@ -1518,10 +1540,10 @@ namespace hud
                 sy += size;
             }
             if(game::focus->lastspawn && lastmillis-game::focus->lastspawn <= 1000) fade *= (lastmillis-game::focus->lastspawn)/1000.f;
-            else if(inventoryhealththrob > 0 && regentime && game::focus->lastregen && lastmillis-game::focus->lastregen <= regentime)
+            else if(inventorythrob > 0 && regentime && game::focus->lastregen && lastmillis-game::focus->lastregen <= regentime)
             {
                 float amt = clamp((lastmillis-game::focus->lastregen)/float(regentime/2), 0.f, 2.f);
-                glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt)*inventoryhealththrob);
+                glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt));
             }
             if(inventoryhealth >= 2)
             {
