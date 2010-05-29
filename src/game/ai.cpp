@@ -355,7 +355,8 @@ namespace ai
             {
                 d->ai->enemymillis = lastmillis;
                 d->ai->enemy = e->clientnum;
-                d->ai->enemyseen = 0;
+                vec dp = d->headpos(), ep = getaimpos(d, e, altfire(d, e));
+                d->ai->enemyseen = cansee(d, dp, ep) ? lastmillis : 0;
             }
             return true;
         }
@@ -999,7 +1000,7 @@ namespace ai
             game::fixrange(yaw, pitch);
             bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*10)+1000,
                 quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (WEAP2(d->weapselect, fullauto, alt) ? skmod : skmod/10);
-            if(insight) d->ai->enemyseen = d->ai->enemymillis = lastmillis;
+            if(insight) d->ai->enemyseen = lastmillis;
             if(idle || insight || hasseen || quick)
             {
                 float sskew = insight ? 1.5f : (hasseen ? 1.f : 0.5f);
@@ -1026,7 +1027,7 @@ namespace ai
             else
             {
                 enemyok = false;
-                if(!d->ai->enemymillis || lastmillis-d->ai->enemymillis > (d->skill*50)+3000)
+                if(!d->ai->enemyseen || lastmillis-d->ai->enemyseen > (d->skill*50)+3000)
                 {
                     d->ai->enemy = -1;
                     d->ai->enemyseen = d->ai->enemymillis = 0;
