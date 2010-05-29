@@ -353,10 +353,8 @@ namespace ai
             if(pursue && b.type != AI_S_PURSUE && b.type != AI_S_DEFEND) d->ai->addstate(AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
             if(d->ai->enemy != e->clientnum)
             {
-                d->ai->enemymillis = lastmillis;
+                d->ai->enemyseen = d->ai->enemymillis = lastmillis;
                 d->ai->enemy = e->clientnum;
-                vec dp = d->headpos(), ep = getaimpos(d, e, altfire(d, e));
-                d->ai->enemyseen = cansee(d, dp, ep) ? lastmillis : 0;
             }
             return true;
         }
@@ -1026,23 +1024,23 @@ namespace ai
             }
             else
             {
-                enemyok = false;
                 if(!d->ai->enemyseen || lastmillis-d->ai->enemyseen > (d->skill*50)+3000)
                 {
                     d->ai->enemy = -1;
                     d->ai->enemyseen = d->ai->enemymillis = 0;
                 }
+                enemyok = false;
                 result = 0;
             }
         }
         else
         {
-            enemyok = false;
             if(!enemyok)
             {
                 d->ai->enemy = -1;
                 d->ai->enemyseen = d->ai->enemymillis = 0;
             }
+            enemyok = false;
             result = 0;
         }
 
