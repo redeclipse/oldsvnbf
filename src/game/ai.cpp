@@ -1003,7 +1003,7 @@ namespace ai
             if(idle || insight || hasseen || quick)
             {
                 float sskew = insight ? 1.5f : (hasseen ? 1.f : 0.5f);
-                if(insight && lockon(d, e, 16))
+                if(insight && lockon(d, e, aistyle[d->aitype].canstrafe ? 32 : 16))
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
@@ -1105,7 +1105,7 @@ namespace ai
             d->strafe = ad.strafe;
             d->aimyaw -= ad.offset;
         }
-        if(d->move && enemyok && lockon(d, e, 8)) d->move = 0;
+        if(!aistyle[d->aitype].canstrafe && d->move && enemyok && lockon(d, e, 8)) d->move = 0;
         game::fixrange(d->aimyaw, d->aimpitch);
         return result;
     }

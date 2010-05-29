@@ -169,7 +169,7 @@ namespace hud
     TVAR(IDF_PERSIST, healthtex, "textures/health", 3);
     TVAR(IDF_PERSIST, progresstex, "textures/progress", 3);
     TVAR(IDF_PERSIST, inventoryenttex, "textures/progress", 3);
-    TVAR(IDF_PERSIST, inventoryedittex, "particles/hint", 3);
+    TVAR(IDF_PERSIST, inventoryedittex, "textures/blip", 3);
     TVAR(IDF_PERSIST, inventorywaittex, "textures/wait", 3);
     TVAR(IDF_PERSIST, inventorydeadtex, "textures/dead", 3);
     TVAR(IDF_PERSIST, inventorychattex, "textures/conopen", 3);
@@ -1343,28 +1343,25 @@ namespace hud
     {
         if(skew <= 0.f) return 0;
         float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew;
-        if(game::focus->state == CS_ALIVE)
+        int glow = int(s*inventoryglow), heal = m_health(game::gamemode, game::mutators);
+        bool pulse = inventoryflash > 1 && game::focus->state == CS_ALIVE && game::focus->health < heal;
+        if(glow || pulse)
         {
-            int glow = int(s*inventoryglow), heal = m_health(game::gamemode, game::mutators);
-            bool pulse = inventoryflash > 1 && game::focus->health < heal;
-            if(glow || pulse)
+            float gr = 1.f, gg = 1.f, gb = 1.f, bgfade = game::focus->state == CS_ALIVE && game::focus->lastspawn && lastmillis-game::focus->lastspawn <= 1000 ? (lastmillis-game::focus->lastspawn)/2000.f : inventoryglowblend;
+            if(teamwidgets) skewcolour(gr, gg, gb);
+            if(pulse)
             {
-                float gr = 1.f, gg = 1.f, gb = 1.f, bgfade = game::focus->lastspawn && lastmillis-game::focus->lastspawn <= 1000 ? (lastmillis-game::focus->lastspawn)/2000.f : inventoryglowblend;
-                if(teamwidgets) skewcolour(gr, gg, gb);
-                if(pulse)
-                {
-                    int timestep = totalmillis%1000;
-                    float amt = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal)), 0.f, 1.f);
-                    gr += (1.f-gr)*amt;
-                    gg -= gg*amt;
-                    gb -= gb*amt;
-                    bgfade += (1.f-bgfade)*amt;
-                    glow += int(glow*amt);
-                }
-                settexture(inventoryhinttex, 3);
-                glColor4f(gr, gg, gb, f*bgfade);
-                drawsized(left ? x-glow : x-int(s)-glow, y-int(s)-glow, int(s)+glow*2);
+                int timestep = totalmillis%1000;
+                float amt = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::focus->health)/float(heal)), 0.f, 1.f);
+                gr += (1.f-gr)*amt;
+                gg -= gg*amt;
+                gb -= gb*amt;
+                bgfade += (1.f-bgfade)*amt;
+                glow += int(glow*amt);
             }
+            settexture(inventoryhinttex, 3);
+            glColor4f(gr, gg, gb, f*bgfade);
+            drawsized(left ? x-glow : x-int(s)-glow, y-int(s)-glow, int(s)+glow*2);
         }
         settexture(tex, 3);
         glColor4f(cr, cg, cb, f);
