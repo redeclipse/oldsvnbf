@@ -1409,9 +1409,12 @@ namespace projs
             projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
             float trans = 1, size = 1;
+            int flags = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST;
             switch(proj.projtype)
             {
-                case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: size = proj.lifesize;
+                case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: 
+                    size = proj.lifesize;
+                    flags |= MDL_LIGHT_FAST;
                 case PRJ_ENT:
                     if(proj.fadetime && proj.lifemillis)
                     {
@@ -1434,7 +1437,7 @@ namespace projs
                     break;
                 default: break;
             }
-            rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST, NULL, NULL, 0, 0, trans, size);
+            rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, flags, NULL, NULL, 0, 0, trans, size);
         }
     }
 
