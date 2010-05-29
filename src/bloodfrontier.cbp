@@ -800,6 +800,13 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="game\weapons.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+			<Option target="server" />
+			<Option target="server-dbg" />
+		</Unit>
 		<Unit filename="include\GL\glext.h">
 			<Option target="client" />
 			<Option target="client-dbg" />

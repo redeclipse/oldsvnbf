@@ -120,7 +120,7 @@ WEAPON(sword,
     2,      0,      10,     10,     2,      1.5f
 );
 WEAPON(shotgun,
-    1,      8,      1,      2,      400,    800,    750,    10,     10,     1500,   1500,   0,      0,      500,    200,
+    1,      8,      1,      2,      400,    800,    600,    10,     10,     1500,   1500,   0,      0,      500,    200,
     0,      0,      0,      0,      40,     20,     0,      16,     10,     15,     40,     40,
     1,      1,      10,     10,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -142,7 +142,7 @@ WEAPON(smg,
     3,      12,     10,     10,     1,      1
 );
 WEAPON(flamer,
-    50,     50,     1,      10,     100,    500,    2000,   10,     20,     200,    200,    0,      500,    250,    750,
+    50,     50,     1,      10,     100,    500,    2000,   8,      16,     200,    200,    0,      500,    250,    750,
     0,      50,     0,      0,      40,     40,     12,     24,     1,      5,      10,     5,
     0,      0,      10,     10,
     BOUNCE_GEOM|IMPACT_PLAYER,                                              IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
@@ -164,7 +164,7 @@ WEAPON(plasma,
     3,      12,     10,     10,     1,      1
 );
 WEAPON(rifle,
-    5,      5,      1,      1,      750,    750,    2000,   50,     100,    2500,   5000,   0,      0,      5000,   5000,
+    5,      5,      1,      1,      750,    500,    1500,   50,     100,    2500,   5000,   0,      0,      5000,   5000,
     0,      0,      0,      0,      40,     40,     24,     0,      1,      1,      1,      0,
     0,      0,      40,     40,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
@@ -175,7 +175,7 @@ WEAPON(rifle,
     2,      12,     10,     10,     1,      1
 );
 WEAPON(grenade,
-    1,      2,      1,      1,      1500,   1500,   1500,   150,    150,    250,    250,    2500,   2500,   5000,   5000,
+    1,      2,      1,      1,      1000,   1000,   1500,   150,    150,    250,    250,    2500,   2500,   5000,   5000,
     200,    200,    0,      0,      40,     40,     48,     48,     1,      1,      1,      1,
     0,      0,      5,      5,
     BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
@@ -186,7 +186,7 @@ WEAPON(grenade,
     2,      0,      10,     10,     1,      1
 );
 WEAPON(rocket,
-    1,      1,      1,      1,      1000,   1000,   1000,   150,     150,    1000,   250,    2500,   2500,  5000,   5000,
+    1,      1,      1,      1,      1000,   1000,   1500,   150,     150,    1000,   250,    2500,   2500,  5000,   5000,
     0,      0,      0,      0,      40,     40,     64,     64,      1,      1,      1,      1,
     0,      0,      10,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
