@@ -61,19 +61,21 @@ namespace projs
 
     void hitpush(gameent *d, projent &proj, int flags = 0, int radial = 0, float dist = 0)
     {
-        vec dir, middle = d->o;
-        middle.z += (d->aboveeye-d->height)/2;
+        vec dir, middle = d->headpos(d->height/2);
         dir = vec(middle).sub(proj.o);
         float dmag = dir.magnitude();
         if(dmag > 1e-3f) dir.div(dmag);
         else dir = vec(0, 0, 1);
-        float speed = proj.vel.magnitude();
-        if(speed > 1e-6f)
+        if(!weaptype[proj.weap].traced && WEAP2(proj.weap, speed, proj.flags&HIT_ALT))
         {
-            dir.add(vec(proj.vel).div(speed));
-            dmag = dir.magnitude();
-            if(dmag > 1e-3f) dir.div(dmag);
-            else dir = vec(0, 0, 1);
+            float speed = proj.vel.magnitude();
+            if(speed > 1e-6f)
+            {
+                dir.add(vec(proj.vel).div(speed));
+                dmag = dir.magnitude();
+                if(dmag > 1e-3f) dir.div(dmag);
+                else dir = vec(0, 0, 1);
+            }
         }
         if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
         {
