@@ -617,7 +617,7 @@ namespace ai
                         if(entities::ents.inrange(b.target))
                         {
                             int weap = w_attr(game::gamemode, entities::ents[b.target]->attrs[0], sweap);
-                            if((attr == d->loadweap && weap != d->loadweap) || d->o.squaredist(entities::ents[ent]->o) > d->o.squaredist(entities::ents[b.target]->o))
+                            if((attr == d->loadweap && weap != d->loadweap) || d->o.squaredist(entities::ents[ent]->o) < d->o.squaredist(entities::ents[b.target]->o))
                                 d->ai->switchstate(b, AI_S_INTEREST, AI_T_ENTITY, ent);
                         }
                         continue;
