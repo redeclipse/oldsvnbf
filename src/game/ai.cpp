@@ -518,7 +518,7 @@ namespace ai
     {
         if(d != e)
         {
-            if(d->ai && (d->aitype >= AI_START || hithurts(flags))) // see if this ai is interested in a grudge
+            if(d->ai && (d->aitype >= AI_START || hithurts(flags) || !game::getclient(d->ai->enemy))) // see if this ai is interested in a grudge
             {
                 d->ai->unsuspend();
                 aistate &b = d->ai->getstate();
@@ -539,14 +539,14 @@ namespace ai
                     }
                 }
             }
-            else if(hithurts(flags))
+            else
             {
                 static vector<int> targets; // check if one of our ai is defending them
                 targets.setsize(0);
                 if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
                 {
                     gameent *t;
-                    loopv(targets) if((t = game::getclient(targets[i])) && t->ai && t->aitype == AI_BOT && !t->ai->suspended)
+                    loopv(targets) if((t = game::getclient(targets[i])) && t->ai && t->aitype == AI_BOT && (hithurts(flags) || !game::getclient(t->ai->enemy)) && !t->ai->suspended)
                     {
                         aistate &c = t->ai->getstate();
                         violence(t, c, e, false);
@@ -572,12 +572,14 @@ namespace ai
             }
             else
             {
-                if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
+                if((m_noitems(game::gamemode, game::mutators) || m_limited(game::gamemode, game::mutators)) && !m_arena(game::gamemode, game::mutators))
                     d->loadweap = m_weapon(game::gamemode, game::mutators);
                 else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
                 else d->loadweap = rnd(WEAP_MAX-WEAP_OFFSET)+WEAP_OFFSET;
             }
             d->ai->suspended = true;
+            vec dp = d->headpos();
+            findorientation(dp, d->yaw, d->pitch, d->ai->target);
         }
     }
 
@@ -589,7 +591,15 @@ namespace ai
             setup(d, false, ent);
         }
     }
-    void killed(gameent *d, gameent *e) { if(d->ai) { d->ai->reset(); if(d->aitype >= AI_START) d->ai->suspended = true; } }
+
+    void killed(gameent *d, gameent *e)
+    {
+        if(d->ai)
+        {
+            d->ai->reset();
+            if(d->aitype >= AI_START) d->ai->suspended = true;
+        }
+    }
 
     bool check(gameent *d, aistate &b)
     {
@@ -959,7 +969,7 @@ namespace ai
             game::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
             d->ai->lasthunt = lastmillis;
         }
-        else d->ai->dontmove = true;
+        else idle = d->ai->dontmove = true;
 
         if(aistyle[d->aitype].canjump)
         {
@@ -1048,29 +1058,34 @@ namespace ai
         d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
         if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-        if(d->aitype == AI_BOT && physics::allowimpulse())
+        if(d->aitype == AI_BOT)
         {
             bool wantsimpulse = false;
-            if(!impulsemeter) wantsimpulse = true;
-            else
+            if(physics::allowimpulse())
             {
-                if(b.idle == -1 && !d->ai->dontmove)
+                if(!impulsemeter) wantsimpulse = true;
+                else if(b.idle == -1 && !d->ai->dontmove)
                     wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
-                if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
-                {
-                    float offyaw, offpitch;
-                    vec v = vec(d->vel).normalize();
-                    vectoyawpitch(v, offyaw, offpitch);
-                    offyaw -= d->aimyaw; offpitch -= d->aimpitch;
-                    if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
-                    else if(d->ai->becareful)
-                    {
-                        d->ai->dontmove = true;
-                        wantsimpulse = false;
-                    }
-                }
-                else d->ai->becareful = false;
             }
+
+            if(d->ai->becareful && d->physstate == PHYS_FALL)
+            {
+                float offyaw, offpitch;
+                vec v = vec(d->vel).normalize();
+                vectoyawpitch(v, offyaw, offpitch);
+                offyaw -= d->aimyaw;
+                if(offyaw > 180) offyaw -= 360;
+                else if(offyaw < -180) offyaw += 360;
+                offpitch -= d->aimpitch;
+                if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
+                else if(d->ai->becareful)
+                {
+                    d->ai->dontmove = true;
+                    wantsimpulse = false;
+                }
+            }
+            else d->ai->becareful = false;
+
             if(d->action[AC_SPRINT] != wantsimpulse)
                 if((d->action[AC_SPRINT] = !d->action[AC_SPRINT]) == true) d->actiontime[AC_SPRINT] = lastmillis;
         }
@@ -1106,6 +1121,7 @@ namespace ai
         }
         if(!aistyle[d->aitype].canstrafe && d->move && enemyok && lockon(d, e, 8)) d->move = 0;
         game::fixrange(d->aimyaw, d->aimpitch);
+        findorientation(dp, d->yaw, d->pitch, d->ai->target);
         return result;
     }
 
@@ -1279,7 +1295,6 @@ namespace ai
         if(!aisuspend && !d->ai->suspended)
         {
             vec dp = d->headpos();
-            findorientation(dp, d->yaw, d->pitch, d->ai->target);
             bool allowmove = game::allowmove(d);
             if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
             if(d->state == CS_ALIVE && allowmove)
@@ -1377,7 +1392,8 @@ namespace ai
             }
             else if(d->state == CS_ALIVE && run)
             {
-                int result = 0; c.idle = 0;
+                int result = 0;
+                c.idle = 0;
                 switch(c.type)
                 {
                     case AI_S_WAIT: result = dowait(d, c); break;

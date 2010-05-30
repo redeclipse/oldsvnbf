@@ -488,7 +488,6 @@ namespace projs
         proj.hit = NULL;
         proj.hitflags = HITFLAG_NONE;
         proj.movement = 1;
-        #if 0
         if(proj.projtype == PRJ_SHOT && proj.owner && !weaptype[proj.weap].traced)
         {
             vec eyedir = vec(proj.o).sub(proj.owner->o);
@@ -497,10 +496,9 @@ namespace projs
             {
                 eyedir.div(eyedist);
                 float blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist);
-                if(blocked >= 0) proj.o = vec(eyedir).mul(blocked+proj.radius).add(proj.owner->o);
+                if(blocked >= 0) proj.o = vec(eyedir).mul(blocked-0.1f).add(proj.owner->o);
             }
         }
-        #endif
         proj.resetinterp();
     }
 
@@ -1412,7 +1410,7 @@ namespace projs
             int flags = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST;
             switch(proj.projtype)
             {
-                case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: 
+                case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT:
                     size = proj.lifesize;
                     flags |= MDL_LIGHT_FAST;
                 case PRJ_ENT:
