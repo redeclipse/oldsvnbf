@@ -126,7 +126,7 @@ WEAPON(shotgun,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      0,
     2,      0,      0,
-    0.5f,   0.25f,  0,      0,      0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,
+    0.15f,  0.15f,  0,      0,      0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,
     15,     15,     25,     20,     0.2f,   0.2f,   150,    150,    1,      1,      50,     50,     1,      1.5f,
     2,      6,      10,     10,     1,      1
 );
@@ -137,7 +137,7 @@ WEAPON(smg,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      1,      1,
     2,      0,      0,
-    0.35f,  0.35f,  0,      0,      0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,
+    0.15f,  0.15f,  0,      0,      0.75f,  0.5f,   30,     30,     0.05f,  0.05f,  2,      2,      0,      0,      1,      1,
     0.5f,   3,      50,     60,     0.15f,  0.15f,  300,    300,    1,      1,      40,     40,     1,      1.5f,
     3,      12,     10,     10,     1,      1
 );

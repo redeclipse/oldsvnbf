@@ -540,12 +540,12 @@ namespace ctf
                 {
                     ctfstate::flag &g = st.flags[i];
                     if(isctfhome(g, ai::owner(d)) && (k || (!g.owner && !g.droptime)) &&
-                        (!st.flags.inrange(goal) || g.spawnloc.squaredist(pos) < st.flags[goal].spawnloc.squaredist(pos)))
+                        (!st.flags.inrange(goal) || g.pos().squaredist(pos) < st.flags[goal].pos().squaredist(pos)))
                     {
                         goal = i;
                     }
                 }
-                if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc))
+                if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos()))
                 {
                     d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
                     return true;
@@ -759,7 +759,7 @@ namespace ctf
                 }
                 if(!hasflags.empty())
                 {
-                    if(ai::makeroute(d, b, f.spawnloc)) b.idle = -1;
+                    if(ai::makeroute(d, b, f.pos())) b.idle = -1;
                     return true;
                 }
                 else if(!isctfflag(f, ai::owner(d))) return false;
