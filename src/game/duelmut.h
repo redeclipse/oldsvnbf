@@ -18,10 +18,10 @@ struct duelservmode : servmode
                     n -= GAME(duelreset) ? 2 : 1;
                     if(n < 0) return;
                 }
-                if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fayou are \fs\fgqueued\fS for the next round");
+                if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fwyou are \fs\fgqueued\fS for the next round");
                 else
                 {
-                    if(n) srvmsgf(ci->clientnum, "\fayou are \fs\fg#%d\fS in the queue", n+1);
+                    if(n) srvmsgf(ci->clientnum, "\fwyou are \fs\fg#%d\fS in the queue", n+1);
                     else srvmsgf(ci->clientnum, "\fwyou are \fs\fzgyNEXT\fS in the queue");
                 }
             }
@@ -146,18 +146,17 @@ struct duelservmode : servmode
                         playing.add(ci);
                     }
                     duelround++;
+                    string fight;
                     if(m_duel(gamemode, mutators))
                     {
                         defformatstring(namea)("%s", colorname(alive[0]));
                         defformatstring(nameb)("%s", colorname(alive[1]));
-                        defformatstring(fight)("\faduel between %s and %s, round \fs\fr#%d\fS", namea, nameb, duelround);
-                        sendf(-1, 1, "ri3s", N_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
+                        formatstring(fight)("\fcduel between %s and %s, round \fs\fr#%d\fS", namea, nameb, duelround);
                     }
                     else if(m_survivor(gamemode, mutators))
-                    {
-                        defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS", duelround);
-                        sendf(-1, 1, "ri3s", N_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
-                    }
+                        formatstring(fight)("\fclast one left alive wins, round \fs\fr#%d\fS", duelround);
+                    loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                        sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
                     if(m_survivor(gamemode, mutators) || GAME(duelclear)) clearitems();
                     dueltime = dueldeath = 0;
                     duelcheck = gamemillis;
@@ -190,7 +189,7 @@ struct duelservmode : servmode
                         {
                             if(!cleanup)
                             {
-                                srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
+                                srvmsgf(-1, "\fcteam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
                                 loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                                 {
                                     if(playing[i]->team == alive[0]->team)
@@ -211,7 +210,7 @@ struct duelservmode : servmode
                     {
                         if(!cleanup)
                         {
-                            srvmsgf(-1, "\faeveryone died, epic fail");
+                            srvmsgf(-1, "\fceveryone died, \fzoyepic fail");
                             loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                                 sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
                         }
@@ -225,7 +224,7 @@ struct duelservmode : servmode
                         {
                             if(!cleanup)
                             {
-                                srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
+                                srvmsgf(-1, "\fc%s was the victor", colorname(alive[0]));
                                 loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                                 {
                                     if(playing[i] == alive[0])

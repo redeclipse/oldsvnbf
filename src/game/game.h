@@ -229,12 +229,12 @@ gametypes gametype[] = {
     { G_TRIAL,          G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_NONE,       "time-trial" },
 }, mutstype[] = {
     { G_M_TEAM,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_TEAM,       "team" },
-    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_INSTA,      "insta" },
+    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_MEDIEVAL|G_M_DEMOLITION,               G_M_INSTA,      "insta" },
     { G_M_MEDIEVAL,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_MEDIEVAL,                              G_M_MEDIEVAL,   "medieval" },
     { G_M_DEMOLITION,   G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_DEMOLITION,                            G_M_DEMOLITION, "demolition" },
     { G_M_DUEL,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                  G_M_DUEL,       "duel" },
     { G_M_SURVIVOR,     G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,              G_M_SURVIVOR,   "survivor" },
-    { G_M_ARENA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                                 G_M_ARENA,      "arena" },
+    { G_M_ARENA,        G_M_TEAM|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                                           G_M_ARENA,      "arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
