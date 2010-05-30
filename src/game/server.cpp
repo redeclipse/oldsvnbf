@@ -1084,6 +1084,7 @@ namespace server
                     if(sents[ci->state.aientity].attrs[5] > 0) weap = sents[ci->state.aientity].attrs[5]-1;
                 }
                 health = max(health+rnd(health), max(health/5, 10));
+                if(GAME(enemystrength) != 1) health = max(int(health*GAME(enemystrength)), 1);
             }
             else if(ci->state.aitype == AI_ZOMBIE) weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;

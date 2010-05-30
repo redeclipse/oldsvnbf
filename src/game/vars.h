@@ -109,6 +109,7 @@ GVAR(0, enemybalance, 0, 1, 3);
 GVAR(0, enemyspawntime, 1, 60000, INT_MAX-1); // when enemies respawn
 GVAR(0, enemyspawndelay, 0, 2000, INT_MAX-1); // after map start enemies first spawn
 GVAR(0, enemyspawnstyle, 0, 1, 3); // 0 = all at once, 1 = staggered, 2 = random, 3 = randomise between both
+GFVAR(0, enemystrength, 1e-3f, 1, 1000); // scale enemy health values by this much
 
 GFVAR(0, forcegravity, -1, -1, 1000);
 GFVAR(0, forceliquidspeed, -1, -1, 1);
