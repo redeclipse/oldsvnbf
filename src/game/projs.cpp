@@ -1055,7 +1055,7 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        if(!(proj.projcollide&COLLIDE_OWNER)) proj.escaped = true;
+        if(!(proj.projcollide&COLLIDE_OWNER) || proj.lastbounce) proj.escaped = true;
         else if(proj.spawntime && lastmillis-proj.spawntime >= (proj.projtype == PRJ_SHOT ? WEAP2(proj.weap, edelay, proj.flags&HIT_ALT) : 40))
         {
             if(proj.projcollide&COLLIDE_TRACE)
