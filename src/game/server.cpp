@@ -822,21 +822,18 @@ namespace server
         return true;
     }
 
-    bool finditem(int i, bool spawned = true, bool timeit = false)
+    bool finditem(int i, bool spawned = false)
     {
         if(!m_noitems(gamemode, mutators))
         {
             if(sents[i].spawned) return true;
-            if(sents[i].type == WEAPON)
+            if(sents[i].type == WEAPON) loopvk(clients)
             {
-                loopvk(clients)
-                {
-                    clientinfo *ci = clients[k];
-                    if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis))) return true;
-                    else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
-                }
+                clientinfo *ci = clients[k];
+                if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || gamemillis < sents[i].millis)) return true;
+                else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
             }
-            if(spawned && timeit && gamemillis < sents[i].millis) return true;
+            if(spawned && gamemillis < sents[i].millis) return true;
         }
         return false;
     }
@@ -846,6 +843,7 @@ namespace server
     {
         static vector<int> items, actors;
         items.setsize(0); actors.setsize(0);
+        int sweap = m_weapon(gamemode, mutators);
         loopv(sents)
         {
             if(!m_campaign(gamemode) && sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
@@ -866,7 +864,7 @@ namespace server
                     case 1: items.add(i); break;
                     case 2:
                     {
-                        int delay = sents[i].type == WEAPON ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                        int delay = sents[i].type == WEAPON ? w_spawn(w_attr(gamemode, sents[i].attrs[0], sweap)) : GAME(itemspawntime);
                         if(delay > 1) sents[i].millis += (delay+rnd(delay))/2;
                         break;
                     }
@@ -1696,7 +1694,7 @@ namespace server
                         droplist &d = drop.add();
                         d.weap = i;
                         d.ent = ts.entid[i];
-                        sents[ts.entid[i]].millis += w_spawn(sents[ts.entid[i]].attrs[0]);
+                        sents[ts.entid[i]].millis += w_spawn(w_attr(gamemode, sents[ts.entid[i]].attrs[0], sweap));
                     }
                 }
             }
@@ -2222,7 +2220,7 @@ namespace server
             loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
             {
                 putint(p, i);
-                if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i, false) ? 1 : 0);
+                if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i) ? 1 : 0);
                 else putint(p, sents[i].spawned ? 1 : 0);
             }
             putint(p, -1);
@@ -2630,8 +2628,12 @@ namespace server
         int dropped = gs.entid[weap];
         gs.ammo[weap] = gs.entid[weap] = -1;
         int nweap = gs.bestweap(sweap, true); // switch to best weapon
-        if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+w_spawn(sents[dropped].attrs[0]);
-        gs.dropped.add(dropped);
+        if(sents.inrange(dropped))
+        {
+            gs.dropped.add(dropped);
+            sents[dropped].millis = gamemillis+w_spawn(w_attr(gamemode, sents[dropped].attrs[0], sweap));
+        }
+        else dropped = -1;
         gs.weapswitch(nweap, millis);
         sendf(-1, 1, "ri6", N_DROP, ci->clientnum, nweap, 1, weap, dropped);
     }
@@ -2667,6 +2669,11 @@ namespace server
             return;
         }
         int sweap = m_weapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? w_attr(gamemode, sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
+        if(!finditem(ent))
+        {
+            if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", ent);
+            return;
+        }
         if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_SWITCH)))
         {
             if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_RELOAD)))
@@ -2682,25 +2689,6 @@ namespace server
             }
             else return;
         }
-        if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
-        {
-            bool found = sents[ent].spawned;
-            loopv(clients)
-            {
-                clientinfo *cp = clients[i];
-                if(cp->state.dropped.projs.find(ent) >= 0)
-                {
-                    cp->state.dropped.remove(ent);
-                    found = true;
-                }
-            }
-            if(!found)
-            {
-                if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", ent);
-                return;
-            }
-        }
-
         int weap = -1, dropped = -1;
         if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap, attr);
         if(isweap(weap))
@@ -2713,16 +2701,13 @@ namespace server
         if(sents.inrange(dropped))
         {
             gs.dropped.add(dropped);
-            if(!(sents[dropped].attrs[1]&WEAP_F_FORCED))
-            {
-                sents[dropped].spawned = false;
-                sents[dropped].millis = gamemillis+w_spawn(sents[dropped].attrs[0]);
-            }
+            sents[dropped].millis = gamemillis+w_spawn(w_attr(gamemode, sents[dropped].attrs[0], sweap));
         }
+        else dropped = -1;
         if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
         {
             sents[ent].spawned = false;
-            sents[ent].millis = gamemillis+w_spawn(sents[ent].attrs[0]);
+            sents[ent].millis = gamemillis+w_spawn(w_attr(gamemode, sents[ent].attrs[0], sweap));
         }
         sendf(-1, 1, "ri6", N_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
     }
@@ -2783,6 +2768,29 @@ namespace server
         while(ci->events.length() > keep) delete ci->events.pop();
     }
 
+    bool chkloadweap(clientinfo *ci, bool request = true)
+    {
+        int aweap = ci->state.loadweap;
+        if(ci->state.loadweap >= WEAP_ITEM) ci->state.loadweap = -1;
+        else if(ci->state.loadweap >= WEAP_OFFSET) switch(WEAP(ci->state.loadweap, allowed))
+        {
+            case 0: ci->state.loadweap = -1; break;
+            case 1: if(m_duke(gamemode, mutators)) { ci->state.loadweap = -1; break; } // fall through
+            case 2: if(m_limited(gamemode, mutators)) { ci->state.loadweap = -1; break; }
+            case 3: default: break;
+        }
+        if(ci->state.loadweap < 0 && ci->state.aitype < 0)
+        {
+            if(request)
+            {
+                if(isweap(aweap)) srvmsgf(ci->clientnum, "sorry, the \fs%s%s\fS is not available, please select a different weapon", weaptype[aweap].text, weaptype[aweap].name);
+                sendf(ci->clientnum, 1, "ri", N_LOADWEAP);
+            }
+            return false;
+        }
+        return true;
+    }
+
     void waiting(clientinfo *ci, int doteam, int drop, bool exclude)
     {
         if(m_campaign(gamemode) && ci->state.cpnodes.empty())
@@ -2807,7 +2815,7 @@ namespace server
         else sendf(-1, 1, "ri2", N_WAITING, ci->clientnum);
         ci->state.state = CS_WAITING;
         ci->state.weapreset(false);
-        if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", N_LOADWEAP);
+        if(m_arena(gamemode, mutators)) chkloadweap(ci);
         if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
             setteam(ci, chooseteam(ci, ci->team), false, true);
     }
@@ -2824,14 +2832,20 @@ namespace server
 
     void checkents()
     {
-        int items[MAXENTTYPES] = {0}, lowest[MAXENTTYPES] = {-1}, sweap = m_weapon(gamemode, mutators);
-        if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators))
+        int items[MAXENTTYPES], lowest[MAXENTTYPES], sweap = m_weapon(gamemode, mutators);
+        memset(items, 0, sizeof(items)); memset(lowest, -1, sizeof(lowest));
+        if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && !m_limited(gamemode, mutators))
         {
             loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < AI_START)
                 items[WEAPON] += clients[i]->state.carry(sweap);
             loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
             {
-                if(finditem(i, true, true)) items[sents[i].type]++;
+                if(sents[i].type == WEAPON)
+                {
+                    int attr = w_attr(gamemode, sents[i].attrs[0], sweap);
+                    if(attr < WEAP_OFFSET || attr >= WEAP_ITEM) continue;
+                }
+                if(finditem(i, true)) items[sents[i].type]++;
                 else if(!sents.inrange(lowest[sents[i].type]) || sents[i].millis < sents[lowest[sents[i].type]].millis)
                     lowest[sents[i].type] = i;
             }
@@ -2858,7 +2872,7 @@ namespace server
                 bool allowed = hasitem(i);
                 if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
-                    bool found = finditem(i, true, true);
+                    bool found = finditem(i, true);
                     if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
@@ -2869,7 +2883,7 @@ namespace server
                         loopvk(clients) clients[k]->state.dropped.remove(i);
                         if((sents[i].spawned = allowed) != false)
                         {
-                            int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                            int delay = sents[i].type == WEAPON ? w_spawn(w_attr(gamemode, sents[i].attrs[0], sweap)) : GAME(itemspawntime);
                             sents[i].millis = gamemillis+delay;
                         }
                         sendf(-1, 1, "ri3", N_ITEMSPAWN, i, sents[i].spawned ? 1 : 0);
@@ -2920,7 +2934,7 @@ namespace server
             }
             else if(ci->state.state == CS_WAITING)
             {
-                if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) continue;
+                if(m_arena(gamemode, mutators) && !chkloadweap(ci, false)) continue;
                 if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
                 int delay = m_delay(gamemode, mutators);
                 if(ci->state.aitype >= AI_START && ci->state.lastdeath)
@@ -3467,26 +3481,9 @@ namespace server
                 {
                     int lcn = getint(p), aweap = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
-                    if(!hasclient(cp, ci) || !isweap(aweap)) break;
-                    bool allowed = true;
-                    switch(WEAP(aweap, allowed))
-                    {
-                        case 0: allowed = false;
-                        case 1: if(m_duke(gamemode, mutators)) allowed = false; // fall through
-                        case 2: if(m_limited(gamemode, mutators)) allowed = false;
-                        case 3: default: break;
-                    }
-                    if(!allowed)
-                    {
-                        if(cp->state.aitype < 0)
-                        {
-                            srvmsgf(cp->clientnum, "sorry, the \fs%s%s\fS has been disabled, please select a different weapon", weaptype[aweap].text, weaptype[aweap].name);
-                            sendf(cp->clientnum, 1, "ri", N_LOADWEAP);
-                            break;
-                        }
-                        cp->state.loadweap = WEAP_MELEE;
-                    }
+                    if(!hasclient(cp, ci) || !isweap(aweap) || !m_arena(gamemode, mutators)) break;
                     cp->state.loadweap = aweap;
+                    chkloadweap(cp);
                     break;
                 }
 

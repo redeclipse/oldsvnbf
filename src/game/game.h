@@ -229,12 +229,12 @@ gametypes gametype[] = {
     { G_TRIAL,          G_M_TEAM|G_M_INSTA|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                           G_M_NONE,       "time-trial" },
 }, mutstype[] = {
     { G_M_TEAM,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_TEAM,       "team" },
-    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_MEDIEVAL|G_M_DEMOLITION,               G_M_INSTA,      "insta" },
+    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,     G_M_INSTA,      "insta" },
     { G_M_MEDIEVAL,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_MEDIEVAL,                              G_M_MEDIEVAL,   "medieval" },
     { G_M_DEMOLITION,   G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_DEMOLITION,                            G_M_DEMOLITION, "demolition" },
     { G_M_DUEL,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,                  G_M_DUEL,       "duel" },
     { G_M_SURVIVOR,     G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA|G_M_MEDIEVAL|G_M_DEMOLITION,              G_M_SURVIVOR,   "survivor" },
-    { G_M_ARENA,        G_M_TEAM|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                                           G_M_ARENA,      "arena" },
+    { G_M_ARENA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                                 G_M_ARENA,      "arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -270,7 +270,7 @@ extern gametypes gametype[], mutstype[];
 #define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_medieval(a,b) ? WEAP_SWORD : (m_demolition(a,b) ? WEAP_ROCKET : (m_edit(a) || m_trial(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))))
 #define m_delay(a,b)        (m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GAME(trialdelay) : ((m_insta(a, b) ? GAME(instadelay) : GAME(spawndelay)))) : 0)
 #define m_protect(a,b)      (m_duke(a,b) ? GAME(duelprotect) : (m_insta(a, b) ? GAME(instaprotect) : GAME(spawnprotect)))
-#define m_noitems(a,b)      (!m_trial(a) && GAME(itemsallowed) < (m_insta(a,b) ? 2 : 1))
+#define m_noitems(a,b)      (m_trial(a) || GAME(itemsallowed) < (m_limited(a,b) ? 2 : 1))
 #define m_health(a,b)       (m_insta(a,b) ? 1 : GAME(maxhealth))
 
 #define w_reload(w1,w2)     (w1 != WEAP_MELEE && (w1 == (isweap(w2) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads))))
