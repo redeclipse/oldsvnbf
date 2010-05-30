@@ -242,6 +242,7 @@ namespace ai
     extern void spawned(gameent *d, int ent);
     extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage);
     extern void killed(gameent *d, gameent *e);
+    extern void itemspawned(int ent, int spawned);
     extern void update();
     extern void avoid();
     extern void think(gameent *d, bool run);

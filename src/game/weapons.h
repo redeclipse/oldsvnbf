@@ -98,7 +98,7 @@ WEAPON(melee,
     2,      0,      10,     10,     2,      4
 );
 WEAPON(pistol,
-    10,     10,     1,      1,      100,    150,    1000,   40,     40,     2000,   2000,   0,      0,      2000,   2000,
+    10,     10,     1,      1,      150,    300,    1000,   40,     40,     2000,   2000,   0,      0,      2000,   2000,
     0,      0,      0,      0,      40,     40,     0,      0,      1,      1,      2,      2,
     1,      1,      100,    100,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
