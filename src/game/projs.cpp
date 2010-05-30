@@ -626,19 +626,19 @@ namespace projs
         if(proj.projtype == PRJ_SHOT)
         {
             updatetargets(proj);
-            if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
+            if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
             {
-                if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
+                if(WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT) > 0)
                 {
                     if(proj.lifespan > WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT))
                     {
-                        if(!proj.stuck) proj.lifesize = clamp((1+WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT))-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
+                        if(!proj.stuck) proj.lifesize = clamp((1.f+WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT))-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
                     }
                     else proj.lifesize = proj.lifespan*(1.f/WEAP2(proj.weap, taperspan, proj.flags&HIT_ALT));
                 }
-                else proj.lifesize = proj.lifespan;
+                else if(!proj.stuck) proj.lifesize = clamp(1.f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
             }
-            else if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0) proj.lifesize = clamp(1.f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
+            else if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT)) proj.lifesize = proj.lifespan;
             else proj.lifesize = 1;
         }
         updatebb(proj);
