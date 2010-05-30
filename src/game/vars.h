@@ -44,7 +44,7 @@ GVAR(0, spawnrotate, 0, 4, INT_MAX-1); // 0 = let client decide, 1 = sequence, 2
 GVAR(0, spawnweapon, 0, WEAP_PISTOL, WEAP_MAX-1);
 GVAR(0, instaweapon, 0, WEAP_RIFLE, WEAP_MAX-1);
 GVAR(0, limitedweapon, 0, WEAP_MELEE, WEAP_MAX-1);
-GVAR(0, spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
+GVAR(0, spawngrenades, 0, 0, 2); // 0 = never, 1 = all but insta/trial, 2 = always
 GVAR(0, spawndelay, 0, 3000, INT_MAX-1); // delay before spawning in most modes
 GVAR(0, instadelay, 0, 1500, INT_MAX-1); // .. in instagib/arena matches
 GVAR(0, trialdelay, 0, 500, INT_MAX-1); // .. in time trial matches
@@ -67,7 +67,7 @@ GVAR(0, regenhealth, 0, 5, INT_MAX-1);
 GVAR(0, regenextra, 0, 10, INT_MAX-1);
 GVAR(0, regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
-GVAR(0, itemsallowed, 0, 2, 2); // 0 = never, 1 = all but instagib, 2 = always
+GVAR(0, itemsallowed, 0, 2, 2); // 0 = never, 1 = all but limited, 2 = always
 GVAR(0, itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 GVAR(0, itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 GVAR(0, itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
