@@ -85,8 +85,7 @@ namespace ai
         {
             switch(d->weapselect)
             {
-                case WEAP_PISTOL: break;
-                case WEAP_MELEE: case WEAP_ROCKET: default: return false; break;
+                case WEAP_PISTOL: case WEAP_MELEE: case WEAP_ROCKET: default: return false; break;
                 case WEAP_SWORD: case WEAP_SHOTGUN: case WEAP_SMG: case WEAP_PLASMA: case WEAP_GRENADE: if(rnd(d->skill*3) <= d->skill) return false; break;
                 case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false; break;
             }
@@ -389,7 +388,7 @@ namespace ai
             n.node = e->lastnode;
             n.target = e->clientnum;
             n.targtype = AI_T_PLAYER;
-            n.score = (force ? -1 : e->o.squaredist(d->o)/(d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators)) ? 1000.f : 10.f));
+            n.score = e->o.squaredist(d->o)/(force ? 1e8f : (d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators)) ? 1e4f : 1e2f));
         }
     }
 
@@ -415,7 +414,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
                             n.target = j;
                             n.targtype = AI_T_ENTITY;
-                            n.score = attr == d->loadweap ? -2 : (force ? -1 : pos.squaredist(e.o));
+                            n.score =  pos.squaredist(e.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
                         }
                         break;
                     }
@@ -442,7 +441,7 @@ namespace ai
                             n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
                             n.target = proj.id;
                             n.targtype = AI_T_DROP;
-                            n.score = attr == d->loadweap ? -2 : (force ? -1 : pos.squaredist(proj.o));
+                            n.score = pos.squaredist(proj.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
                         }
                         break;
                     }
@@ -598,6 +597,34 @@ namespace ai
         {
             d->ai->reset();
             if(d->aitype >= AI_START) d->ai->suspended = true;
+        }
+    }
+
+    void itemspawned(int ent, int spawned)
+    {
+        if(entities::ents.inrange(ent) && entities::ents[ent]->type == WEAPON)
+        {
+            int sweap = m_weapon(game::gamemode, game::mutators), attr = w_attr(game::gamemode, entities::ents[ent]->attrs[0], sweap);
+            loopv(game::players) if(game::players[i] && game::players[i]->ai && game::players[i]->aitype == AI_BOT)
+            {
+                gameent *d = game::players[i];
+                if(!d->hasweap(attr, sweap) && (!d->hasweap(d->loadweap, sweap) || d->carry(sweap) == 0))
+                {
+                    aistate &b = d->ai->getstate();
+                    if(b.type == AI_S_PURSUE && b.targtype == AI_T_AFFINITY) continue;
+                    if(b.type == AI_S_INTEREST && (b.targtype == AI_T_ENTITY || b.targtype == AI_T_DROP))
+                    {
+                        if(entities::ents.inrange(b.target))
+                        {
+                            int weap = w_attr(game::gamemode, entities::ents[b.target]->attrs[0], sweap);
+                            if((attr == d->loadweap && weap != d->loadweap) || d->o.squaredist(entities::ents[ent]->o) > d->o.squaredist(entities::ents[b.target]->o))
+                                d->ai->switchstate(b, AI_S_INTEREST, AI_T_ENTITY, ent);
+                        }
+                        continue;
+                    }
+                    d->ai->addstate(AI_S_INTEREST, AI_T_ENTITY, ent);
+                }
+            }
         }
     }
 

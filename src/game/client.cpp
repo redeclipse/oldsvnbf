@@ -1558,6 +1558,7 @@ namespace client
                     int ent = getint(p), value = getint(p);
                     if(!entities::ents.inrange(ent)) break;
                     entities::setspawn(ent, value);
+                    ai::itemspawned(ent, value!=0);
                     if(entities::ents[ent]->spawned)
                     {
                         playsound(S_ITEMSPAWN, entities::ents[ent]->o);
