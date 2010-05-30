@@ -159,7 +159,7 @@ WEAPON(plasma,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
     1,      0,      0,      1,      0,      0,      1,      1,      0,      0,      1,      1,      0,      1,      0,
     2,      0,      0,
-    0.5f,   0.75f,  0.05f,  0.25f,  0,      0,      0,      0,      0.125f, 0.175f, 1,      1,      0,      0,      4,      2,
+    0.5f,   0.75f,  0,      0.25f,  0,      0,      0,      0,      0.125f, 0.175f, 1,      1,      0,      0,      4,      2,
     3,      6,      50,     -50,    0.1f,   0.1f,   200,    50,     18,     44,     0,      0,      2,      1.5f,
     3,      12,     10,     10,     1,      1
 );
