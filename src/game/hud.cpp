@@ -290,9 +290,10 @@ namespace hud
             ss = tm%60;
             tm = (tm-ss)/60;
         }
-        if(tm > 0) mn = tm;
+        if(style >= 0 && tm > 0) mn = tm;
         switch(style)
         {
+            case -1: formatstring(timestr)("%d.%d", ss, ms/100); break;
             case 0: formatstring(timestr)("%d:%02d.%03d", mn, ss, ms); break;
             case 1: formatstring(timestr)("%d:%02d.%d", mn, ss, ms/100); break;
             case 2: formatstring(timestr)("%d:%02d", mn, ss); break;
@@ -774,7 +775,7 @@ namespace hud
                         {
                             pushfont("default");
                             if(m_duke(game::gamemode, game::mutators)) ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-                            else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, delay/1000.f)*noticescale;
+                            else if(delay) ty += draw_textx("Down for \fs\fy%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, timetostr(delay, -1))*noticescale;
                             popfont();
                             if(target == game::player1 && target->state != CS_WAITING && shownotices >= 3 && lastmillis-target->lastdeath >= 500)
                             {

@@ -694,7 +694,8 @@ namespace projs
                     if(proj.movement > 0.f)
                     {
                         bool effect = false;
-                        float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f))*proj.scale;
+                        float scale = lastmillis-proj.spawntime <= proj.lifemillis/10 ? (lastmillis-proj.spawntime)/float(proj.lifemillis/10) : 1,
+                            size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale*scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f))*proj.scale;
                         if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis - (lastmillis%firedelay); }
                         int len = effect ? max(int(firelength*max(1.f-proj.lifespan, 0.1f)), 1) : 1;
                         if(firehint && effect && notrayspam(proj.weap, proj.flags&HIT_ALT, 1)) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
@@ -758,9 +759,10 @@ namespace projs
                 }
                 case WEAP_PLASMA:
                 {
-                    if(proj.flags&HIT_ALT) part_fireball(proj.o, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.5f*proj.lifesize*proj.scale, PART_EXPLOSION, 1, 0x225599, 1.f, 0.5f);
-                    part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*proj.lifesize*proj.scale, (proj.flags&HIT_ALT ? 0.75f : clamp(1.5f-proj.lifespan, 0.5f, 1.f))*proj.scale);
-                    part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.45f*proj.lifesize*proj.scale, (proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f))*proj.scale);
+                    float scale = lastmillis-proj.spawntime <= proj.lifemillis/10 ? (lastmillis-proj.spawntime)/float(proj.lifemillis/10) : 1;
+                    if(proj.flags&HIT_ALT) part_fireball(proj.o, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.5f*proj.lifesize*proj.scale*scale, PART_EXPLOSION, 1, 0x225599, 1.f, 0.5f);
+                    part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*proj.lifesize*proj.scale*scale, (proj.flags&HIT_ALT ? 0.75f : clamp(1.5f-proj.lifespan, 0.5f, 1.f))*proj.scale);
+                    part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.45f*proj.lifesize*proj.scale*scale, (proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f))*proj.scale);
                     break;
                 }
                 case WEAP_RIFLE:

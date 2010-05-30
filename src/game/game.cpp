@@ -523,7 +523,7 @@ namespace game
                     { 2, PART_FIREBALL_SOFT, 0, 0.25f, 3 },
                     { 1, PART_PLASMA_SOFT, 0x226688, 0.15f, 2 },
                     { 2, PART_PLASMA_SOFT, 0x6611FF, 0.1f, 2.5f },
-                    { 3, PART_PLASMA_SOFT, 0, 0.5f, 0.5f },
+                    { 3, PART_PLASMA_SOFT, 0, 0.5f, 0.125f },
                     { 0, 0, 0, 0 },
                 };
                 float amt = (lastmillis-d->weaplast[i])/float(d->weapwait[i]);
