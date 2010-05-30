@@ -1,7 +1,7 @@
 #ifdef GAMESERVER
 struct duelservmode : servmode
 {
-    int duelround, dueltime, duelcheck;
+    int duelround, dueltime, duelcheck, dueldeath;
     vector<clientinfo *> duelqueue, allowed, playing;
 
     duelservmode() {}
@@ -88,7 +88,7 @@ struct duelservmode : servmode
 
     void clear()
     {
-        duelcheck = 0;
+        duelcheck = dueldeath = 0;
         dueltime = gamemillis+GAME(duellimit);
         playing.shrink(0);
     }
@@ -159,7 +159,7 @@ struct duelservmode : servmode
                         sendf(-1, 1, "ri3s", N_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
                     }
                     if(m_survivor(gamemode, mutators) || GAME(duelclear)) clearitems();
-                    dueltime = 0;
+                    dueltime = dueldeath = 0;
                     duelcheck = gamemillis;
                 }
             }
@@ -185,20 +185,24 @@ struct duelservmode : servmode
                     loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
                     if(!found)
                     {
-                        if(!cleanup)
+                        if(!dueldeath) dueldeath = gamemillis;
+                        else if(gamemillis-dueldeath > DEATHMILLIS)
                         {
-                            srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
-                            loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                            if(!cleanup)
                             {
-                                if(playing[i]->team == alive[0]->team)
+                                srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
+                                loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                                 {
-                                    sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
-                                    givepoints(playing[i], playing.length());
+                                    if(playing[i]->team == alive[0]->team)
+                                    {
+                                        sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
+                                        givepoints(playing[i], playing.length());
+                                    }
+                                    else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
                                 }
-                                else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
                             }
+                            clear();
                         }
-                        clear();
                     }
                 }
                 else switch(alive.length())
@@ -216,20 +220,24 @@ struct duelservmode : servmode
                     }
                     case 1:
                     {
-                        if(!cleanup)
+                        if(!dueldeath) dueldeath = gamemillis;
+                        else if(gamemillis-dueldeath > DEATHMILLIS)
                         {
-                            srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
-                            loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                            if(!cleanup)
                             {
-                                if(playing[i] == alive[0])
+                                srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
+                                loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                                 {
-                                    sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
-                                    givepoints(playing[i], playing.length());
+                                    if(playing[i] == alive[0])
+                                    {
+                                        sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
+                                        givepoints(playing[i], playing.length());
+                                    }
+                                    else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
                                 }
-                                else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
                             }
+                            clear();
                         }
-                        clear();
                         break;
                     }
                     default: break;
@@ -240,7 +248,7 @@ struct duelservmode : servmode
 
     void reset(bool empty)
     {
-        duelround = duelcheck = 0;
+        duelround = duelcheck = dueldeath = 0;
         dueltime = -1;
         allowed.shrink(0);
         duelqueue.shrink(0);
