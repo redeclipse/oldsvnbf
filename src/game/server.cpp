@@ -95,28 +95,49 @@ namespace server
         void process(clientinfo *ci);
     };
 
+    struct projectile
+    {
+        int id, value;
+        projectile(int n, int v) : id(n), value(v) {}
+        ~projectile() {}
+    };
     struct projectilestate
     {
-        vector<int> projs;
+        vector<projectile> projs;
         projectilestate() { reset(); }
         void reset() { projs.shrink(0); }
-        void add(int val)
+        void add(int id, int value = -1)
         {
-            projs.add(val);
+            projs.add(projectile(id, value));
         }
-        bool remove(int val)
+        bool remove(int id)
         {
-            loopv(projs) if(projs[i]==val)
+            loopv(projs) if(projs[i].id==id)
             {
                 projs.remove(i);
                 return true;
             }
             return false;
         }
-        bool find(int val)
+        int removeall(int id)
         {
-            loopv(projs) if(projs[i]==val) return true;
+            int count = 0;
+            loopvrev(projs) if(projs[i].id==id)
+            {
+                projs.remove(i);
+                count++;
+            }
+            return count;
+        }
+        bool find(int id)
+        {
+            loopv(projs) if(projs[i].id==id) return true;
             return false;
+        }
+        int value(int id)
+        {
+            loopv(projs) if(projs[i].id==id) return projs[i].value;
+            return -1;
         }
     };
 
@@ -830,7 +851,7 @@ namespace server
             if(sents[i].type == WEAPON) loopvk(clients)
             {
                 clientinfo *ci = clients[k];
-                if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || gamemillis < sents[i].millis)) return true;
+                if(ci->state.dropped.find(i) && (!spawned || gamemillis < sents[i].millis)) return true;
                 else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
             }
             if(spawned && gamemillis < sents[i].millis) return true;
@@ -1667,7 +1688,18 @@ namespace server
 
     void takeammo(clientinfo *ci, int weap, int amt = 1) { ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0); }
 
-    struct droplist { int weap, ent; };
+    void setspawn(int ent, bool spawned)
+    {
+        if(sents.inrange(ent))
+        {
+            loopvk(clients) clients[k]->state.dropped.removeall(ent);
+            sents[ent].spawned = spawned;
+            sents[ent].millis = gamemillis+(sents[ent].type != WEAPON || sents[ent].attrs[1]&WEAP_F_FORCED ? GAME(itemspawndelay) : w_spawn(w_attr(gamemode, sents[ent].attrs[0], m_weapon(gamemode, mutators))));
+            sendf(-1, 1, "ri3", N_ITEMSPAWN, ent, sents[ent].spawned ? 1 : 0);
+        }
+    }
+
+    struct droplist { int weap, ent, value; };
     void dropitems(clientinfo *ci, int level = 2)
     {
         if(ci->state.aitype >= AI_START) ci->state.weapreset(false);
@@ -1681,7 +1713,7 @@ namespace server
                 ts.weapshots[WEAP_GRENADE][0].add(-1);
                 droplist &d = drop.add();
                 d.weap = WEAP_GRENADE;
-                d.ent = -1;
+                d.ent = d.value = -1;
                 takeammo(ci, WEAP_GRENADE, WEAP2(WEAP_GRENADE, sub, false));
             }
             if(!m_noitems(gamemode, mutators))
@@ -1691,11 +1723,12 @@ namespace server
                     sents[ts.entid[i]].millis = gamemillis;
                     if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
                     {
-                        ts.dropped.add(ts.entid[i]);
                         droplist &d = drop.add();
                         d.weap = i;
                         d.ent = ts.entid[i];
-                        sents[ts.entid[i]].millis += w_spawn(w_attr(gamemode, sents[ts.entid[i]].attrs[0], sweap));
+                        d.value = ts.ammo[i];
+                        setspawn(d.ent, false);
+                        ts.dropped.add(d.ent, d.value);
                     }
                 }
             }
@@ -2626,17 +2659,17 @@ namespace server
             if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
             return;
         }
-        int dropped = gs.entid[weap];
+        int dropped = gs.entid[weap], value = gs.ammo[weap];
         gs.ammo[weap] = gs.entid[weap] = -1;
         int nweap = gs.bestweap(sweap, true); // switch to best weapon
         if(sents.inrange(dropped))
         {
-            gs.dropped.add(dropped);
-            sents[dropped].millis = gamemillis+w_spawn(w_attr(gamemode, sents[dropped].attrs[0], sweap));
+            setspawn(dropped, false);
+            gs.dropped.add(dropped, value);
         }
         else dropped = -1;
         gs.weapswitch(nweap, millis);
-        sendf(-1, 1, "ri6", N_DROP, ci->clientnum, nweap, 1, weap, dropped);
+        sendf(-1, 1, "ri7", N_DROP, ci->clientnum, nweap, 1, weap, dropped, value);
     }
 
     void reloadevent::process(clientinfo *ci)
@@ -2690,27 +2723,27 @@ namespace server
             }
             else return;
         }
-        int weap = -1, dropped = -1;
-        if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap, attr);
+        int weap = -1, amt = -1, dropped = -1, value = -1;
+        if(sents[ent].type == WEAPON)
+        {
+            if(gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap, attr);
+            loopvk(clients) if(clients[k]->state.dropped.find(ent)) { amt = clients[k]->state.dropped.value(ent); break; }
+        }
         if(isweap(weap))
         {
-            dropped = gs.entid[weap];
-            gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
-            gs.ammo[weap] = gs.entid[weap] = -1;
+            if(sents.inrange(dropped = gs.entid[weap]))
+            {
+                value = gs.ammo[weap];
+                gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
+                gs.ammo[weap] = gs.entid[weap] = -1;
+                setspawn(dropped, false);
+                gs.dropped.add(dropped, value);
+            }
+            else dropped = -1;
         }
-        gs.useitem(ent, sents[ent].type, attr, sents[ent].attrs, sweap, millis);
-        if(sents.inrange(dropped))
-        {
-            gs.dropped.add(dropped);
-            sents[dropped].millis = gamemillis+w_spawn(w_attr(gamemode, sents[dropped].attrs[0], sweap));
-        }
-        else dropped = -1;
-        if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
-        {
-            sents[ent].spawned = false;
-            sents[ent].millis = gamemillis+w_spawn(w_attr(gamemode, sents[ent].attrs[0], sweap));
-        }
-        sendf(-1, 1, "ri6", N_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
+        gs.useitem(ent, sents[ent].type, attr, amt, sweap, millis);
+        setspawn(ent, false);
+        sendf(-1, 1, "ri8", N_ITEMACC, ci->clientnum, ent, amt, sents[ent].spawned ? 1 : 0, weap, dropped, value);
     }
 
     bool gameevent::flush(clientinfo *ci, int fmillis)
@@ -2881,13 +2914,7 @@ namespace server
                     }
                     if((!found && !sents[i].spawned) || (!allowed && sents[i].spawned))
                     {
-                        loopvk(clients) clients[k]->state.dropped.remove(i);
-                        if((sents[i].spawned = allowed) != false)
-                        {
-                            int delay = sents[i].type == WEAPON ? w_spawn(w_attr(gamemode, sents[i].attrs[0], sweap)) : GAME(itemspawntime);
-                            sents[i].millis = gamemillis+delay;
-                        }
-                        sendf(-1, 1, "ri3", N_ITEMSPAWN, i, sents[i].spawned ? 1 : 0);
+                        setspawn(i, allowed);
                         items[sents[i].type]++;
                     }
                 }
@@ -4044,8 +4071,7 @@ namespace server
                     QUEUE_MSG;
                     if(tweaked)
                     {
-                        sents[n].spawned = false;
-                        sents[n].millis = gamemillis+GAME(itemspawndelay);
+                        setspawn(n, false);
                         if(sents[n].type == TRIGGER) setuptriggers(true);
                     }
                     break;

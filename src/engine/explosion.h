@@ -525,5 +525,5 @@ struct fireballrenderer : sharedlistrenderer
         glPopMatrix();
     }
 };
-static fireballrenderer fireballs("particles/explosion");
+static fireballrenderer fireballs("<grey>particles/explosion");
 

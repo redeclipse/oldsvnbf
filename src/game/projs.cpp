@@ -528,7 +528,7 @@ namespace projs
         projs.add(&proj);
     }
 
-    void drop(gameent *d, int g, int n, bool local)
+    void drop(gameent *d, int g, int n, int v, bool local)
     {
         if(g >= WEAP_OFFSET && isweap(g))
         {
@@ -536,7 +536,7 @@ namespace projs
             if(entities::ents.inrange(n))
             {
                 if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attrs[1]&WEAP_F_FORCED))
-                    create(from, to, local, d, PRJ_ENT, w_spawn(g), w_spawn(g), 1, 1, n);
+                    create(from, to, local, d, PRJ_ENT, w_spawn(g), w_spawn(g), 1, 1, n, v);
                 d->ammo[g] = -1;
                 d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
             }

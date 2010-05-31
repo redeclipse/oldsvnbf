@@ -1519,8 +1519,8 @@ namespace client
                     bool local = target && (target == game::player1 || target->ai);
                     if(ds) loopj(ds)
                     {
-                        int gs = getint(p), drop = getint(p);
-                        if(target) projs::drop(target, gs, drop, local);
+                        int gs = getint(p), drop = getint(p), value = getint(p);
+                        if(target) projs::drop(target, gs, drop, value, local);
                     }
                     if(isweap(weap) && target)
                     {
@@ -1594,11 +1594,12 @@ namespace client
 
                 case N_ITEMACC:
                 { // uses a specific drop so the client knows what to replace
-                    int lcn = getint(p), ent = getint(p), spawn = getint(p), weap = getint(p), drop = getint(p);
+                    int lcn = getint(p), ent = getint(p), amt = getint(p), spawn = getint(p), weap = getint(p),
+                        drop = getint(p), value = getint(p);
                     gameent *target = game::getclient(lcn);
                     if(!target) break;
                     if(entities::ents.inrange(ent) && enttype[entities::ents[ent]->type].usetype == EU_ITEM)
-                        entities::useeffects(target, ent, spawn, weap, drop);
+                        entities::useeffects(target, ent, amt, spawn, weap, drop, value);
                     break;
                 }
 
