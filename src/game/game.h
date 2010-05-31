@@ -1023,6 +1023,7 @@ namespace physics
     extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
     extern void smoothplayer(gameent *d, int res, bool local);
     extern void update();
+    extern void reset();
 }
 
 namespace projs

@@ -1305,8 +1305,14 @@ namespace physics
         return false;
     }
 
+    void reset()
+    {
+        lastphysframe = 0;
+    }
+
     void update()
     {
+        if(!lastphysframe) lastphysframe = lastmillis;
         int diff = lastmillis - lastphysframe;
         if(diff <= 0) physsteps = 0;
         else
