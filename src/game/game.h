@@ -468,14 +468,18 @@ struct gamestate
         return carry;
     }
 
-    int drop(int sweap, int exclude = -1)
+    int drop(int sweap)
     {
         int weap = -1;
-        if(hasweap(weapselect, sweap, 1, exclude)) weap = weapselect;
-        else loopi(WEAP_MAX) if(hasweap(i, sweap, 1, exclude))
+        loopi(WEAP_MAX) if(i != weapselect && i != lastweap && hasweap(i, sweap, 1))
         {
             weap = i;
             break;
+        }
+        if(!isweap(weap))
+        {
+            if(hasweap(lastweap, sweap, 1)) weap = lastweap;
+            else if(hasweap(weapselect, sweap, 1)) weap = weapselect;
         }
         return weap;
     }

@@ -1751,12 +1751,13 @@ namespace server
     bool allowstate(clientinfo *ci, int n)
     {
         if(!ci) return false;
-        if(ci->state.aitype < 0) switch(n)
+        bool isai = ci->state.aitype >= AI_BOT;
+        switch(n)
         {
             case 0: if(ci->state.state == CS_SPECTATOR || gamemode >= G_EDITMODE) return false; // first spawn, falls through
             case 1: // try spawn
             {
-                if(ci->wantsmap || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR)) return false;
+                if(!isai && (ci->wantsmap || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR))) return false;
                 if(ci->state.state == CS_ALIVE || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
                 break;
             }
@@ -1765,11 +1766,11 @@ namespace server
                 if((ci->state.state != CS_DEAD && ci->state.state != CS_WAITING) || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
                 break;
             }
-            case 3: return true; // spec
+            case 3: return !isai; // spec
             case 5: if(ci->state.state != CS_EDITING) return false;
             case 4: // edit on/off
             {
-                if(!m_edit(gamemode) || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR)) return false;
+                if(isai || !m_edit(gamemode) || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR)) return false;
                 break;
             }
             default: break;
@@ -2740,21 +2741,18 @@ namespace server
         int weap = -1, amt = -1, dropped = -1, value = -1;
         if(sents[ent].type == WEAPON)
         {
-            if(gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap, attr);
+            if(gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap);
             loopvk(clients) if(clients[k]->state.dropped.find(ent)) { amt = clients[k]->state.dropped.value(ent); break; }
         }
-        if(isweap(weap))
+        if(isweap(weap) && sents.inrange(dropped = gs.entid[weap]))
         {
-            if(sents.inrange(dropped = gs.entid[weap]))
-            {
-                value = gs.ammo[weap];
-                gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
-                gs.ammo[weap] = gs.entid[weap] = -1;
-                setspawn(dropped, false);
-                gs.dropped.add(dropped, value);
-            }
-            else dropped = -1;
+            value = gs.ammo[weap];
+            gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
+            gs.ammo[weap] = gs.entid[weap] = -1;
+            setspawn(dropped, false);
+            gs.dropped.add(dropped, value);
         }
+        else weap = dropped = value = -1;
         gs.useitem(ent, sents[ent].type, attr, amt, sweap, millis);
         setspawn(ent, false);
         sendf(-1, 1, "ri8", N_ITEMACC, ci->clientnum, ent, amt, sents[ent].spawned ? 1 : 0, weap, dropped, value);
