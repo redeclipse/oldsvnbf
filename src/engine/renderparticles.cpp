@@ -1637,9 +1637,9 @@ void makeparticle(const vec &o, vector<int> &attr)
         case 12: //snow
         case 13: //sparks
         {
-            const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
-            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.25f, 4.f, 2.f, 0.6f, 4.f, 0.5f, 0.2f }, velmap[] = { 0, 0, 0, 0, 30, 30, 50, 20, 10, 20 },
-                gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 };
+            const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK },
+                      gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 };
+            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.25f, 4.f, 2.f, 0.6f, 4.f, 0.5f, 0.2f }, velmap[] = { 0, 0, 0, 0, 30, 30, 50, 20, 10, 20 };
             int type = typemap[attr[0]-4], fade = attr[4] > 0 ? attr[4] : 250,
                 grav = attr[0] > 7 && attr[7] != 0 ? attr[7] : gravmap[attr[0]-4],
                 decal = attr[0] > 7 && attr[6] > 0 && attr[6] <= DECAL_MAX ? attr[6]-1 : -1;
@@ -1652,8 +1652,8 @@ void makeparticle(const vec &o, vector<int> &attr)
         case 14: // flames <radius> <height> <rgb>
         case 15: // smoke plume
         {
-            const int typemap[] = { PART_FLAME, PART_SMOKE }, fademap[] = { 500, 1000 }, densitymap[] = { 3, 1 };
-            const float sizemap[] = { 2, 2 }, velmap[] = { 25, 50 }, gravmap[] = { -5, -10 };
+            const int typemap[] = { PART_FLAME, PART_SMOKE }, fademap[] = { 500, 1000 }, densitymap[] = { 3, 1 }, gravmap[] = { -5, -10 };
+            const float sizemap[] = { 2, 2 }, velmap[] = { 25, 50 };
             int type = typemap[attr[0]-14], density = densitymap[attr[0]-14];
             regularflame(type, o, float(attr[1])/100.0f, float(attr[2])/100.0f, attr[3], density, attr[4] > 0 ? attr[4] : fademap[attr[0]-14], attr[5] != 0 ? attr[5]/100.f : sizemap[attr[0]-14], 1, attr[6] != 0 ? attr[6] : gravmap[attr[0]-14], 0, attr[7] != 0 ? attr[7] : velmap[attr[0]-14]);
             break;
