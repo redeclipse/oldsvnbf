@@ -1071,6 +1071,7 @@ namespace game
         intermission = false;
         maptime = hud::lastnewgame = 0;
         projs::reset();
+        physics::reset();
         resetworld();
         if(*name)
         {
