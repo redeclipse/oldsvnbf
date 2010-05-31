@@ -2648,16 +2648,30 @@ namespace server
             if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - unexpected message", weap);
             return;
         }
+        if(!sents.inrange(gs.entid[weap]))
+        {
+            if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
+            return;
+        }
         int sweap = m_weapon(gamemode, mutators);
-        if(!gs.hasweap(weap, sweap, weap == WEAP_GRENADE ? 2 : 0) || (weap != WEAP_GRENADE && m_noitems(gamemode, mutators)))
+        if(!gs.hasweap(weap, sweap))
         {
             if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
             return;
         }
-        if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attrs[1]&WEAP_F_FORCED))
+        if(!gs.weapwaited(weap, millis, gs.skipwait(weap, 0, millis, (1<<WEAP_S_SWITCH), true)))
         {
-            if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
-            return;
+            if(!gs.weapwaited(weap, millis, gs.skipwait(weap, 0, millis, (1<<WEAP_S_RELOAD), true)))
+            {
+                if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
+                return;
+            }
+            else if(gs.weapload[weap] > 0)
+            {
+                takeammo(ci, weap, gs.weapload[weap]);
+                gs.weapload[weap] = -gs.weapload[weap];
+            }
+            else return;
         }
         int dropped = gs.entid[weap], value = gs.ammo[weap];
         gs.ammo[weap] = gs.entid[weap] = -1;
@@ -2667,7 +2681,7 @@ namespace server
             setspawn(dropped, false);
             gs.dropped.add(dropped, value);
         }
-        else dropped = -1;
+        else weap = dropped = value = -1;
         gs.weapswitch(nweap, millis);
         sendf(-1, 1, "ri7", N_DROP, ci->clientnum, nweap, 1, weap, dropped, value);
     }

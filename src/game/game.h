@@ -514,7 +514,7 @@ struct gamestate
         return millis-weaplast[weap] >= weapwait[weap];
     }
 
-    int skipwait(int weap, int flags, int millis, int skip, bool override = false)
+    int skipwait(int weap, int flags, int millis, int skip = 0, bool override = false)
     {
         int skipstate = skip;
         if(WEAP2(weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
