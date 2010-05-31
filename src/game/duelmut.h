@@ -145,10 +145,10 @@ struct duelservmode : servmode
                     {
                         defformatstring(namea)("%s", colorname(alive[0]));
                         defformatstring(nameb)("%s", colorname(alive[1]));
-                        formatstring(fight)("\fcduel between %s and %s, round \fs\fr#%d\fS", namea, nameb, duelround);
+                        formatstring(fight)("\fwduel between %s and %s, round \fs\fr#%d\fS", namea, nameb, duelround);
                     }
                     else if(m_survivor(gamemode, mutators))
-                        formatstring(fight)("\fclast one left alive wins, round \fs\fr#%d\fS", duelround);
+                        formatstring(fight)("\fwlast one left alive wins, round \fs\fr#%d\fS", duelround);
                     loopv(playing) if(allowbroadcast(playing[i]->clientnum))
                         sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
                     if(m_survivor(gamemode, mutators) || GAME(duelclear)) clearitems();
