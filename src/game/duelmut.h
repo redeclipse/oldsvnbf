@@ -71,13 +71,7 @@ struct duelservmode : servmode
 
     void clearitems()
     {
-        loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
-        {
-            loopvk(clients) clients[k]->state.dropped.remove(i);
-            sents[i].spawned = true;
-            sents[i].millis = gamemillis; // hijack its spawn time
-            sendf(-1, 1, "ri3", N_ITEMSPAWN, i, 1);
-        }
+        loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i)) setspawn(i, true);
     }
 
     void cleanup()

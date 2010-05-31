@@ -78,7 +78,7 @@ static void renderlightning(Texture *tex, const vec &o, const vec &d, float sz)
 struct lightningrenderer : sharedlistrenderer
 {
     lightningrenderer()
-        : sharedlistrenderer("particles/lightning", 2, PT_LIGHTNING|PT_GLARE)
+        : sharedlistrenderer("<grey>particles/lightning", 2, PT_LIGHTNING|PT_GLARE)
     {}
 
     void startrender()

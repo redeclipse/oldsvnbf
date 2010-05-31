@@ -262,7 +262,7 @@ namespace entities
     // these two functions are called when the server acknowledges that you really
     // picked up the item (in multiplayer someone may grab it before you).
 
-    void useeffects(gameent *d, int n, bool s, int g, int r)
+    void useeffects(gameent *d, int n, int c, bool s, int g, int r, int v)
     {
         gameentity &e = *(gameentity *)ents[n];
         int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
@@ -291,7 +291,7 @@ namespace entities
                 d->weapselect = g;
             }
         }
-        d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
+        d->useitem(n, e.type, attr, c, sweap, lastmillis);
         if(issound(d->wschan)) removesound(d->wschan);
         playsound(S_ITEMPICKUP, d->o, d, 0, -1, -1, -1, &d->wschan);
         if(game::dynlighteffects) adddynlight(d->o, enttype[e.type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
@@ -299,7 +299,7 @@ namespace entities
         {
             gameentity &f = *(gameentity *)ents[r];
             attr = w_attr(game::gamemode, f.attrs[0], sweap);
-            if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
+            if(isweap(attr)) projs::drop(d, attr, r, v, d == game::player1 || d->ai);
         }
         if(e.spawned != s)
         {

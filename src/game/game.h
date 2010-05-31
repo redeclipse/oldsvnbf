@@ -564,16 +564,16 @@ struct gamestate
         return false;
     }
 
-    void useitem(int id, int type, int attr, vector<int> &attrs, int sweap, int millis)
+    void useitem(int id, int type, int attr, int amt, int sweap, int millis)
     {
         switch(type)
         {
             case TRIGGER: break;
             case WEAPON:
             {
-                int prev = ammo[attr];
+                int prev = ammo[attr], value = amt >= 0 ? amt : WEAP(attr, add);
                 weapswitch(attr, millis, hasweap(attr, sweap) ? WEAP_S_SWITCH : WEAP_S_PICKUP);
-                ammo[attr] = clamp(max(ammo[attr], 0)+WEAP(attr, add), 1, WEAP(attr, max));
+                ammo[attr] = clamp(max(ammo[attr], 0)+value, 1, WEAP(attr, max));
                 weapload[attr] = ammo[attr]-prev;
                 entid[attr] = id;
                 break;
@@ -1027,7 +1027,7 @@ namespace projs
     extern void preload();
     extern void remove(gameent *owner);
     extern void shootv(int weap, int flags, int offset, float scale, vec &from, vector<vec> &locs, gameent *d, bool local);
-    extern void drop(gameent *d, int g, int n, bool local = true);
+    extern void drop(gameent *d, int g, int n, int v = -1, bool local = true);
     extern void adddynlights();
     extern void render();
 }
@@ -1168,7 +1168,7 @@ namespace entities
     extern bool tryspawn(dynent *d, const vec &o, short yaw = 0, short pitch = 0);
     extern void spawnplayer(gameent *d, int ent = -1, bool suicide = false);
     extern const char *entinfo(int type, vector<int> &attr, bool full = false);
-    extern void useeffects(gameent *d, int n, bool s, int g, int r);
+    extern void useeffects(gameent *d, int n, int c, bool s, int g, int r, int v = -1);
     extern const char *entmdlname(int type, vector<int> &attr);
     extern bool clipped(const vec &o, bool aiclip = false);
     extern void edittoggled(bool edit);
