@@ -208,16 +208,16 @@ struct weaptypes
 weaptypes weaptype[] =
 {
     {
-            ANIM_MELEE,         0x444444,       S_MELEE,    -1,          -1,         -1,             1,
+            ANIM_MELEE,         0x888888,       S_MELEE,    -1,          -1,         -1,             1,
             true,       true,       false,      false,
             { 0, 0 },               1,          0,
-            "melee",        "\fd",  "",                         "", "",                        "",                     ""
+            "melee",        "\fa",  "",                         "", "",                        "",                     ""
     },
     {
-            ANIM_LIGHT,         0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
+            ANIM_LIGHT,         0xDDDDDD,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
             false,      false,      true,       true,
             { 0, 0 },               4,          0.35f,
-            "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep", "weapons/pistol/hwep",     "",                     "projs/cartridge"
+            "pistol",       "\fw",  "weapons/pistol/item",      "weapons/pistol/vwep", "weapons/pistol/hwep",     "",                     "projs/cartridge"
     },
     {
             ANIM_WIELD,          0x2222FF,      S_SWORD,    -1,          -1,         -1,             1,

@@ -14,9 +14,8 @@ struct ctfstate
         int owner;
         vector<int> votes;
 #else
-        bool pickup;
         gameent *owner, *lastowner;
-        int ent, interptime;
+        int ent, interptime, pickuptime;
 #endif
 
         flag()
@@ -33,9 +32,8 @@ struct ctfstate
             owner = -1;
             votes.shrink(0);
 #else
-            pickup = false;
             owner = lastowner = NULL;
-            interptime = 0;
+            interptime = pickuptime = 0;
 #endif
             team = TEAM_NEUTRAL;
             taketime = droptime = 0;
@@ -90,8 +88,8 @@ struct ctfstate
 #ifdef GAMESERVER
         f.votes.shrink(0);
 #else
+        f.pickuptime = 0;
         f.lastowner = owner;
-        f.pickup = true;
 #endif
     }
 
@@ -105,7 +103,7 @@ struct ctfstate
         f.owner = -1;
         f.votes.shrink(0);
 #else
-        f.pickup = false;
+        f.pickuptime = 0;
         f.owner = NULL;
 #endif
     }
@@ -118,7 +116,7 @@ struct ctfstate
         f.owner = -1;
         f.votes.shrink(0);
 #else
-        f.pickup = false;
+        f.pickuptime = 0;
         f.owner = NULL;
 #endif
     }
