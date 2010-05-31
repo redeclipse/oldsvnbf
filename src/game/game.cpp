@@ -78,8 +78,8 @@ namespace game
     VAR(IDF_PERSIST, zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
     VAR(IDF_PERSIST, zoomscroll, 0, 0, 1); // 0 = stop at min/max, 1 = go to opposite end
 
-    VAR(IDF_PERSIST, shownamesabovehead, 0, 2, 2);
-    VAR(IDF_PERSIST, showstatusabovehead, 0, 2, 2);
+    VAR(IDF_PERSIST, shownamesabovehead, 0, 1, 2);
+    VAR(IDF_PERSIST, showstatusabovehead, 0, 1, 2);
     VAR(IDF_PERSIST, showteamabovehead, 0, 1, 3);
     VAR(IDF_PERSIST, showdamageabovehead, 0, 0, 2);
     VAR(IDF_PERSIST, showcritabovehead, 0, 1, 2);

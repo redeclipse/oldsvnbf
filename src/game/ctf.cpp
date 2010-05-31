@@ -6,7 +6,7 @@ namespace ctf
     void dropflag(gameent *d)
     {
         if(m_ctf(game::gamemode) && ctfstyle <= 2)
-            client::addmsg(N_DROPFLAG, "ri4", game::player1->clientnum, int(d->o.x*DMF), int(d->o.y*DMF), int(d->o.z*DMF));
+            client::addmsg(N_DROPFLAG, "ri4", d->clientnum, int(d->o.x*DMF), int(d->o.y*DMF), int(d->o.z*DMF));
         else if(d == game::player1) playsound(S_ERROR, d->o, d);
     }
     ICOMMAND(0, dropflag, "", (), dropflag(game::player1));
@@ -504,7 +504,6 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
         ctfstate::flag &f = st.flags[i];
-        if(f.lastowner == d && f.droptime && lastmillis-f.droptime <= 5000) return;
         flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
         game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
         st.takeflag(i, d, lastmillis);
@@ -517,14 +516,14 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 2 && (ctfstyle == 2 || !f.droptime))) continue;
+            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || f.owner || (f.pickuptime && lastmillis-f.pickuptime <= 3000)) continue;
+            if(f.team == d->team && ctfstyle <= 2 && (ctfstyle == 2 || !f.droptime)) continue;
+            if(f.lastowner == d && f.droptime && lastmillis-f.droptime <= 3000) continue;
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
-                if(f.pickup) continue;
                 client::addmsg(N_TAKEFLAG, "ri2", d->clientnum, i);
-                f.pickup = true;
+                f.pickuptime = lastmillis;
             }
-            else f.pickup = false;
        }
     }
 

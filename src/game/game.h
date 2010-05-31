@@ -1064,7 +1064,6 @@ namespace hud
     extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
     extern void drawsized(float x, float y, float s);
     extern void colourskew(float &r, float &g, float &b, float skew = 1.f);
-    extern void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb = 1.f);
     extern void skewcolour(float &r, float &g, float &b, bool t = false);
     extern void skewcolour(int &r, int &g, int &b, bool t = false);
     extern void drawindicator(int weap, int x, int y, int s);
