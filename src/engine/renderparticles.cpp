@@ -548,8 +548,8 @@ struct varenderer : partrenderer
     particle *parts;
     int maxparts, numparts, lastupdate, rndmask;
 
-    varenderer(const char *texname, int type)
-        : partrenderer(texname, 3, type),
+    varenderer(const char *texname, int type, int texclamp = 3)
+        : partrenderer(texname, texclamp, type),
           verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1), rndmask(0)
     {
         if(type & PT_HFLIP) rndmask |= 0x01;
@@ -1020,7 +1020,7 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_SHRINK),
     new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
     new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_GLARE),
-    new taperenderer("particles/lightning", PT_TAPE|PT_GLARE|PT_HFLIP|PT_VFLIP),
+    new taperenderer("particles/lightning", PT_TAPE|PT_GLARE|PT_HFLIP|PT_VFLIP, 2), // uses same clamp setting as normal lightning to avoid conflict
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP),
     new quadrenderer("<grey>particles/snow", PT_PART|PT_GLARE|PT_FLIP),
     &texts, &textontop,
