@@ -3178,7 +3178,7 @@ namespace server
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
             if(type < N_EDITENT || type > N_NEWMAP || !m_edit(gamemode) || !ci || ci->state.state != CS_EDITING)
             {
-                static const int exempt[] = { N_POS, N_DESTROY };
+                static const int exempt[] = { N_POS, N_SPAWN, N_DESTROY };
                 loopi(sizeof(exempt)/sizeof(int)) if(type == exempt[i]) return type;
                 if(++ci->overflow >= 250) return -2;
             }
