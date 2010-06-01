@@ -133,7 +133,7 @@ namespace weapons
     {
         int weap = isweap(a) ? a : d->weapselect;
         bool found = false;
-        if(isweap(weap) && weap >= WEAP_OFFSET && weap != m_weapon(game::gamemode, game::mutators) && !m_noitems(game::gamemode, game::mutators) && entities::ents.inrange(d->entid[weap]))
+        if(isweap(weap) && weap >= WEAP_OFFSET && weap != m_weapon(game::gamemode, game::mutators) && entities::ents.inrange(d->entid[weap]))
         {
             if(d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true)))
             {

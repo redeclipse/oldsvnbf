@@ -629,7 +629,7 @@ namespace entities
             int n = curnode->childindex(branch); \
             if(ents.inrange(n)) { \
                 extentity &e = *ents[n]; \
-                if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || (!m_noitems(game::gamemode, game::mutators) && e.spawned))) \
+                if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || e.spawned)) \
                 { \
                     float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3] ? e.attrs[e.type == CHECKPOINT ? 0 : 3] : enttype[e.type].radius; \
                     if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
@@ -694,7 +694,7 @@ namespace entities
         loopv(projs::projs)
         {
             projent &proj = *projs::projs[i];
-            if(proj.projtype != PRJ_ENT || !proj.ready() || m_noitems(game::gamemode, game::mutators)) continue;
+            if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
             if(!ents.inrange(proj.id) || enttype[ents[proj.id]->type].usetype != EU_ITEM) continue;
             if(!overlapsbox(m, eye, d->radius, proj.o, enttype[ents[proj.id]->type].radius, enttype[ents[proj.id]->type].radius))
                 continue;
@@ -754,7 +754,7 @@ namespace entities
         gameentity &e = *(gameentity *)ents[n];
         switch(enttype[e.type].usetype)
         {
-            case EU_ITEM: if(d->action[AC_USE] && !m_noitems(game::gamemode, game::mutators))
+            case EU_ITEM: if(d->action[AC_USE])
             {
                 if(game::allowmove(d))
                 {
@@ -2265,12 +2265,12 @@ namespace entities
             renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
         if(!envmapping)
         {
-            int numents = m_edit(game::gamemode) ? ents.length() : (m_noitems(game::gamemode, game::mutators) ? 0 : lastusetype[EU_ITEM]);
+            int numents = m_edit(game::gamemode) ? ents.length() : lastusetype[EU_ITEM];
             loopi(numents)
             {
                 gameentity &e = *(gameentity *)ents[i];
                 if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-                bool active = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (e.spawned || (e.lastuse && lastmillis-e.lastuse < 500));
+                bool active = enttype[e.type].usetype == EU_ITEM && (e.spawned || (e.lastuse && lastmillis-e.lastuse < 500));
                 if(m_edit(game::gamemode) || active)
                 {
                     const char *mdlname = entmdlname(e.type, e.attrs);
@@ -2327,7 +2327,7 @@ namespace entities
         vec off(0, 0, 2.f), pos(o);
         if(enttype[e.type].usetype == EU_ITEM) pos.add(off);
         bool edit = m_edit(game::gamemode) && cansee(e), isedit = edit && game::player1->state == CS_EDITING,
-                item = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (spawned || (e.lastuse && lastmillis-e.lastuse < 500)),
+                item = enttype[e.type].usetype == EU_ITEM && (spawned || (e.lastuse && lastmillis-e.lastuse < 500)),
                 hasent = isedit && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
         int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
             colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
