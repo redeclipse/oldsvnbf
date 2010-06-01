@@ -25,11 +25,11 @@ GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
 GVAR(IDF_ADMIN, campaignplayers, 1, 4, MAXPLAYERS);
 
-GSVAR(IDF_ADMIN, allowmaps, "alphacampain bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hinder hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower tranquility venus warground warp wishbone");
-GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli depot eight enigma ghost gladiator longestyard mist nova panic refuge rivals smouldering stone tower tranquility warground warp wet venus");
-GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight ghost gladiator longestyard mist nova panic refuge rivals tower tranquility warground wet venus");
-GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tranquility warground warp wet venus");
-GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli depot enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tower tranquility warground warp wet venus");
+GSVAR(IDF_ADMIN, allowmaps, "alphacampain bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli depot dutility eight enigma firehouse forge ghost gladiator hinder hollow keystone longestyard mist nova oasis overseer panic refuge rivals siege smouldering spacetech stone testchamber tower tranquility venus warground warp wishbone");
+GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli depot eight enigma ghost gladiator keystone longestyard mist nova panic refuge rivals smouldering spacetech stone tower tranquility warground warp wet venus");
+GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple dutility eight keystone longestyard panic rivals warground wet venus");
+GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli depot enigma forge ghost gladiator keystone mist nova panic refuge rivals smouldering stone tranquility warground warp wet venus");
+GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli depot enigma forge ghost gladiator keystone mist nova panic refuge rivals smouldering stone tower tranquility warground warp wet venus");
 GSVAR(IDF_ADMIN, trialmaps, "hinder testchamber");
 GSVAR(IDF_ADMIN, campaignmaps, "alphacampain wishbone");
 
