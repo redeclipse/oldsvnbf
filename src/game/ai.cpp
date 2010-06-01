@@ -394,59 +394,56 @@ namespace ai
 
     void items(gameent *d, aistate &b, vector<interest> &interests, bool force = false)
     {
-        if(!m_noitems(game::gamemode, game::mutators))
+        vec pos = d->feetpos();
+        loopj(entities::lastusetype[EU_ITEM])
         {
-            vec pos = d->feetpos();
-            loopj(entities::lastusetype[EU_ITEM])
+            gameentity &e = *(gameentity *)entities::ents[j];
+            if(enttype[e.type].usetype != EU_ITEM) continue;
+            int sweap = m_weapon(game::gamemode, game::mutators);
+            switch(e.type)
             {
-                gameentity &e = *(gameentity *)entities::ents[j];
-                if(enttype[e.type].usetype != EU_ITEM) continue;
-                int sweap = m_weapon(game::gamemode, game::mutators);
-                switch(e.type)
+                case WEAPON:
                 {
-                    case WEAPON:
-                    {
-                        int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-                        if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
-                        { // go get a weapon upgrade
-                            interest &n = interests.add();
-                            n.state = AI_S_INTEREST;
-                            n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
-                            n.target = j;
-                            n.targtype = AI_T_ENTITY;
-                            n.score =  pos.squaredist(e.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
-                        }
-                        break;
+                    int attr = w_attr(game::gamemode, e.attrs[0], sweap);
+                    if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
+                    { // go get a weapon upgrade
+                        interest &n = interests.add();
+                        n.state = AI_S_INTEREST;
+                        n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
+                        n.target = j;
+                        n.targtype = AI_T_ENTITY;
+                        n.score =  pos.squaredist(e.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
                     }
-                    default: break;
+                    break;
                 }
+                default: break;
             }
+        }
 
-            loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready())
+        loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready())
+        {
+            projent &proj = *projs::projs[j];
+            if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
+            gameentity &e = *(gameentity *)entities::ents[proj.id];
+            int sweap = m_weapon(game::gamemode, game::mutators);
+            switch(e.type)
             {
-                projent &proj = *projs::projs[j];
-                if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
-                gameentity &e = *(gameentity *)entities::ents[proj.id];
-                int sweap = m_weapon(game::gamemode, game::mutators);
-                switch(e.type)
+                case WEAPON:
                 {
-                    case WEAPON:
-                    {
-                        int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-                        if(isweap(attr) && !d->hasweap(attr, sweap))
-                        { // go get a weapon upgrade
-                            if(proj.owner == d) break;
-                            interest &n = interests.add();
-                            n.state = AI_S_INTEREST;
-                            n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
-                            n.target = proj.id;
-                            n.targtype = AI_T_DROP;
-                            n.score = pos.squaredist(proj.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
-                        }
-                        break;
+                    int attr = w_attr(game::gamemode, e.attrs[0], sweap);
+                    if(isweap(attr) && !d->hasweap(attr, sweap))
+                    { // go get a weapon upgrade
+                        if(proj.owner == d) break;
+                        interest &n = interests.add();
+                        n.state = AI_S_INTEREST;
+                        n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
+                        n.target = proj.id;
+                        n.targtype = AI_T_DROP;
+                        n.score = pos.squaredist(proj.o)/(attr == d->loadweap ? 1e8f : (force ? 1e4f : 1e2f));
                     }
-                    default: break;
+                    break;
                 }
+                default: break;
             }
         }
     }
@@ -571,7 +568,7 @@ namespace ai
             }
             else
             {
-                if((m_noitems(game::gamemode, game::mutators) || m_limited(game::gamemode, game::mutators)) && !m_arena(game::gamemode, game::mutators))
+                if(m_limited(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
                     d->loadweap = m_weapon(game::gamemode, game::mutators);
                 else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
                 else d->loadweap = rnd(WEAP_MAX-WEAP_OFFSET)+WEAP_OFFSET;
@@ -733,7 +730,6 @@ namespace ai
                 }
                 case AI_T_ENTITY:
                 {
-                    if(m_noitems(game::gamemode, game::mutators) || d->hasweap(d->loadweap, sweap)) return 0;
                     if(entities::ents.inrange(b.target))
                     {
                         gameentity &e = *(gameentity *)entities::ents[b.target];
@@ -757,7 +753,6 @@ namespace ai
                 }
                 case AI_T_DROP:
                 {
-                    if(m_noitems(game::gamemode, game::mutators) || d->hasweap(d->loadweap, sweap)) return 0;
                     loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
                     {
                         projent &proj = *projs::projs[j];
@@ -1158,7 +1153,7 @@ namespace ai
         bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
         if(d->aitype == AI_BOT)
         {
-            if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
+            if(busy <= 1 && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
                 loopirev(WEAP_MAX) if(i >= WEAP_OFFSET && i < WEAP_ITEM && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
@@ -1168,7 +1163,7 @@ namespace ai
                     return true;
                 }
             }
-            if(busy <= 2 && !m_noitems(game::gamemode, game::mutators) && !d->action[AC_USE] && haswaited)
+            if(busy <= 2 && !d->action[AC_USE] && haswaited)
             {
                 static vector<actitem> actitems;
                 actitems.setsize(0);

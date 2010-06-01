@@ -535,8 +535,7 @@ namespace projs
             vec from(d->o), to(d->muzzlepos(g));
             if(entities::ents.inrange(n))
             {
-                if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attrs[1]&WEAP_F_FORCED))
-                    create(from, to, local, d, PRJ_ENT, w_spawn(g), w_spawn(g), 1, 1, n, v);
+                create(from, to, local, d, PRJ_ENT, w_spawn(g), w_spawn(g), 1, 1, n, v);
                 d->ammo[g] = -1;
                 d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
             }

@@ -845,17 +845,14 @@ namespace server
 
     bool finditem(int i, bool spawned = false)
     {
-        if(!m_noitems(gamemode, mutators))
+        if(sents[i].spawned) return true;
+        if(sents[i].type == WEAPON) loopvk(clients)
         {
-            if(sents[i].spawned) return true;
-            if(sents[i].type == WEAPON) loopvk(clients)
-            {
-                clientinfo *ci = clients[k];
-                if(ci->state.dropped.find(i) && (!spawned || gamemillis < sents[i].millis)) return true;
-                else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
-            }
-            if(spawned && gamemillis < sents[i].millis) return true;
+            clientinfo *ci = clients[k];
+            if(ci->state.dropped.find(i) && (!spawned || gamemillis < sents[i].millis)) return true;
+            else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
         }
+        if(spawned && gamemillis < sents[i].millis) return true;
         return false;
     }
 
@@ -1716,20 +1713,16 @@ namespace server
                 d.ent = d.value = -1;
                 takeammo(ci, WEAP_GRENADE, WEAP2(WEAP_GRENADE, sub, false));
             }
-            if(!m_noitems(gamemode, mutators))
+            if(level)
             {
                 loopi(WEAP_MAX) if(i != sweap && ts.hasweap(i, sweap) && sents.inrange(ts.entid[i]))
                 {
-                    sents[ts.entid[i]].millis = gamemillis;
-                    if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
-                    {
-                        droplist &d = drop.add();
-                        d.weap = i;
-                        d.ent = ts.entid[i];
-                        d.value = ts.ammo[i];
-                        setspawn(d.ent, false);
-                        ts.dropped.add(d.ent, d.value);
-                    }
+                    droplist &d = drop.add();
+                    d.weap = i;
+                    d.ent = ts.entid[i];
+                    d.value = ts.ammo[i];
+                    setspawn(d.ent, false);
+                    ts.dropped.add(d.ent, d.value);
                 }
             }
             if(level && !drop.empty())
@@ -2712,7 +2705,7 @@ namespace server
     void useevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        if(gs.state != CS_ALIVE || !sents.inrange(ent) || enttype[sents[ent].type].usetype != EU_ITEM || m_noitems(gamemode, mutators))
+        if(gs.state != CS_ALIVE || !sents.inrange(ent) || enttype[sents[ent].type].usetype != EU_ITEM)
         {
             if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
             return;
@@ -2878,9 +2871,10 @@ namespace server
 
     void checkents()
     {
+        bool thresh = m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && !m_limited(gamemode, mutators);
         int items[MAXENTTYPES], lowest[MAXENTTYPES], sweap = m_weapon(gamemode, mutators);
         memset(items, 0, sizeof(items)); memset(lowest, -1, sizeof(lowest));
-        if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && !m_limited(gamemode, mutators))
+        if(thresh)
         {
             loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < AI_START)
                 items[WEAPON] += clients[i]->state.carry(sweap);
@@ -2919,7 +2913,7 @@ namespace server
                 if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
                     bool found = finditem(i, true);
-                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
+                    if(allowed && thresh && i == lowest[sents[i].type])
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
                         if(dist < GAME(itemthreshold)) found = false;
